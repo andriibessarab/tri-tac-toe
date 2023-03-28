@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
-import {Vector2, Raycaster} from "three";
+import React, {useEffect} from 'react';
+import {Raycaster, Vector2} from "three";
 
 import SceneInit from "../components/SceneInit";
 import TicTacToe from "../components/TicTacToe";
-import {int} from "three/nodes";
 
 const Game = () => {
     useEffect(() => {
@@ -16,11 +15,12 @@ const Game = () => {
         const game = new TicTacToe();
         scene.scene.add(game.board);
 
-        // Pointers to mouse and raycaster
+        // Instances of mouse and raycaster
         const mouse = new Vector2();
         const raycaster = new Raycaster();
 
-        function onMouseDown(event) {
+        // Event listeners
+        window.addEventListener("mousedown", (event) => {
             // Obtain mouse's position
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -33,8 +33,6 @@ const Game = () => {
                 game.hiddenTiles.children
             );
 
-            console.log(intersects);
-
             // If raycaster intersects with any tiles, identify it by UUID, and delete it
             if (intersects.length > 0) {
                 const xOffset = intersects[0].object.position.x;
@@ -46,37 +44,35 @@ const Game = () => {
                 );
                 game.hiddenTiles.children.splice(index, 1);
             }
-        }
+        }, false);
 
-        // Scale up element
-        const scaleUp = (obj) => {
-            if (obj.scale.x < 1) {
-                obj.scale.x += 0.04;
-            }
-            if (obj.scale.y < 1) {
-                obj.scale.y += 0.04;
-            }
-            if (obj.scale.z < 1) {
-                obj.scale.z += 0.04;
-            }
-        };
-
-        // Animate board
+        // Animate board & elements
         const animate = () => {
+            // Animation for scaling up an element
+            const scaleUp = (obj) => {
+                if (obj.scale.x < 1) {
+                    obj.scale.x += 0.04;
+                }
+                if (obj.scale.y < 1) {
+                    obj.scale.y += 0.04;
+                }
+                if (obj.scale.z < 1) {
+                    obj.scale.z += 0.04;
+                }
+            };
+
             game.boardLines.children.forEach(scaleUp);
             game.crosses.children.forEach(scaleUp);
             game.circles.children.forEach(scaleUp);
+            game.winLine.children.forEach(scaleUp);
             requestAnimationFrame(animate);
         };
-
-        window.addEventListener("mousedown", onMouseDown, false);
-
         animate();
     });
 
     return (
         <div className="Game">
-            <canvas id="3jsCanvas" />
+            <canvas id="3jsCanvas"/>
         </div>
     );
 };

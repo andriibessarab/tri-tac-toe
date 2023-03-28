@@ -29,6 +29,10 @@ export default class TicTacToe {
         this._createBoard();
     }
 
+    ////////////////////////////
+    //     PUBLIC METHODS     //
+    ////////////////////////////
+
     // Draw marker on board
     addMarker(xOffset, yOffset) {
         // Draw marker depending on whose turn it is, update boardCopy, and mark
@@ -50,12 +54,12 @@ export default class TicTacToe {
         for (let n = 0; n < 3; n++) {
             if (this._checkHorizontalWin(n)) {
                 strike = this._strike(64, 2, 4);
-                strike.position.y = this._getOffsetY(n);
+                strike.position.y = this._roundYOffset(n);
                 this.winLine.add(strike);
             }
             if (this._checkVerticalWin(n)) {
                 strike = this._strike(2, 64, 4);
-                strike.position.x = this._getOffsetX(n);
+                strike.position.x = this._roundXOffset(n);
                 this.winLine.add(strike);
             }
         }
@@ -73,57 +77,9 @@ export default class TicTacToe {
         }
     }
 
-    _getOffsetX(n) {
-        if (n === 0) {
-            return -24;
-        } else if (n === 1) {
-            return 0;
-        } else {
-            return 24;
-        }
-    }
-
-    _getOffsetY(n) {
-        if (n === 0) {
-            return 24;
-        } else if (n === 1) {
-            return 0;
-        } else {
-            return -24;
-        }
-    }
-
-    // #TODO
-    _checkHorizontalWin(i) {
-        return false;
-        // 0 = 1 and 0 = 2
-    }
-
-    // #TODO
-    _checkVerticalWin(i) {
-        return false;
-        // 0 = 1 and 0 = 2
-    }
-
-    // #TODO
-    _checkRightLeaningDiagonalWin(i) {
-        return false;
-    }
-
-    // #TODO
-    _checkLeftLeaningDiagonalWin(i) {
-        return false;
-    }
-
-    _strike(x, y, z) {
-        const strikeGeometry = new THREE.BoxGeometry(x, y, z);
-        const strikeMaterial = new THREE.MeshNormalMaterial();
-        const strike = new THREE.Mesh(strikeGeometry, strikeMaterial);
-        strike.scale.x = 0;
-        strike.scale.y = 0;
-        strike.scale.z = 0;
-        return strike;
-    }
+    ////////////////////////////
+    //      PRIVATE MISC      //
+    ////////////////////////////
 
     // Construct board
     _createBoard() {
@@ -145,10 +101,33 @@ export default class TicTacToe {
         this.hiddenTiles.add(this._hiddenTile(24, -24)); // bottom-right tile
     }
 
+    // Change xOffset to appropriate offset for column
+    _roundXOffset(n) {
+        if (n === 0) {
+            return -24;
+        } else if (n === 1) {
+            return 0;
+        } else {
+            return 24;
+        }
+    }
+
+    // Change yOffset to appropriate offset for row
+    _roundYOffset(n) {
+        if (n === 0) {
+            return 24;
+        } else if (n === 1) {
+            return 0;
+        } else {
+            return -24;
+        }
+    }
+
     // Update board array
     _updateBoardCopy(xOffset, yOffset) {
         let i, j;
 
+        // Determine row by offset
         if (xOffset < 0) {
             j = 0;
         } else if (xOffset === 0) {
@@ -157,6 +136,7 @@ export default class TicTacToe {
             j = 2;
         }
 
+        // Determine column bby offset
         if (yOffset < 0) {
             i = 2;
         } else if (yOffset === 0) {
@@ -165,16 +145,42 @@ export default class TicTacToe {
             i = 0;
         }
 
-        if (this.currentPlayer === "o") {
+        if (this.currentMarker === "o") {
             this.boardCopy[i][j] = "o";
         } else {
             this.boardCopy[i][j] = "x";
         }
-
-        console.log(this.boardCopy);
     }
 
-    // Construct board line
+    ////////////////////////////
+    //     WIN CONDITIONS     //
+    ////////////////////////////
+
+    // Check for win in horizontal line
+    _checkHorizontalWin(i) {
+        return (this.boardCopy[i][0] === this.boardCopy[i][1] && this.boardCopy[i][0]=== this.boardCopy[i][2]);
+    }
+
+    // Check for win in vertical line
+    _checkVerticalWin(i) {
+        return (this.boardCopy[0][i] === this.boardCopy[1][i] && this.boardCopy[0][i]=== this.boardCopy[2][i]);
+    }
+
+    // Check for win in right leaning diagonal line
+    _checkRightLeaningDiagonalWin() {
+        return (this.boardCopy[0][0] === this.boardCopy[1][1] && this.boardCopy[0][0]=== this.boardCopy[2][2]);
+    }
+
+    // Check for win in left leaning diagonal line
+    _checkLeftLeaningDiagonalWin() {
+        return (this.boardCopy[0][2] === this.boardCopy[1][1] && this.boardCopy[0][2]=== this.boardCopy[2][0]);
+    }
+
+    ////////////////////////////
+    //     BOARD ELEMENTS     //
+    ////////////////////////////
+
+    // Board line
     _boardLine(x, y, z, xOffset, yOffset) {
         const boardLineGeometry = new THREE.BoxGeometry(x, y, z);
         const boardLineMaterial = new THREE.MeshNormalMaterial();
@@ -187,7 +193,7 @@ export default class TicTacToe {
         return boardLine;
     }
 
-    // Create hidden tiles(create hidden mesh for raycasting)
+    // Hidden tiles(create hidden mesh for raycasting)
     _hiddenTile(xOffset, yOffset) {
         const hiddenTileGeometry = new THREE.BoxGeometry(20, 20, 1);
         const hiddenTileMaterial = new THREE.MeshNormalMaterial({ transparent: true, opacity: 0.0 });
@@ -197,6 +203,7 @@ export default class TicTacToe {
         return hiddenTile;
     }
 
+    // Cross marker
     _crossMarker(xOffset, yOffset) {
         // Generate geometry, material, and mesh
         const crossGeometry = new THREE.BoxGeometry(12, 4, 4);
@@ -221,6 +228,7 @@ export default class TicTacToe {
         return cross;
     }
 
+    // Circle marker
     _circleMarker(xOffset, yOffset) {
         // Generate geometry, material, and mesh
         const circleGeometry = new THREE.CylinderGeometry(6, 6, 4, 100);
@@ -237,4 +245,16 @@ export default class TicTacToe {
 
         return circleMesh;
     }
+
+    // Win line
+    _strike(x, y, z) {
+        const strikeGeometry = new THREE.BoxGeometry(x, y, z);
+        const strikeMaterial = new THREE.MeshNormalMaterial();
+        const strike = new THREE.Mesh(strikeGeometry, strikeMaterial);
+        strike.scale.x = 0;
+        strike.scale.y = 0;
+        strike.scale.z = 0;
+        return strike;
+    }
+
 }
