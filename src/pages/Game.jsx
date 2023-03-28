@@ -40,6 +40,7 @@ const Game = () => {
                 const xOffset = intersects[0].object.position.x;
                 const yOffset = intersects[0].object.position.y;
                 game.addMarker(xOffset, yOffset);
+                game.checkWin();
                 const index = game.hiddenTiles.children.findIndex(
                     (c) => c.uuid === intersects[0].object.uuid
                 );
