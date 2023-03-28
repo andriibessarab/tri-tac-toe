@@ -6,10 +6,23 @@ export default class TicTacToe {
         this.board = new THREE.Group();
         this.boardLines = new THREE.Group();
         this.hiddenTiles = new THREE.Group();
+        this.crosses = new THREE.Group();
+        this.circles = new THREE.Group();
 
         // Add groups to board
+        this.board.add(this.crosses);
+        this.board.add(this.circles);
         this.board.add(this.boardLines);
         this.board.add(this.hiddenTiles);
+
+
+        // Additional data
+        this.currentMarker = "o";
+        this.boardCopy = [
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
+        ];
 
         this._createBoard();
     }
@@ -57,4 +70,86 @@ export default class TicTacToe {
         return hiddenTile;
     }
 
+    // Draw marker on board
+    addMarker(xOffset, yOffset) {
+        // Draw marker depending on whose turn it is, update boardCopy, and mark
+        if (this.currentMarker === "x") {
+            this.crosses.add(this._crossMarker(xOffset, yOffset));
+            this._updateBoardCopy(xOffset, yOffset);
+            this.currentMarker = "o";
+        } else {
+            this.circles.add(this._circleMarker(xOffset, yOffset));
+            this._updateBoardCopy(xOffset, yOffset);
+            this.currentMarker = "x";
+        }
+    }
+
+    _crossMarker(xOffset, yOffset) {
+        // Generate geometry, material, and mesh
+        const crossGeometry = new THREE.BoxGeometry(12, 4, 4);
+        const crossMaterial = new THREE.MeshNormalMaterial();
+        const leftCrossStickMesh = new THREE.Mesh(crossGeometry, crossMaterial);
+        const rightCrossStickMesh = new THREE.Mesh(crossGeometry, crossMaterial);
+        leftCrossStickMesh.rotation.z = Math.PI / 4;
+        rightCrossStickMesh.rotation.z = -Math.PI / 4;
+
+        // Combine meshes into a group
+        const cross = new THREE.Group();
+        cross.add(leftCrossStickMesh);
+        cross.add(rightCrossStickMesh);
+
+        // Give group properties
+        cross.position.x = xOffset;
+        cross.position.y = yOffset;
+        cross.scale.x = 0;
+        cross.scale.y = 0;
+        cross.scale.z = 0;
+
+        return cross;
+    }
+
+    _circleMarker(xOffset, yOffset) {
+        // Generate geometry, material, and mesh
+        const circleGeometry = new THREE.CylinderGeometry(6, 6, 4, 100);
+        const circleMaterial = new THREE.MeshNormalMaterial();
+        const circleMesh = new THREE.Mesh(circleGeometry, circleMaterial);
+
+        // Give mesh properties
+        circleMesh.position.x = xOffset;
+        circleMesh.position.y = yOffset;
+        circleMesh.rotation.x = Math.PI / 2;
+        circleMesh.scale.x = 0;
+        circleMesh.scale.y = 0;
+        circleMesh.scale.z = 0;
+
+        return circleMesh;
+    }
+
+    _updateBoardCopy(xOffset, yOffset) {
+        let i, j;
+
+        if (xOffset < 0) {
+            j = 0;
+        } else if (xOffset === 0) {
+            j = 1;
+        } else {
+            j = 2;
+        }
+
+        if (yOffset < 0) {
+            i = 2;
+        } else if (yOffset === 0) {
+            i = 1;
+        } else {
+            i = 0;
+        }
+
+        if (this.currentPlayer === "o") {
+            this.boardCopy[i][j] = "o";
+        } else {
+            this.boardCopy[i][j] = "x";
+        }
+
+        console.log(this.boardCopy);
+    }
 }

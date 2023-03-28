@@ -13,8 +13,8 @@ const Game = () => {
         scene.animate();
 
         // Initialize game
-        const ticTacToe = new TicTacToe();
-        scene.scene.add(ticTacToe.board);
+        const game = new TicTacToe();
+        scene.scene.add(game.board);
 
         // Pointers to mouse and raycaster
         const mouse = new Vector2();
@@ -30,17 +30,20 @@ const Game = () => {
 
             // Obtain list of objects raycaster intersects with
             const intersects = raycaster.intersectObjects(
-                ticTacToe.hiddenTiles.children
+                game.hiddenTiles.children
             );
 
             console.log(intersects);
 
             // If raycaster intersects with any tiles, identify it by UUID, and delete it
             if (intersects.length > 0) {
-                const index = ticTacToe.hiddenTiles.children.findIndex(
+                const xOffset = intersects[0].object.position.x;
+                const yOffset = intersects[0].object.position.y;
+                game.addMarker(xOffset, yOffset);
+                const index = game.hiddenTiles.children.findIndex(
                     (c) => c.uuid === intersects[0].object.uuid
                 );
-                ticTacToe.hiddenTiles.children.splice(index, 1);
+                game.hiddenTiles.children.splice(index, 1);
             }
         }
 
@@ -59,7 +62,9 @@ const Game = () => {
 
         // Animate board
         const animate = () => {
-            ticTacToe.boardLines.children.forEach(scaleUp);
+            game.boardLines.children.forEach(scaleUp);
+            game.crosses.children.forEach(scaleUp);
+            game.circles.children.forEach(scaleUp);
             requestAnimationFrame(animate);
         };
 
