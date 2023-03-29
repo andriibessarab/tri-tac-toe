@@ -4,7 +4,7 @@ import Game from "./pages/Game";
 const App = () => {
     return (
         <div className="App">
-            <Game />
+            <Game/>
         </div>
     );
 };

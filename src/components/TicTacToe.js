@@ -56,11 +56,13 @@ export default class TicTacToe {
                 strike = this._strike(64, 2, 4);
                 strike.position.y = this._roundYOffset(n);
                 this.winLine.add(strike);
+                return true;
             }
             if (this._checkVerticalWin(n)) {
                 strike = this._strike(2, 64, 4);
                 strike.position.x = this._roundXOffset(n);
                 this.winLine.add(strike);
+                return true;
             }
         }
 
@@ -68,13 +70,38 @@ export default class TicTacToe {
             strike = this._strike(90, 2, 4);
             strike.rotation.z = -Math.PI / 4;
             this.winLine.add(strike);
+            return true;
         }
 
         if (this._checkLeftLeaningDiagonalWin()) {
             strike = this._strike(90, 2, 4);
             strike.rotation.z = Math.PI / 4;
             this.winLine.add(strike);
+            return true;
         }
+        return false
+    }
+
+    // Restart game
+    restartGame() {
+        // Reset board copy
+        this.boardCopy = [
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
+        ];
+
+        this.currentMarker = "o";
+
+        // Remove all old elements
+        this.boardLines.children.splice(0, this.boardLines.children.length);
+        this.hiddenTiles.children.splice(0, this.hiddenTiles.children.length);
+        this.crosses.children.splice(0, this.crosses.children.length);
+        this.circles.children.splice(0, this.circles.children.length);
+        this.winLine.children.splice(0, this.winLine.children.length);
+
+        // Generate new elements
+        this._createBoard();
     }
 
     ////////////////////////////
@@ -99,6 +126,8 @@ export default class TicTacToe {
         this.hiddenTiles.add(this._hiddenTile(-24, -24)); // bottom-left tile
         this.hiddenTiles.add(this._hiddenTile(0, -24)); // bottom-mid tile
         this.hiddenTiles.add(this._hiddenTile(24, -24)); // bottom-right tile
+
+        //this._cog();
     }
 
     // Change xOffset to appropriate offset for column
@@ -158,22 +187,22 @@ export default class TicTacToe {
 
     // Check for win in horizontal line
     _checkHorizontalWin(i) {
-        return (this.boardCopy[i][0] === this.boardCopy[i][1] && this.boardCopy[i][0]=== this.boardCopy[i][2]);
+        return (this.boardCopy[i][0] === this.boardCopy[i][1] && this.boardCopy[i][0] === this.boardCopy[i][2]);
     }
 
     // Check for win in vertical line
     _checkVerticalWin(i) {
-        return (this.boardCopy[0][i] === this.boardCopy[1][i] && this.boardCopy[0][i]=== this.boardCopy[2][i]);
+        return (this.boardCopy[0][i] === this.boardCopy[1][i] && this.boardCopy[0][i] === this.boardCopy[2][i]);
     }
 
     // Check for win in right leaning diagonal line
     _checkRightLeaningDiagonalWin() {
-        return (this.boardCopy[0][0] === this.boardCopy[1][1] && this.boardCopy[0][0]=== this.boardCopy[2][2]);
+        return (this.boardCopy[0][0] === this.boardCopy[1][1] && this.boardCopy[0][0] === this.boardCopy[2][2]);
     }
 
     // Check for win in left leaning diagonal line
     _checkLeftLeaningDiagonalWin() {
-        return (this.boardCopy[0][2] === this.boardCopy[1][1] && this.boardCopy[0][2]=== this.boardCopy[2][0]);
+        return (this.boardCopy[0][2] === this.boardCopy[1][1] && this.boardCopy[0][2] === this.boardCopy[2][0]);
     }
 
     ////////////////////////////
@@ -196,7 +225,7 @@ export default class TicTacToe {
     // Hidden tiles(create hidden mesh for raycasting)
     _hiddenTile(xOffset, yOffset) {
         const hiddenTileGeometry = new THREE.BoxGeometry(20, 20, 1);
-        const hiddenTileMaterial = new THREE.MeshNormalMaterial({ transparent: true, opacity: 0.0 });
+        const hiddenTileMaterial = new THREE.MeshNormalMaterial({transparent: true, opacity: 0.0});
         const hiddenTile = new THREE.Mesh(hiddenTileGeometry, hiddenTileMaterial);
         hiddenTile.position.x = xOffset;
         hiddenTile.position.y = yOffset;
@@ -255,6 +284,34 @@ export default class TicTacToe {
         strike.scale.y = 0;
         strike.scale.z = 0;
         return strike;
+    }
+
+    // Cog icon for settings menu
+    _cog() {
+        // create cog geometry
+        const cogGeometry = new THREE.CylinderGeometry(3, 3, 2, 50);
+        const toothGeometry = new THREE.BoxGeometry(0.3, 3.3, 1);
+
+        // create cog material
+        const cogMaterial = new THREE.MeshNormalMaterial();
+
+        // create cog mesh
+        //const cogMesh = new THREE.Mesh(cogGeometry, cogMaterial);
+
+        // create cog teeth
+        const cogTeeth = new THREE.Group();
+        for (let i = 0; i < 24; i++) {
+            const toothMesh = new THREE.Mesh(toothGeometry, cogMaterial);
+            toothMesh.rotation.z = (i * Math.PI) / 12;
+            cogTeeth.add(toothMesh);
+        }
+
+        // create cog mesh group
+        const cogGroup = new THREE.Group();
+        //cogGroup.add(cogMesh);
+        cogGroup.add(cogTeeth);
+
+        this.boardLines.add(cogGroup);
     }
 
 }

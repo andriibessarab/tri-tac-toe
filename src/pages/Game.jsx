@@ -11,6 +11,10 @@ const Game = () => {
         scene.initScene();
         scene.animate();
 
+        // Variables for game
+        let gameOngoing = true;
+        let turnsGone = 0;
+
         // Initialize game
         const game = new TicTacToe();
         scene.scene.add(game.board);
@@ -21,34 +25,43 @@ const Game = () => {
 
         // Event listeners
         window.addEventListener("mousedown", (event) => {
-            // Obtain mouse's position
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            // If game is happening, look for raycaster intersections
+            // Else wait for next click to restart the game
+            if (gameOngoing) {
+                // Obtain mouse's position
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-            // Set up raycaster
-            raycaster.setFromCamera(mouse, scene.camera);
+                // Set up raycaster
+                raycaster.setFromCamera(mouse, scene.camera);
 
-            // Obtain list of objects raycaster intersects with
-            const intersects = raycaster.intersectObjects(
-                game.hiddenTiles.children
-            );
-
-            // If raycaster intersects with any tiles, identify it by UUID, and delete it
-            if (intersects.length > 0) {
-                const xOffset = intersects[0].object.position.x;
-                const yOffset = intersects[0].object.position.y;
-                game.addMarker(xOffset, yOffset);
-                game.checkWin();
-                const index = game.hiddenTiles.children.findIndex(
-                    (c) => c.uuid === intersects[0].object.uuid
+                // Obtain list of objects raycaster intersects with
+                const intersects = raycaster.intersectObjects(
+                    game.hiddenTiles.children
                 );
-                game.hiddenTiles.children.splice(index, 1);
+
+                // If raycaster intersects with any tiles, identify it by UUID, and delete it
+                if (intersects.length > 0) {
+                    const xOffset = intersects[0].object.position.x;
+                    const yOffset = intersects[0].object.position.y;
+                    game.addMarker(xOffset, yOffset);
+                    turnsGone++;
+
+                    gameOngoing = !(game.checkWin() || turnsGone === 9);
+                    const index = game.hiddenTiles.children.findIndex(
+                        (c) => c.uuid === intersects[0].object.uuid
+                    );
+                    game.hiddenTiles.children.splice(index, 1);
+                }
+            } else {
+                game.restartGame();
+                turnsGone = 0;
+                gameOngoing = true;
             }
         }, false);
 
         // Animate board & elements
         const animate = () => {
-            // Animation for scaling up an element
             const scaleUp = (obj) => {
                 if (obj.scale.x < 1) {
                     obj.scale.x += 0.04;
@@ -61,6 +74,7 @@ const Game = () => {
                 }
             };
 
+            // Animation for scaling up an element
             game.boardLines.children.forEach(scaleUp);
             game.crosses.children.forEach(scaleUp);
             game.circles.children.forEach(scaleUp);
