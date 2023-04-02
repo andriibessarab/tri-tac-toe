@@ -1,10 +1,10 @@
 import React, {useEffect} from 'react';
 import {Raycaster, Vector2} from "three";
 
-import SceneInit from "../components/SceneInit";
-import TicTacToe from "../components/TicTacToe";
+import SceneInit from "../game_scenes/SceneInit";
+import TicTacToe from "../game_scenes/TicTacToe";
 
-const Game = () => {
+const GameScreen = () => {
     useEffect(() => {
         // Initialize scene
         const scene = new SceneInit("3jsCanvas");
@@ -91,4 +91,4 @@ const Game = () => {
     );
 };
 
-export default Game;
+export default GameScreen;
