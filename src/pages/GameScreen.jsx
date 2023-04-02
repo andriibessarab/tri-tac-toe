@@ -11,10 +11,6 @@ const GameScreen = () => {
         scene.initScene();
         scene.animate();
 
-        // Variables for game
-        let gameOngoing = true;
-        let turnsGone = 0;
-
         // Initialize game
         const game = new TicTacToe();
         scene.scene.add(game.board);
@@ -22,6 +18,10 @@ const GameScreen = () => {
         // Instances of mouse and raycaster
         const mouse = new Vector2();
         const raycaster = new Raycaster();
+
+        // Variables for game
+        let gameOngoing = true;
+        let turnsGone = 0;
 
         // Event listeners
         window.addEventListener("mousedown", (event) => {
@@ -79,6 +79,7 @@ const GameScreen = () => {
             game.crosses.children.forEach(scaleUp);
             game.circles.children.forEach(scaleUp);
             game.winLine.children.forEach(scaleUp);
+            game.text.children.forEach(scaleUp);
             requestAnimationFrame(animate);
         };
         animate();

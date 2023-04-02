@@ -4,6 +4,8 @@ import createMeshCross from "./createMeshCross";
 import createMeshHiddenBoardTile from "./createMeshHiddenBoardTile";
 import createMeshWinLine from "./createMeshWinLine";
 import createMeshCog from "./createMeshCog";
+import createMeshStartButton from "./createMeshStartButton";
+import createMeshText from "./createMeshText";
 
 /**
  * Static class containing methods for construction meshes of different
@@ -24,9 +26,15 @@ class GameComponents {
     static createMeshCross = createMeshCross;
 
     ////////////////////
+    //      TEXT      //
+    ////////////////////
+    static createMeshText = createMeshText;
+
+    ////////////////////
     //      MISC      //
     ////////////////////
     static createMeshCog = createMeshCog;
+    static createMeshStartButton = createMeshStartButton;
 
 }
 

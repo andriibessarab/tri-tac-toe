@@ -11,6 +11,7 @@ class TicTacToe {
         this.crosses = new THREE.Group();
         this.circles = new THREE.Group();
         this.winLine = new THREE.Group();
+        this.text = new THREE.Group();
 
         // Add groups to board
         this.board.add(this.boardLines);
@@ -18,7 +19,7 @@ class TicTacToe {
         this.board.add(this.crosses);
         this.board.add(this.circles);
         this.board.add(this.winLine);
-
+        this.board.add(this.text);
 
         // Additional data
         this.currentMarker = "o";
@@ -28,6 +29,7 @@ class TicTacToe {
             ["7", "8", "9"],
         ];
 
+        this._initializeBoard();
         this._createBoard();
     }
 
@@ -110,7 +112,25 @@ class TicTacToe {
     //      PRIVATE MISC      //
     ////////////////////////////
 
-    // Construct board
+    /**
+     * Construct board elements that will be drawn once and not changed with replays.
+     * @private
+     */
+    _initializeBoard() {
+        // Construct the title
+        GameComponents.createMeshText(10, 2, -36, 39, true)
+            .then((textMesh) => {
+                this.text.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    /**
+     * Construct board elements that will be re-drawn after every game.
+     * @private
+     */
     _createBoard() {
         // Construct board lines
         this.boardLines.add(GameComponents.createMeshBoardLine(64, 4, 4, 0, 12)); // top line
@@ -128,6 +148,8 @@ class TicTacToe {
         this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, -24)); // bottom-left tile
         this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, -24)); // bottom-mid tile
         this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, -24)); // bottom-right tile
+
+        //this.boardLines.add(GameComponents.createMeshStartButton(20, 20));
     }
 
     // Change xOffset to appropriate offset for column
