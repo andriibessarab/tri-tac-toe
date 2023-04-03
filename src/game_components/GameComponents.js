@@ -4,7 +4,7 @@ import createMeshCross from "./createMeshCross";
 import createMeshHiddenBoardTile from "./createMeshHiddenBoardTile";
 import createMeshWinLine from "./createMeshWinLine";
 import createMeshCog from "./createMeshCog";
-import createMeshStartButton from "./createMeshStartButton";
+import createMeshButton from "./createMeshButton";
 import createMeshText from "./createMeshText";
 
 /**
@@ -34,7 +34,7 @@ class GameComponents {
     //      MISC      //
     ////////////////////
     static createMeshCog = createMeshCog;
-    static createMeshStartButton = createMeshStartButton;
+    static createMeshButton = createMeshButton;
 
 }
 

@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  *
- * Generates a mesh for hiddent tiles in Tic-Tac-Toe game.
+ * Generates a mesh for hidden tiles in Tic-Tac-Toe game.
  * Hidden tiles are invisible boxes used for raycasting.
  *
  * @param xOffset x position on the canvas

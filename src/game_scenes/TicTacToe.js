@@ -4,6 +4,9 @@ import GameComponents from "../game_components/GameComponents";
 
 class TicTacToe {
     constructor() {
+        // Change this instead of actual y offsets to keep the ratio
+        this._setYOffset = -2;
+
         // Create 3JS groups
         this.board = new THREE.Group();
         this.boardLines = new THREE.Group();
@@ -12,6 +15,7 @@ class TicTacToe {
         this.circles = new THREE.Group();
         this.winLine = new THREE.Group();
         this.text = new THREE.Group();
+        this.buttons = new THREE.Group();
 
         // Add groups to board
         this.board.add(this.boardLines);
@@ -20,6 +24,7 @@ class TicTacToe {
         this.board.add(this.circles);
         this.board.add(this.winLine);
         this.board.add(this.text);
+        this.board.add(this.buttons);
 
         // Additional data
         this.currentMarker = "o";
@@ -65,6 +70,7 @@ class TicTacToe {
             if (this._checkVerticalWin(n)) {
                 strike = GameComponents.createMeshWinLine(2, 64, 4);
                 strike.position.x = this._roundXOffset(n);
+                strike.position.y = this._setYOffset;
                 this.winLine.add(strike);
                 return true;
             }
@@ -73,6 +79,7 @@ class TicTacToe {
         if (this._checkRightLeaningDiagonalWin()) {
             strike = GameComponents.createMeshWinLine(90, 2, 4);
             strike.rotation.z = -Math.PI / 4;
+            strike.position.y = this._setYOffset;
             this.winLine.add(strike);
             return true;
         }
@@ -80,6 +87,7 @@ class TicTacToe {
         if (this._checkLeftLeaningDiagonalWin()) {
             strike = GameComponents.createMeshWinLine(90, 2, 4);
             strike.rotation.z = Math.PI / 4;
+            strike.position.y = this._setYOffset;
             this.winLine.add(strike);
             return true;
         }
@@ -118,13 +126,17 @@ class TicTacToe {
      */
     _initializeBoard() {
         // Construct the title
-        GameComponents.createMeshText(10, 2, -36, 39, true)
+        GameComponents.createMeshText("Pass & Play", 10, 2, -36, 41 + this._setYOffset, true)
             .then((textMesh) => {
                 this.text.add(textMesh);
             })
             .catch((error) => {
                 console.error(error);
             });
+
+        // this.buttons.add(GameComponents.createMeshButton("backToTitleScreenButton", 20, 6, 1, -15, -45, true));
+        // this.buttons.add(GameComponents.createMeshButton("restartGameButton", 20, 6, 1, 15, -45, true));
+
     }
 
     /**
@@ -133,23 +145,21 @@ class TicTacToe {
      */
     _createBoard() {
         // Construct board lines
-        this.boardLines.add(GameComponents.createMeshBoardLine(64, 4, 4, 0, 12)); // top line
-        this.boardLines.add(GameComponents.createMeshBoardLine(64, 4, 4, 0, -12)); // bottom line
-        this.boardLines.add(GameComponents.createMeshBoardLine(4, 64, 4, -12, 0)); // left line
-        this.boardLines.add(GameComponents.createMeshBoardLine(4, 64, 4, 12, 0)); // right line
+        this.boardLines.add(GameComponents.createMeshBoardLine(64, 4, 4, 0, 12 + this._setYOffset)); // top line
+        this.boardLines.add(GameComponents.createMeshBoardLine(64, 4, 4, 0, -12 + this._setYOffset)); // bottom line
+        this.boardLines.add(GameComponents.createMeshBoardLine(4, 64, 4, -12, 0 + this._setYOffset)); // left line
+        this.boardLines.add(GameComponents.createMeshBoardLine(4, 64, 4, 12, 0 + this._setYOffset)); // right line
 
         // Construct hidden tiles for ray-casting
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, 24)); // top-left tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, 24)); // top-mid tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, 24)); // top-right tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, 0)); // mid-left tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, 0)); // mid-mid tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, 0)); // mid-right tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, -24)); // bottom-left tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, -24)); // bottom-mid tile
-        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, -24)); // bottom-right tile
-
-        //this.boardLines.add(GameComponents.createMeshStartButton(20, 20));
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, 24 + this._setYOffset)); // top-left tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, 24 + this._setYOffset)); // top-mid tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, 24 + this._setYOffset)); // top-right tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, 0 + this._setYOffset)); // mid-left tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, 0 + this._setYOffset)); // mid-mid tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, 0 + this._setYOffset)); // mid-right tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(-24, -24 + this._setYOffset)); // bottom-left tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(0, -24 + this._setYOffset)); // bottom-mid tile
+        this.hiddenTiles.add(GameComponents.createMeshHiddenBoardTile(24, -24 + this._setYOffset)); // bottom-right tile
     }
 
     // Change xOffset to appropriate offset for column
@@ -166,11 +176,11 @@ class TicTacToe {
     // Change yOffset to appropriate offset for row
     _roundYOffset(n) {
         if (n === 0) {
-            return 24;
+            return 24 + this._setYOffset;
         } else if (n === 1) {
-            return 0;
+            return 0 + this._setYOffset;
         } else {
-            return -24;
+            return -24 + this._setYOffset;
         }
     }
 
@@ -188,9 +198,9 @@ class TicTacToe {
         }
 
         // Determine column bby offset
-        if (yOffset < 0) {
+        if (yOffset < 0 + this._setYOffset) {
             i = 2;
-        } else if (yOffset === 0) {
+        } else if (yOffset === 0 + this._setYOffset) {
             i = 1;
         } else {
             i = 0;

@@ -3,6 +3,7 @@ import {Raycaster, Vector2} from "three";
 
 import SceneInit from "../game_scenes/SceneInit";
 import TicTacToe from "../game_scenes/TicTacToe";
+import MainMenu from "../game_scenes/MainMenu";
 
 const GameScreen = () => {
     useEffect(() => {
@@ -11,53 +12,103 @@ const GameScreen = () => {
         scene.initScene();
         scene.animate();
 
+        // Initialize main menu
+        const menu = new MainMenu();
+        scene.scene.add(menu.menuElements);
+
         // Initialize game
         const game = new TicTacToe();
-        scene.scene.add(game.board);
+        // scene.scene.add(game.board);
 
         // Instances of mouse and raycaster
         const mouse = new Vector2();
         const raycaster = new Raycaster();
 
         // Variables for game
-        let gameOngoing = true;
+        let currentScreen = "titleScreen";
+        let gameOngoing = false;
         let turnsGone = 0;
 
         // Event listeners
         window.addEventListener("mousedown", (event) => {
-            // If game is happening, look for raycaster intersections
-            // Else wait for next click to restart the game
-            if (gameOngoing) {
-                // Obtain mouse's position
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            // Obtain mouse's position
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
+            if (currentScreen === "titleScreen") {
                 // Set up raycaster
                 raycaster.setFromCamera(mouse, scene.camera);
 
                 // Obtain list of objects raycaster intersects with
                 const intersects = raycaster.intersectObjects(
-                    game.hiddenTiles.children
+                    menu.menuModeButtons.children
                 );
 
-                // If raycaster intersects with any tiles, identify it by UUID, and delete it
+                // If raycaster intersects with any mode buttons, go to the corresponding screen
                 if (intersects.length > 0) {
-                    const xOffset = intersects[0].object.position.x;
-                    const yOffset = intersects[0].object.position.y;
-                    game.addMarker(xOffset, yOffset);
-                    turnsGone++;
-
-                    gameOngoing = !(game.checkWin() || turnsGone === 9);
-                    const index = game.hiddenTiles.children.findIndex(
-                        (c) => c.uuid === intersects[0].object.uuid
-                    );
-                    game.hiddenTiles.children.splice(index, 1);
-                }
-            } else {
-                game.restartGame();
-                turnsGone = 0;
-                gameOngoing = true;
+                    const clickedButtonID = menu.menuModeButtons.children.find((c) => c.uuid === intersects[0].object.uuid).userData.id;
+                    if (clickedButtonID === "passAndPlayButton") {
+                        scene.scene.children.splice(0, scene.scene.children.length);
+                        scene.scene.add(game.board);
+                        currentScreen = "passAndPlayGameScreen";
+                        gameOngoing = true;
+                        // turnsGone = 0;
+                    }}
             }
+
+            else if (currentScreen === "passAndPlayGameScreen") {
+                // If game is happening, look for raycaster intersections
+                // Else wait for next click to restart the game
+                if (gameOngoing) {
+                    // Set up raycaster
+                    raycaster.setFromCamera(mouse, scene.camera);
+
+                    // Obtain list of objects raycaster intersectsTiles with
+                    const intersectsTiles = raycaster.intersectObjects(
+                        game.hiddenTiles.children
+                    );
+
+                    //console.log(intersectsTiles);
+
+                    // If raycaster intersectsTiles with any tiles, identify it by UUID, and delete it
+                    if (intersectsTiles.length > 0) {
+                        const xOffset = intersectsTiles[0].object.position.x;
+                        const yOffset = intersectsTiles[0].object.position.y;
+                        game.addMarker(xOffset, yOffset);
+                        turnsGone++;
+
+                        gameOngoing = !(game.checkWin() || turnsGone === 9);
+                        const index = game.hiddenTiles.children.findIndex(
+                            (c) => c.uuid === intersectsTiles[0].object.uuid
+                        );
+                        game.hiddenTiles.children.splice(index, 1);
+                    }
+
+                    // // Obtain list of buttons raycaster intersects with
+                    // const intersectsButtons = raycaster.intersectObjects(
+                    //     game.buttons.children
+                    // );
+                    //
+                    // // If raycaster intersects with any button, do the corresponding action
+                    // if (intersectsButtons.length > 0) {
+                    //     const clickedButtonID = menu.menuModeButtons.children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
+                    //
+                    //     console.log(clickedButtonID)
+                    //
+                    //     if (clickedButtonID === "backToTitleScreenButton") {
+                    //     } else if (clickedButtonID === "restartGameButton") {
+                    //         game.restartGame();
+                    //         turnsGone = 0;
+                    //         gameOngoing = true;
+                    //     }
+                    // }
+                } else {
+                    game.restartGame();
+                    turnsGone = 0;
+                    gameOngoing = true;
+                }
+            }
+
         }, false);
 
         // Animate board & elements
@@ -75,11 +126,19 @@ const GameScreen = () => {
             };
 
             // Animation for scaling up an element
-            game.boardLines.children.forEach(scaleUp);
-            game.crosses.children.forEach(scaleUp);
-            game.circles.children.forEach(scaleUp);
-            game.winLine.children.forEach(scaleUp);
-            game.text.children.forEach(scaleUp);
+            if (currentScreen === "titleScreen") {
+                menu.menuText.children.forEach(scaleUp);
+                menu.menuModeButtons.children.forEach(scaleUp);
+            }
+            else if (currentScreen === "passAndPlayGameScreen") {
+                game.boardLines.children.forEach(scaleUp);
+                game.crosses.children.forEach(scaleUp);
+                game.circles.children.forEach(scaleUp);
+                game.winLine.children.forEach(scaleUp);
+                game.text.children.forEach(scaleUp);
+                game.buttons.children.forEach(scaleUp);
+            }
+
             requestAnimationFrame(animate);
         };
         animate();

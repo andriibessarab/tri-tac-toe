@@ -4,10 +4,10 @@ import * as THREE from "three";
 
 const fontLoader = new FontLoader();
 
-function createMeshText(fontSize, fontHeight, xOffset, yOffset, setScaleToZeros = false) {
+function createMeshText(text, fontSize, fontHeight, xOffset, yOffset, setScaleToZeros = false) {
     return new Promise((resolve, reject) => {
         fontLoader.load("/assets/fonts/changa_one_regular.json", (loadedFont) => {
-            const textGeometry = new TextGeometry("Tic-Tac-Toe", {
+            const textGeometry = new TextGeometry(text, {
                 font: loadedFont,
                 size: fontSize,
                 height: fontHeight,
