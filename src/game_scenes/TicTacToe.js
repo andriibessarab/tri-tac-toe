@@ -126,7 +126,7 @@ class TicTacToe {
      */
     _initializeBoard() {
         // Construct the title
-        GameComponents.createMeshText("Pass & Play", 10, 2, -36, 41 + this._setYOffset, true)
+        GameComponents.createMeshText("Pass & Play", 10, 1, 2, -36, 41 + this._setYOffset, 2, true)
             .then((textMesh) => {
                 this.text.add(textMesh);
             })
@@ -134,8 +134,24 @@ class TicTacToe {
                 console.error(error);
             });
 
-        // this.buttons.add(GameComponents.createMeshButton("backToTitleScreenButton", 20, 6, 1, -15, -45, true));
-        // this.buttons.add(GameComponents.createMeshButton("restartGameButton", 20, 6, 1, 15, -45, true));
+        GameComponents.createMeshText("Main Menu", 2.5, 2, 2, -23.75, -44 + this._setYOffset, 0, true)
+            .then((textMesh) => {
+                this.text.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        GameComponents.createMeshText("Restart", 2.5, 2, 2, 9, -44 + this._setYOffset, 0, true)
+            .then((textMesh) => {
+                this.text.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        this.buttons.add(GameComponents.createMeshButton("backToTitleScreenButton", 20, 6, 1, -15, -45, true));
+        this.buttons.add(GameComponents.createMeshButton("restartGameButton", 20, 6, 1, 15, -45, true));
 
     }
 

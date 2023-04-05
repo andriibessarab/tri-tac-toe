@@ -9,6 +9,7 @@ function createMeshButton(buttonID, width, height, depth, xOffset, yOffset, setS
 
     buttonMesh.position.x = xOffset;
     buttonMesh.position.y = yOffset;
+    buttonMesh.scale.z = 4;
 
     if (setScaleToZeros) {
         buttonMesh.scale.x = 0;

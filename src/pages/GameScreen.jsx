@@ -84,24 +84,30 @@ const GameScreen = () => {
                         game.hiddenTiles.children.splice(index, 1);
                     }
 
-                    // // Obtain list of buttons raycaster intersects with
-                    // const intersectsButtons = raycaster.intersectObjects(
-                    //     game.buttons.children
-                    // );
-                    //
-                    // // If raycaster intersects with any button, do the corresponding action
-                    // if (intersectsButtons.length > 0) {
-                    //     const clickedButtonID = menu.menuModeButtons.children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
-                    //
-                    //     console.log(clickedButtonID)
-                    //
-                    //     if (clickedButtonID === "backToTitleScreenButton") {
-                    //     } else if (clickedButtonID === "restartGameButton") {
-                    //         game.restartGame();
-                    //         turnsGone = 0;
-                    //         gameOngoing = true;
-                    //     }
-                    // }
+                    // Obtain list of buttons raycaster intersects with
+                    const intersectsButtons = raycaster.intersectObjects(
+                        game.buttons.children
+                    );
+
+                    // If raycaster intersects with any button, do the corresponding action
+                    if (intersectsButtons.length > 0) {
+                        const clickedButtonID = game.buttons.children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
+
+                        if (clickedButtonID === "backToTitleScreenButton") {
+                            scene.scene.children.splice(0, scene.scene.children.length);
+                            scene.scene.add(menu.menuElements);
+                            currentScreen = "titleScreen";
+
+                            gameOngoing = false;
+                            turnsGone = 0;
+                        }
+
+                         else if (clickedButtonID === "restartGameButton") {
+                            game.restartGame();
+                            turnsGone = 0;
+                            gameOngoing = true;
+                        }
+                    }
                 } else {
                     game.restartGame();
                     turnsGone = 0;

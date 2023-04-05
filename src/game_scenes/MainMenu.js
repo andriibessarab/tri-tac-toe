@@ -28,7 +28,39 @@ class MainMenu {
      */
     _initializeMenu() {
         // Construct the title
-        GameComponents.createMeshText("Tic-Tac-Toe", 17, 2, -62, 28, true)
+        GameComponents.createMeshText("Tic-Tac-Toe", 17, 2, 2, -62, 28, -4, true)
+            .then((textMesh) => {
+                this.menuText.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        GameComponents.createMeshText("Play Online", 11, 2.5, 2, -40, 0, 0, true)
+            .then((textMesh) => {
+                this.menuText.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        // GameComponents.createMeshText("P & P", 10, 2.5, 2, -38.5, -28, true)
+        //     .then((textMesh) => {
+        //         this.menuText.add(textMesh);
+        //     })
+        //     .catch((error) => {
+        //         console.error(error);
+        //     });
+
+        GameComponents.createMeshText(" Pass &\nPlay", 7, 4, 1.3, -39.5, -21.5, 0, true)
+            .then((textMesh) => {
+                this.menuText.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        GameComponents.createMeshText(" Versus\n Computer", 6, 4, 1.3, 2, -22, 0, true)
             .then((textMesh) => {
                 this.menuText.add(textMesh);
             })
@@ -41,8 +73,8 @@ class MainMenu {
         this.menuModeButtons.add(GameComponents.createMeshButton("passAndPlayButton", 40, 23, 1, -23.5, -24, true));
         this.menuModeButtons.add(GameComponents.createMeshButton("singlePlayerButton", 40, 23, 1, 21.5, -24, true));
 
-        // Construct the title
-            GameComponents.createMeshText("© 2023 Andrii Bessarab. All rights reserved.", 2.2, 0.2, -31.5, -48, true)
+        // Copyright Sing
+            GameComponents.createMeshText("© 2023 Andrii Bessarab. All rights reserved.", 2.2, 1, 0.2, -31.5, -48, true)
             .then((textMesh) => {
                 this.menuText.add(textMesh);
             })
