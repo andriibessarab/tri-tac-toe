@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import GameComponents from "../game_components/GameComponents";
+import GameComponents from "../components/GameComponents";
 
 class TicTacToe {
     constructor() {

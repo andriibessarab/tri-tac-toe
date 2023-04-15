@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import GameComponents from "../game_components/GameComponents";
+import GameComponents from "../components/GameComponents";
 
 /**
  * The MainMenu class represents the Three.js group with all elements for the main menu of the Tic-Tac-Toe game.
