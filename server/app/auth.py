@@ -1,3 +1,4 @@
+import functools
 import re
 
 from flask import (
@@ -143,3 +144,19 @@ def load_logged_in_user():
         g.user = get_db().execute(
             'SELECT * FROM user WHERE id = ?', (user_id,)
         ).fetchone()
+
+
+def login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return jsonify({
+                "success": False,
+                "error_code": 401,
+                "error_message": "Authentication required.",
+                "data": {},
+            }), 401
+
+        return view(**kwargs)
+
+    return wrapped_view
