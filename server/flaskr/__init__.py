@@ -1,7 +1,7 @@
 import os
 
 from flask import Flask
-
+from flask import (jsonify)
 
 def create_app(test_config=None):
     # create and configure the app
@@ -28,5 +28,22 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
+
+    @app.errorhandler(405)
+    def method_not_allowed_error(error):
+        return jsonify({
+            'success': False,
+            'error_code': 405,
+            'error_message': 'Method not allowed',
+            'data': {}
+        }), 405
+
+    # init database
+    from . import db
+    db.init_app(app)
+
+    # reg auth bp
+    from . import auth
+    app.register_blueprint(auth.auth_bp)
 
     return app
