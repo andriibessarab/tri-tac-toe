@@ -10,7 +10,7 @@ import * as THREE from "three";
  * @param yOffset y position on the canvas
  * @returns {Mesh}
  */
-function createMeshBoardLine(x, y, z, xOffset, yOffset) {
+function mesh_BoardLine(x, y, z, xOffset, yOffset) {
     const boardLineGeometry = new THREE.BoxGeometry(x, y, z);
     const boardLineMaterial = new THREE.MeshNormalMaterial();
     const boardLine = new THREE.Mesh(boardLineGeometry, boardLineMaterial);
@@ -22,4 +22,4 @@ function createMeshBoardLine(x, y, z, xOffset, yOffset) {
     return boardLine;
 }
 
-export default createMeshBoardLine;
+export default mesh_BoardLine;

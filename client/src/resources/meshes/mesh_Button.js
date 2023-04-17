@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-function createMeshButton(buttonID, width, height, depth, xOffset, yOffset, setScaleToZeros = false) {
+function mesh_Button(buttonID, width, height, depth, xOffset, yOffset, setScaleToZeros = false) {
     const buttonGeometry = new THREE.BoxGeometry(width, height, depth);
     const buttonMaterial = new THREE.MeshNormalMaterial();
     const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
@@ -19,4 +19,4 @@ function createMeshButton(buttonID, width, height, depth, xOffset, yOffset, setS
     return buttonMesh;
 }
 
-export default createMeshButton;
+export default mesh_Button;

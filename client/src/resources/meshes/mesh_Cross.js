@@ -7,7 +7,7 @@ import * as THREE from "three";
  * @param yOffset y position on the canvas
  * @returns {Group} cross mesh as Three.js group
  */
-function createMeshCross(xOffset, yOffset) {
+function mesh_Cross(xOffset, yOffset) {
     // Generate geometry, material, and mesh
     const crossGeometry = new THREE.BoxGeometry(12, 4, 4);
     const crossMaterial = new THREE.MeshNormalMaterial();
@@ -31,4 +31,4 @@ function createMeshCross(xOffset, yOffset) {
     return cross;
 }
 
-export default createMeshCross;
+export default mesh_Cross;

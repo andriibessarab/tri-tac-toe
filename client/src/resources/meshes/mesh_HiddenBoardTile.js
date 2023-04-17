@@ -9,7 +9,7 @@ import * as THREE from "three";
  * @param yOffset y position on the canvas
  * @returns {Mesh} hidden tile mesh
  */
-function createMeshHiddenBoardTile(xOffset, yOffset) {
+function mesh_HiddenBoardTile(xOffset, yOffset) {
     const hiddenTileGeometry = new THREE.BoxGeometry(20, 20, 1);
     const hiddenTileMaterial = new THREE.MeshNormalMaterial({transparent: true, opacity: 0.0});
     const hiddenTile = new THREE.Mesh(hiddenTileGeometry, hiddenTileMaterial);
@@ -18,4 +18,4 @@ function createMeshHiddenBoardTile(xOffset, yOffset) {
     return hiddenTile;
 }
 
-export default createMeshHiddenBoardTile;
+export default mesh_HiddenBoardTile;

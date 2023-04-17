@@ -1,31 +1,21 @@
 // import * as THREE from "three";
 //
-// class TicTacToe {
-//     constructor() {
-//         // Change this instead of actual y offsets to keep the ratio
-//         this._setYOffset = -2;
 //
-//         // Create 3JS groups
-//         this.board = new THREE.Group();
-//         this.boardLines = new THREE.Group();
-//         this.hiddenTiles = new THREE.Group();
-//         this.crosses = new THREE.Group();
-//         this.circles = new THREE.Group();
-//         this.winLine = new THREE.Group();
-//         this.text = new THREE.Group();
-//         this.buttons = new THREE.Group();
+// class Game {
+//     constructor(scene, startMarker) {
+//         // Check if the scene is undefined or null
+//         if (!scene) {
+//             throw new Error("Scene is undefined");
+//         }
 //
-//         // Add groups to board
-//         this.board.add(this.boardLines);
-//         this.board.add(this.hiddenTiles);
-//         this.board.add(this.crosses);
-//         this.board.add(this.circles);
-//         this.board.add(this.winLine);
-//         this.board.add(this.text);
-//         this.board.add(this.buttons);
+//         // Check if the start marker is invalid (not "x" or "o")
+//         if (startMarker !== "x" && startMarker !== "o") {
+//             throw new Error("Invalid start marker: " + startMarker);
+//         }
 //
-//         // Additional data
-//         this.currentMarker = "o";
+//         // Save the scene and marker to instance variables
+//         this.scene = scene;
+//         this.startMarker = startMarker;
 //         this.boardCopy = [
 //             ["1", "2", "3"],
 //             ["4", "5", "6"],

@@ -8,7 +8,7 @@ import * as THREE from "three";
  * @param yOffset y position on the canvas
  * @returns {Mesh} circle mesh
  */
-function createMeshCircle(xOffset, yOffset) {
+function mesh_Circle(xOffset, yOffset) {
     // Generate geometry, material, and mesh
     const circleGeometry = new THREE.CylinderGeometry(6, 6, 4, 100);
     const circleMaterial = new THREE.MeshNormalMaterial();
@@ -25,4 +25,4 @@ function createMeshCircle(xOffset, yOffset) {
     return circleMesh;
 }
 
-export default createMeshCircle;
+export default mesh_Circle;

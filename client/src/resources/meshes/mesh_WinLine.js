@@ -8,7 +8,7 @@ import * as THREE from "three";
  * @param z z-axis stretch of line
  * @returns {Mesh} win line mesh
  */
-function createMeshWinLine(x, y, z) {
+function mesh_WinLine(x, y, z) {
     const strikeGeometry = new THREE.BoxGeometry(x, y, z);
     const strikeMaterial = new THREE.MeshNormalMaterial();
     const strike = new THREE.Mesh(strikeGeometry, strikeMaterial);
@@ -18,4 +18,4 @@ function createMeshWinLine(x, y, z) {
     return strike;
 }
 
-export default createMeshWinLine;
+export default mesh_WinLine;

@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 const fontLoader = new FontLoader();
 
-function createMeshText(text, fontSize, z, fontHeight, xOffset, yOffset, zOffset = 0, setScaleToZeros = false) {
+function mesh_Text(text, fontSize, z, fontHeight, xOffset, yOffset, zOffset = 0, setScaleToZeros = false) {
     return new Promise((resolve, reject) => {
         fontLoader.load("/assets/fonts/changa_one_regular.json", (loadedFont) => {
             const textGeometry = new TextGeometry(text, {
@@ -29,4 +29,4 @@ function createMeshText(text, fontSize, z, fontHeight, xOffset, yOffset, zOffset
     });
 }
 
-export default createMeshText;
+export default mesh_Text;

@@ -7,7 +7,7 @@ import * as THREE from "three";
  * @param yOffset y position on the board
  * @returns {Mesh} cog mesh
  */
-function createMeshCog(xOffset, yOffset) {
+function mesh_Cog(xOffset, yOffset) {
     // create cog geometry
     //const cogGeometry = new THREE.CylinderGeometry(3, 3, 2, 50);
     const toothGeometry = new THREE.BoxGeometry(0.3, 3.3, 1);
@@ -37,4 +37,4 @@ function createMeshCog(xOffset, yOffset) {
     return cogGroup;
 }
 
-export default createMeshCog;
+export default mesh_Cog;
