@@ -2,3 +2,23 @@ body {
     margin: 0;
     overflow: hidden;
 }
+
+div#debug {
+    position: absolute;
+}
+
+div#debug > h2 {
+    color: white;
+}
+
+div#debug > input {
+    display: block;
+    color: white;
+    background-color: black;
+}
+
+div#debug > button {
+    display: block;
+    color: white;
+    background-color: black;
+}

@@ -55,8 +55,6 @@ const GameScreen = () => {
             default:
                 //  scene.scene.children.splice(0, scene.scene.children.length);
                 break;
-
-
         }
 
 

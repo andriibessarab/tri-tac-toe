@@ -15,39 +15,6 @@ USERNAME_PATTERN = r"^[a-zA-Z0-9_-]{3,16}$"
 EMAIL_PATTERN = r"^[\w-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$"
 PASSWORD_PATTERN = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
 
-# def login_required(f):
-#     @wraps(f)
-#     def decorated_function(*args, **kwargs):
-#         if session.get('user_id') is None:
-#             return jsonify({
-#
-#             })
-#         return f(*args, **kwargs)
-#     return decorated_function
-#
-#
-# @socketio.on("connect")
-# @login_required
-# def connected():
-#     """event listener when client connects to the server"""
-#     print(request.sid)
-#     print("client has connected")
-#     emit("connect", {"data": f"id: {request.sid} is connected"})
-#
-#     # update the status of the user in the database
-#     cursor.execute('UPDATE users SET status=? WHERE sid=?', ('connected', request.sid))
-#     conn.commit()
-#
-# @socketio.on("disconnect")
-# def disconnected():
-#     """event listener when client disconnects to the server"""
-#     print("user disconnected")
-#     emit("disconnect", f"user {request.sid} disconnected", broadcast=True)
-#
-#     # update the status of the user in the database
-#     cursor.execute('UPDATE users SET status=? WHERE sid=?', ('disconnected', request.sid))
-#     conn.commit()
-
 
 @socket.on('register')
 def register(data):
