@@ -1,13 +1,19 @@
 from flask import jsonify, request, session
 from flask_socketio import SocketIO
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.__init__ import create_app
 from app.db import get_db
+import re
 
 app = create_app()
 socket = SocketIO(app, cors_allowed_origins="*")
 
+
+# Regex patterns for username, email, and password validation
+USERNAME_PATTERN = r"^[a-zA-Z0-9_-]{3,16}$"
+EMAIL_PATTERN = r"^[\w-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$"
+PASSWORD_PATTERN = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
 
 # def login_required(f):
 #     @wraps(f)
@@ -41,6 +47,70 @@ socket = SocketIO(app, cors_allowed_origins="*")
 #     # update the status of the user in the database
 #     cursor.execute('UPDATE users SET status=? WHERE sid=?', ('disconnected', request.sid))
 #     conn.commit()
+
+
+@socket.on('register')
+def register(data):
+    # Fetch event data
+    username = data["username"]
+    email = data["email"]
+    password = data["password"]
+    db = get_db()
+
+    # Validate username
+    if not re.match(USERNAME_PATTERN, username):
+        socket.emit('register', {
+            "success": False,
+            "error_code": 422,
+            "error_message": "Username is invalid.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Validate email
+    if not re.match(EMAIL_PATTERN, email):
+        socket.emit('register', {
+            "success": False,
+            "error_code": 422,
+            "error_message": "Email is invalid.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Validate password
+    if not re.match(PASSWORD_PATTERN, password):
+        socket.emit('register', {
+            "success": False,
+            "error_code": 422,
+            "error_message": "Password must contain at least 8 characters, one uppercase letter, one lowercase "
+                             "letter, and one number. ",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    try:
+        db.execute(
+            "INSERT INTO user (username, email, password) VALUES (?, ?, ?)",
+            (username, email, generate_password_hash(password)),
+        )
+        db.commit()
+    except db.IntegrityError:
+        socket.emit('register', {
+            "success": False,
+            "error_code": 409,
+            "error_message": "Username or email is/are already in-use.",
+            "data": {},
+        }, room=request.sid)
+        return
+    else:
+        socket.emit('register', {
+            "success": True,
+            "error_code": 200,
+            "error_message": "",
+            "data": {},
+        }, room=request.sid)
+    return
+
 
 @socket.on('login')
 def login(data):
