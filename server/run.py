@@ -154,6 +154,21 @@ def login(data):
     return
 
 
+@socket.on('logout')
+def logout():
+    # Clear session
+    session.clear()
+
+    # Return 200
+    socket.emit('session', {
+        "success": True,
+        "error_code": 200,
+        "error_message": "",
+        "data": {},
+    }, room=request.sid)
+    return
+
+
 @socket.on('session')
 def session_info():
     user_id = session.get("user_id")
