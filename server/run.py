@@ -1,14 +1,15 @@
-from flask import jsonify, request, session
+import re
+from functools import wraps
+
+from flask import request, session, jsonify
 from flask_socketio import SocketIO
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.__init__ import create_app
 from app.db import get_db
-import re
 
 app = create_app()
 socket = SocketIO(app, cors_allowed_origins="*")
-
 
 # Regex patterns for username, email, and password validation
 USERNAME_PATTERN = r"^[a-zA-Z0-9_-]{3,16}$"
@@ -16,12 +17,30 @@ EMAIL_PATTERN = r"^[\w-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$"
 PASSWORD_PATTERN = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
 
 
+def login_required(method_name):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if 'user_id' not in session:
+                socket.emit(method_name, {
+                    "success": False,
+                    "error_code": 401,
+                    "error_message": "User is not authorized.",
+                    "data": {},
+                }, room=request.sid)
+                return
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 @socket.on('connect')
-def handle_connect():
+def connect():
     print('Client connected: ', request.sid)
 
+
 @socket.on('disconnect')
-def handle_disconnect():
+def disconnect():
     print('Client disconnected: ', request.sid)
 
     # # Delete the disconnected user from waiting list table
@@ -153,18 +172,9 @@ def logout():
 
 
 @socket.on('session')
+@login_required(method_name="session")
 def session_info():
     user_id = session.get("user_id")
-
-    # Check if user is not authorized
-    if user_id is None:
-        socket.emit('session', {
-            "success": False,
-            "error_code": 401,
-            "error_message": "User is not authorized.",
-            "data": {},
-        }, room=request.sid)
-        return
 
     # Return 200 & session data
     socket.emit('session', {
@@ -176,6 +186,43 @@ def session_info():
             "username": session.get("username"),
             "email": session.get("email"),
         }}, room=request.sid)
+    return
+
+
+@socket.on('join-online-game')
+@login_required(method_name="join-online-game")
+def join_online_game():
+    user_id = session.get("user_id")
+
+    # try:
+    #     db.execute(
+    #         "INSERT INTO user (username, email, password) VALUES (?, ?, ?)",
+    #         (username, email, generate_password_hash(password)),
+    #     )
+    #     db.commit()
+    # except db.IntegrityError:
+    #     socket.emit('register', {
+    #         "success": False,
+    #         "error_code": 409,
+    #         "error_message": "Username or email is/are already in-use.",
+    #         "data": {},
+    #     }, room=request.sid)
+    #     return
+    # else:
+    #     socket.emit('register', {
+    #         "success": True,
+    #         "error_code": 200,
+    #         "error_message": "",
+    #         "data": {},
+    #     }, room=request.sid)
+    # return
+
+    socket.emit('register', {
+            "success": True,
+            "error_code": 200,
+            "error_message": f"user {user_id} joined wait room",
+            "data": {},
+    }, room=request.sid)
     return
 
 

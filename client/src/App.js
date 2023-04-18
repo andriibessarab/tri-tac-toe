@@ -63,13 +63,19 @@ function App() {
             // Listen for logout response
             socket.on("logout", (data) => {
                 // parse data received from server
-                console.log("Logout", data);
+                console.log("Logout response:", data);
             });
 
             // Listen for session response
             socket.on("session", (data) => {
                 // parse data received from server
-                console.log("Session data", data);
+                console.log("Session data:", data);
+            });
+
+            // Listen for join online game
+            socket.on("join-online-game", (data) => {
+                // parse data received from server
+                console.log("Join game status:", data);
             });
         }
     }, [socket]);
@@ -232,6 +238,7 @@ function App() {
                 <h2>Other Actions</h2>
                 <button onClick={() => socket.emit("logout")}>Log Out</button>
                 <button onClick={() => socket.emit("session")}>Session Info</button>
+                <button onClick={() => socket.emit("join-online-game")}>Play Online</button>
             </div>
         </div>
     );
