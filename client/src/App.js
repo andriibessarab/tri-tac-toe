@@ -5,52 +5,77 @@ import {Raycaster, Vector2} from "three";
 import Cookies from "js-cookie";
 import screen_MainMenu from "./resources/screens/screen_MainMenu";
 import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
+import mesh_Cross from "./resources/meshes/mesh_Cross";
+import mesh_Circle from "./resources/meshes/mesh_Circle";
 
 function App() {
+    // State variables
+    const [socket, setSocket] = useState(null);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
 
-    let socket;
+    // Cookies - #TODO MOVE TO BACKEND
+    Cookies.set('currentScreen', '1');
+    Cookies.set('currentMarker', 'x');
 
-    // Web-sockets code
+    // Initialize Websocket
     useEffect(() => {
         // Create websocket/connect
-        socket = io();
+        const newSocket = io();
 
-        // listen for login response
-        socket.on("login", (data) => {
+        // Runs when connection with server established
+        newSocket.on("connect", (data) => {
             // parse data received from server
-            console.log("Login response:", data);
+            console.log("Connected to server", data);
         });
 
-        // listen for registration response
-        socket.on("register", (data) => {
+        // Runs when connection with server lost
+        newSocket.on("disconnect", (data) => {
             // parse data received from server
-            console.log("Registration response:", data);
+            console.log("Disconnected from server", data);
         });
 
-        // listen for session response
-        socket.on("session", (data) => {
-            // parse data received from server
-            console.log("Session data", data);
-        });
+        // Save socket to state
+        setSocket(newSocket);
 
-        // listen for session response
-        socket.on("logout", (data) => {
-            // parse data received from server
-            console.log("Logout", data);
-        });
-
+        // Disconnect socket when component unmounts
         return () => {
-            // disconnect socket when component unmounts
-            socket.disconnect();
+            newSocket.disconnect();
         };
-    }, [username, password, email]);
+    }, []);
 
-    // 3JS Code
+    // Update event listeners when state variables change
     useEffect(() => {
-        console.log("bnkiuyhj")
+        if (socket) {
+            // listen for registration response
+            socket.on("register", (data) => {
+                // parse data received from server
+                console.log("Registration response:", data);
+            });
+
+            // Listen for login response
+            socket.on("login", (data) => {
+                // parse data received from server
+                console.log("Login response:", data);
+            });
+
+            // Listen for logout response
+            socket.on("logout", (data) => {
+                // parse data received from server
+                console.log("Logout", data);
+            });
+
+            // Listen for session response
+            socket.on("session", (data) => {
+                // parse data received from server
+                console.log("Session data", data);
+            });
+        }
+    }, [socket]);
+
+    // Event listeners and animation for scene
+    useEffect(() => {
         // Initialize scene
         const scene = new SceneInit("3jsCanvas");
         scene.initScene();
@@ -64,8 +89,9 @@ function App() {
         //  -1 - unknown
         //   0 - title
         //   1 - in-game
-        Cookies.set('currentScreen', '1'); // #TODO -1 when done testing
 
+
+        // Switch scene contents depending on screen
         switch (parseInt(Cookies.get("currentScreen"))) {
             case 0:
                 scene.scene.children.splice(0, scene.scene.children.length);
@@ -80,6 +106,75 @@ function App() {
                 break;
         }
 
+        // Event listeners
+        window.addEventListener("mousedown", (event) => {
+            // Obtain mouse's position
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Set up raycaster
+            raycaster.setFromCamera(mouse, scene.camera);
+
+            // Obtain list of objects raycaster intersectsTiles with
+            const intersectsTiles = raycaster.intersectObjects(
+                scene.scene.getObjectByName("hiddenTilesGroup").children
+            );
+
+            // If raycaster intersectsTiles with any tiles, identify it by UUID, and delete it
+            if (intersectsTiles.length > 0) {
+                const xOffset = intersectsTiles[0].object.position.x;
+                const yOffset = intersectsTiles[0].object.position.y;
+
+                // Draw marker depending on whose turn it is, update boardCopy, and mark
+
+
+                if (Cookies.get("currentMarker") === "x") {
+                    scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+                    //this._updateBoardCopy(xOffset, yOffset);
+                    Cookies.set('currentMarker', 'o');
+                } else {
+                    scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+                    //this._updateBoardCopy(xOffset, yOffset);
+                    Cookies.set('currentMarker', 'x');
+                }
+
+
+                // game.addMarker(xOffset, yOffset);
+                // turnsGone++;
+                // gameOngoing = !(game.checkWin() || turnsGone === 9);
+                const index = scene.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
+                    (c) => c.uuid === intersectsTiles[0].object.uuid);
+                scene.scene.getObjectByName("hiddenTilesGroup").children.splice(index, 1);
+            }
+
+            // // Obtain list of buttons raycaster intersects with
+            // const intersectsButtons = raycaster.intersectObjects(
+            //     game.buttons.children
+            // );
+            //
+            // // If raycaster intersects with any button, do the corresponding action
+            // if (intersectsButtons.length > 0) {
+            //     const clickedButtonID = game.buttons.children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
+            //
+            //     if (clickedButtonID === "backToTitleScreenButton") {
+            //         scene.scene.children.splice(0, scene.scene.children.length);
+            //         scene.scene.add(menu.menuElements);
+            //         currentScreen = "titleScreen";
+            //
+            //         gameOngoing = false;
+            //         turnsGone = 0;
+            //     }
+            //
+            //      else if (clickedButtonID === "restartGameButton") {
+            //         game.restartGame();
+            //         turnsGone = 0;
+            //         gameOngoing = true;
+            //     }
+            // }
+
+        }, false);
+
+        // Animate scene elements
         const animate = () => {
             const scaleUp = (obj) => {
                 if (obj.scale.x < 1) {
@@ -97,6 +192,8 @@ function App() {
             scene.scene.getObjectByName("boardLinesGroup").children.forEach(scaleUp);
             scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(scaleUp);
             scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(scaleUp);
+            scene.scene.getObjectByName("crossMarkerGroup").children.forEach(scaleUp);
+            scene.scene.getObjectByName("circleMarkerGroup").children.forEach(scaleUp);
 
             requestAnimationFrame(animate);
         };

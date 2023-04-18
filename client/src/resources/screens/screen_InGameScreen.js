@@ -7,6 +7,14 @@ function screen_inGame(gamemode) {
     const [xOffset, yOffset] = [0, -2];
     const screenComponents = new THREE.Group();
 
+    // Empty Groups
+    const crosses = new THREE.Group();
+    const circles = new THREE.Group();
+    crosses.name = "crossMarkerGroup";
+    circles.name = "circleMarkerGroup";
+    screenComponents.add(crosses);
+    screenComponents.add(circles);
+
     screenComponents.name = "screenComponents";
 
     screenComponents.add(component_InGameTitle(xOffset, yOffset, 1,gamemode));

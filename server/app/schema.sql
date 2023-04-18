@@ -33,3 +33,9 @@ CREATE TABLE game_move
     column_index INTEGER   NOT NULL CHECK (column_index >= 0 AND column_index <= 2),
     created      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE waiting_room (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);

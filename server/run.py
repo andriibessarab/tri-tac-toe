@@ -16,6 +16,22 @@ EMAIL_PATTERN = r"^[\w-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$"
 PASSWORD_PATTERN = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
 
 
+@socket.on('connect')
+def handle_connect():
+    print('Client connected: ', request.sid)
+
+@socket.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected: ', request.sid)
+
+    # # Delete the disconnected user from waiting list table
+    # conn = sqlite3.connect('mydatabase.db')
+    # c = conn.cursor()
+    # c.execute("DELETE FROM waiting_list WHERE user_id = ?", (request.sid,))
+    # conn.commit()
+    # conn.close()
+
+
 @socket.on('register')
 def register(data):
     # Fetch event data
