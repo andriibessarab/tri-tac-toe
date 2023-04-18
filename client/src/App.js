@@ -21,6 +21,12 @@ function App() {
             console.log("Login response:", data);
         });
 
+        // listen for login response
+        socket.on("session", (data) => {
+            // parse data received from server
+            console.log("Session data", data);
+        });
+
         return () => {
             // disconnect socket when component unmounts
             socket.disconnect();
@@ -37,6 +43,7 @@ function App() {
             <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
             <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
             <button onClick={handleLogin}>Login</button>
+            <button onClick={() => socket.emit("session")}>Test</button>
         </div>
     );
 }

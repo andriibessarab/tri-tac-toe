@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask import (jsonify)
 from flask_cors import CORS
+# from flask_session import Session
 
 
 def create_app(test_config=None):
@@ -12,6 +13,7 @@ def create_app(test_config=None):
         SECRET_KEY="dev",  # TODO should be overridden with a random value when deploying
         DATABASE=os.path.join(app.instance_path, "db.sqlite"),
     )
+    # Session(app)
 
     # enable CORS for all domains on all routes
     CORS(app, resources={r"/*": {"origins": "*"}})

@@ -43,7 +43,7 @@ socket = SocketIO(app, cors_allowed_origins="*")
 #     conn.commit()
 
 @socket.on('login')
-def on_login(data):
+def login(data):
     # Fetch event data
     username = data["username"]
     password = data["password"]
@@ -64,31 +64,50 @@ def on_login(data):
         }, room=request.sid)
         return
 
+    # Clear session and add user
     session.clear()
     session["user_id"] = user["id"]
+    session["username"] = user["username"]
+    session["email"] = user["email"]
 
-    # print(data)
-    # user = User.query.filter_by(email=message['email']).first()
-    # if not user:
-    #    socket.emit('login', {'msg': "User not found"})
-    #
-    # if not user.check_password(form['password']):
-    #    socket.emit('login', {'msg': "User not found"})
-    #    return
-    # user = UserSchema().dump(user).data
-    # token = jwt.encode(
-    #         {'id': user['id'], 'user': user['name']})
-    # user['token'] = token.decode('UTF-8')
+    # Return 200 & user data
     socket.emit('login', {
         "success": True,
         "error_code": 200,
         "error_message": "",
         "data": {
             "user_id": session["user_id"],
-            "username": user["username"],
-            "email": user["email"],
+            "username": session["username"],
+            "email": session["email"],
         },
     }, room=request.sid)
+    return
+
+
+@socket.on('session')
+def session_info():
+    user_id = session.get("user_id")
+
+    # Check if user is not authorized
+    if user_id is None:
+        socket.emit('session', {
+            "success": False,
+            "error_code": 401,
+            "error_message": "User is not authorized.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Return 200 & session data
+    socket.emit('session', {
+        "success": True,
+        "error_code": 200,
+        "error_message": "",
+        "data": {
+            "user_id": session.get("user_id"),
+            "username": session.get("username"),
+            "email": session.get("email"),
+        }}, room=request.sid)
     return
 
 
