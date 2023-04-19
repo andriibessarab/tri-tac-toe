@@ -15,10 +15,12 @@ div#debug > input {
     display: block;
     color: white;
     background-color: black;
+    margin: 0.5rem 0;
 }
 
 div#debug > button {
     display: block;
     color: white;
     background-color: black;
+    margin: 0.5rem 0;
 }

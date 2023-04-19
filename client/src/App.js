@@ -14,6 +14,7 @@ function App() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
+    const [isWaitingToJoinGame, setIsWaitingToJoinGame] = useState(false);
 
     // Cookies - #TODO MOVE TO BACKEND
     Cookies.set('currentScreen', '1');
@@ -72,10 +73,13 @@ function App() {
                 console.log("Session data:", data);
             });
 
-            // Listen for join online game
-            socket.on("join-online-game", (data) => {
-                // parse data received from server
-                console.log("Join game status:", data);
+            socket.on("join-online-game", (res) => {
+                if (res["success"]) {
+                    //console.log(`Joined game ${res["data"]["game_id"]} vs ${res["data"]["opponent"]}`);
+                    console.log(res);
+                } else {
+                    console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
+                }setIsWaitingToJoinGame(false);
             });
         }
     }, [socket]);
@@ -216,6 +220,13 @@ function App() {
         socket.emit("register", {email, username, password});
     };
 
+    const handleJoinGame = () => {
+        // send registration event to server with email, username and password
+        setIsWaitingToJoinGame(true);
+        socket.emit("join-online-game")
+
+    };
+
     return (
         <div className="App">
             <canvas id="3jsCanvas"/>
@@ -238,7 +249,9 @@ function App() {
                 <h2>Other Actions</h2>
                 <button onClick={() => socket.emit("logout")}>Log Out</button>
                 <button onClick={() => socket.emit("session")}>Session Info</button>
-                <button onClick={() => socket.emit("join-online-game")}>Play Online</button>
+                <button onClick={handleJoinGame} disabled={isWaitingToJoinGame}>
+                    {isWaitingToJoinGame ? "Waiting for opponent..." : "Play Online"}
+                </button>
             </div>
         </div>
     );
