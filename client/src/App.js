@@ -252,6 +252,10 @@ function App() {
                 <button onClick={handleJoinGame} disabled={isWaitingToJoinGame}>
                     {isWaitingToJoinGame ? "Waiting for opponent..." : "Play Online"}
                 </button>
+
+                <h2>Admin Actions</h2>
+                <button onClick={() => socket.emit("clear-redis-db")}>Clear Redis DB</button>
+                <button onClick={() => socket.emit("remove-all-groups")}>Remove All Socket Groups</button>
             </div>
         </div>
     );

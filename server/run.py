@@ -5,7 +5,7 @@ from functools import wraps
 
 from flask import request, session
 from flask_redis import Redis
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.__init__ import create_app
@@ -27,6 +27,7 @@ def clear_redis():
     redis_client.flushdb()
 
 
+# Decorator requires user authentication
 def login_required(method_name):
     def decorator(func):
         @wraps(func)
@@ -46,6 +47,20 @@ def login_required(method_name):
     return decorator
 
 
+# Decorator requires admin privileges
+def admin_required(method_name):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if 'user_status' not in session or session["user_status"] != "adm":
+                return
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 @socket.on('connect')
 def connect():
     print('Client connected: ', request.sid)
@@ -55,12 +70,8 @@ def connect():
 def disconnect():
     print('Client disconnected: ', request.sid)
 
-    # # Delete the disconnected user from waiting list table
-    # conn = sqlite3.connect('mydatabase.db')
-    # c = conn.cursor()
-    # c.execute("DELETE FROM waiting_list WHERE user_id = ?", (request.sid,))
-    # conn.commit()
-    # conn.close()
+    redis_client.lrem("wait-list", 0, json.dumps({"user_id": session.get("user_id")}))
+    session.clear()
 
 
 @socket.on('register')
@@ -103,9 +114,10 @@ def register(data):
         return
 
     try:
+        # TODO user status must NOT be adm when deployed
         db.execute(
-            "INSERT INTO user (username, email, password) VALUES (?, ?, ?)",
-            (username, email, generate_password_hash(password)),
+            "INSERT INTO user (username, email, password, user_status) VALUES (?, ?, ?, ?)",
+            (username, email, generate_password_hash(password), "adm"),
         )
         db.commit()
     except db.IntegrityError:
@@ -154,6 +166,7 @@ def login(data):
     session["user_id"] = user["id"]
     session["username"] = user["username"]
     session["email"] = user["email"]
+    session["user_status"] = user["user_status"]
 
     # Return 200 & user data
     socket.emit('login', {
@@ -177,7 +190,7 @@ def logout():
     session.clear()
 
     # Return 200
-    socket.emit('session', {
+    socket.emit('logout', {
         "success": True,
         "error_code": 200,
         "error_message": "",
@@ -239,6 +252,10 @@ def join_online_game():
     game_id = cursor.lastrowid
     db.commit()
 
+    room = 'gamer' + str(game_id)
+    join_room(room, sid=player1['request_id'])
+    join_room(room, sid=player2['request_id'])
+
     # Response for player 1
     socket.emit("join-online-game", {
         "success": True,
@@ -267,6 +284,25 @@ def join_online_game():
 
     print(f"Game #{game_id} started between player #{player1['user_id']} and player #{player2['user_id']}")
     return
+
+
+####################
+# DEVELOPER EVENTS #
+####################
+@socket.on("clear-redis-db")
+@login_required(method_name="clear-radis-db")
+@admin_required(method_name="clear-radis-db")
+def clear_redis_db():
+    redis_client.flushdb()
+    print('Redis DB cleared.')
+
+
+@socket.on("remove-all-groups")
+@login_required(method_name="remove-all-groups")
+@admin_required(method_name="remove-all-groups")
+def remove_all_groups():
+    socket.server.manager.disconnect_all()
+    print('All SocketIO groups removed.')
 
 
 if __name__ == '__main__':
