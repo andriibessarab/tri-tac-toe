@@ -16,6 +16,14 @@ function App() {
     const [email, setEmail] = useState("");
     const [isWaitingToJoinGame, setIsWaitingToJoinGame] = useState(false);
 
+    // Game states
+    const [currentGameId, setCurrentGameID] = useState(null);
+    const [currentGameRoomId, setCurrentGameRoomID] = useState(null);
+    const [currentGamePlayerNumber, setCurrentGamePlayerNumber] = useState(null);
+    const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null);
+    const [currentGameOpponentId, setCurrentGameOpponentId] = useState(null);
+    const [currentGameOpponentUsername, setCurrentGameOpponentUsername] = useState(null);
+
     // Cookies - #TODO MOVE TO BACKEND
     Cookies.set('currentScreen', '1');
     Cookies.set('currentMarker', 'x');
@@ -73,13 +81,45 @@ function App() {
                 console.log("Session data:", data);
             });
 
-            socket.on("join-online-game", (res) => {
+            // Listen for join wait response
+            socket.on("join-wait", (res) => {
+                setIsWaitingToJoinGame(false);
                 if (res["success"]) {
-                    //console.log(`Joined game ${res["data"]["game_id"]} vs ${res["data"]["opponent"]}`);
-                    console.log(res);
-                } else {
+                    setCurrentGameID(res["data"]["game"]["game_id"]);
+                    setCurrentGameRoomID(res["data"]["game"]["game_room_id"]);
+
+                    // Join the game room
+                    socket.emit("join-game", {
+                        game_id: res["data"]["game"]["game_id"],
+                        room_id: currentGameRoomId,
+                    });
+                  } else {
                     console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
-                }setIsWaitingToJoinGame(false);
+                    // #TODO - Handle error
+                  }
+
+            });
+
+            // Listen for join game response
+            socket.on(`join-game`, (res) => {
+                if (!res["success"]) {
+                    console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
+                    // #TODO - Handle error
+                }
+
+                // Update necessary state variables
+                // setCurrentGameID(res["data"]["game"]["game_id"]);  // Update just in case were changed
+                // setCurrentGameRoomID(res["data"]["game"]["game_room_id"]);  // Update just in case were changed
+                setCurrentGamePlayerNumber(res["data"]["player"]["player_number"]);
+                setCurrentGamePlayerTurn(res["data"]["player"]["player_turn"]);
+                setCurrentGameOpponentId(res["data"]["opponent"]["opponent_id"]);
+                setCurrentGameOpponentUsername(res["data"]["opponent"]["opponent_username"])
+
+                // PROGRESS::::::: We receive all data now figure ouyt why state doesnt work and start working on actual game
+
+                console.log(`Started a game[#${res["data"]["game"]["game_id"]}] against ${res["data"]["opponent"]["opponent_username"]}[#${res["data"]["opponent"]["opponent_id"]}]`)
+                console.log(`Currently your turn: ${res["data"]["player"]["player_turn"]}`)
+
             });
         }
     }, [socket]);
@@ -223,7 +263,7 @@ function App() {
     const handleJoinGame = () => {
         // send registration event to server with email, username and password
         setIsWaitingToJoinGame(true);
-        socket.emit("join-online-game")
+        socket.emit("join-wait")
 
     };
 

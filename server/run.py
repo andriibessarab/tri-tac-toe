@@ -61,17 +61,43 @@ def admin_required(method_name):
     return decorator
 
 
+# Decorator requires user to be available for game
+def not_in_another_game(method_name):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # TODO - comment out for debug purposes
+            if "has_game_ongoing" in session and session.get("has_game_ongoing"):
+                # TODO is it the best idea to just send message?
+                socket.emit(method_name, {
+                    "success": False,
+                    "error_code": 400,
+                    "error_message": "You are already in a game.",
+                    "data": {},
+                }, room=request.sid)
+                return
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 @socket.on('connect')
 def connect():
-    print('Client connected: ', request.sid)
+    return
 
 
 @socket.on('disconnect')
 def disconnect():
-    print('Client disconnected: ', request.sid)
-
+    # Remove user from wait room
     redis_client.lrem("wait-list", 0, json.dumps({"user_id": session.get("user_id")}))
+
+    # Clear session
     session.clear()
+
+    # Remove user from ongoing games
+    # TODO Remove disconnected users from any ongoing games
 
 
 @socket.on('register')
@@ -217,11 +243,14 @@ def session_info():
     return
 
 
-@socket.on('join-online-game')
-@login_required(method_name="join-online-game")
-def join_online_game():
-    db = get_db()
-    cursor = db.cursor()
+@socket.on('join-wait')
+@login_required(method_name="join-wait")
+# @not_in_another_game(method_name="join-wait")
+def join_wait():
+    """
+    Pair 2 players for game and send out generic game data
+    :return: nothing
+    """
 
     # Check if the user is already in Redis
     wait_list = redis_client.lrange("wait-list", 0, -1)
@@ -229,15 +258,18 @@ def join_online_game():
         if json.loads(user)["user_id"] == session.get("user_id"):
             return
 
+    # Add user data to redis db
     redis_client.rpush("wait-list", json.dumps({
         "user_id": session.get("user_id"),
         "username": session.get("username"),
         "request_id": request.sid
     }))
 
+    # Check if wait list has less than two users
     if redis_client.llen("wait-list") < 2:
         return
 
+    # Pick two players for game
     player1 = json.loads(redis_client.lpop("wait-list"))
     player2 = json.loads(redis_client.lpop("wait-list"))
 
@@ -245,6 +277,8 @@ def join_online_game():
     first_move = random.randint(1, 2)
 
     # Create game row in database
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute(
         "INSERT INTO game (game_mode, player_1, player_2, first_turn) VALUES (?, ?, ?, ?)",
         ('online', player1["user_id"], player2["user_id"], first_move),
@@ -252,37 +286,118 @@ def join_online_game():
     game_id = cursor.lastrowid
     db.commit()
 
-    room = 'gamer' + str(game_id)
-    join_room(room, sid=player1['request_id'])
-    join_room(room, sid=player2['request_id'])
+    # Add both users to socket room
+    room_id = 'game-' + str(game_id)
+    join_room(room_id, sid=player1['request_id'])
+    join_room(room_id, sid=player2['request_id'])
 
     # Response for player 1
-    socket.emit("join-online-game", {
+    socket.emit("join-wait", {
         "success": True,
         "error_code": 200,
         "error_message": "",
         "data": {
-            "game_id": game_id,
-            "opponent": {
-                "user_id": player2["user_id"],
-                "username": player2["username"],
+            "game": {
+                "game_id": game_id,
+                "game_room_id": room_id,
+                "game_players": [player1["user_id"], player2["user_id"]],
             },
         }}, room=player1["request_id"])
 
     # Response for player 2
-    socket.emit("join-online-game", {
+    socket.emit("join-wait", {
         "success": True,
         "error_code": 200,
         "error_message": "",
         "data": {
-            "game_id": game_id,
-            "opponent": {
-                "user_id": player1["user_id"],
-                "username": player1["username"],
+            "game": {
+                "game_id": game_id,
+                "game_room_id": room_id,
+                "game_players": [player1["user_id"], player2["user_id"]],
             },
         }}, room=player2["request_id"])
 
     print(f"Game #{game_id} started between player #{player1['user_id']} and player #{player2['user_id']}")
+    return
+
+
+@socket.on('join-game')
+@login_required(method_name="join-game")
+# @not_in_another_game(method_name="join-game")
+def join_game(data):
+    """
+    Init game and send response with game, player, and opponent specific data.
+    :return: nothing
+    """
+    # Store response data
+    game_id = data["game_id"]
+
+    # Retrieve needed session data
+    user_id = session.get("user_id")
+
+    # Retrieve game data from db
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM game WHERE id = ?", (game_id,))
+    game_data = cursor.fetchone()
+
+    # Check if user is part of this game
+    if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
+        socket.emit("join-game", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "You are not part of this game.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Player & opponent data
+    room_id = 'game-' + str(game_id)
+    player_number = 1 if game_data["player_1"] == user_id else 2
+    player_turn = player_number == game_data["first_turn"]
+    opponent_player_number = 2 if player_number == 1 else 1
+    opponent_id = game_data["player_2"] if player_number == 1 else game_data["player_1"]
+
+    # Retrieve opponent data
+    cursor.execute("SELECT * FROM user WHERE id = ?", (opponent_id,))
+    opponent_data = cursor.fetchone()
+    opponent_username = opponent_data["username"]
+
+    # Update session info w/ game data
+    session["has_game_ongoing"] = True
+    session["ongoing_game_id"] = game_id
+    session["ongoing_game_room_id"] = room_id
+    session["ongoing_game_player_number"] = player_number
+    session["ongoing_game_player_turn"] = player_turn
+    session["ongoing_game_opponent_id"] = opponent_id
+    session["ongoing_game_opponent_username"] = opponent_username
+
+    # Send event with game, player, and opponent data
+    socket.emit("join-game", {
+        "success": True,
+        "error_code": 200,
+        "error_message": "",
+        "data": {
+            "game": {
+                "game_id": game_id,
+                "game_room_id": room_id,
+            },
+            "player": {
+                "player_number": player_number,
+                "player_turn": player_turn,
+            },
+            "opponent": {
+                "opponent_id": opponent_id,
+                "opponent_username": opponent_username,
+                "opponent_player_number": opponent_player_number
+            },
+        }}, room=request.sid)
+    return
+
+
+@socket.on('make-move')
+@login_required(method_name="join-game")
+def make_move(data):
     return
 
 
