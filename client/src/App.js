@@ -146,6 +146,33 @@ function App() {
 
                 console.log(`Started a game[#${game_id}] against ${opponent_username}[#${opponent_id}] ${is_player_turn ? 'with your turn first' : 'with opponent\'s turn first'}`);
             });
+
+            // Listen for join game response
+            socket.on(`make-move`, (res) => {
+            //     // Store response data (p.s. using snake case
+            //     // to not interfere with globals)
+            //     const prev_move_player_id = res["data"]["previous_move"]["player_id"]
+            //     const prev_move_player_marker = res["data"]["previous_move"]["player_marker"]
+            //     const prev_move_coord = res["data"]["previous_move"]["move_coordinate"];
+            //     const next_move_player_id = res["data"]["next_move"]["player_id"];
+
+                console.log(res);
+
+                // if (!prev_move_player_id === userId) {
+                //     // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
+                //
+                //     // Draw other player's turn
+                //     if (prev_move_player_marker === "x") {
+                //         sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+                //     } else {
+                //         sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+                //     }
+                //
+                //     // Change state variables
+                //     setCurrentGamePlayerTurn(true);
+                // }
+            });
+
         }
     }, [socket]);
 
@@ -232,9 +259,9 @@ function App() {
             if (!hasGameOngoing) {
                 return;
             }
-            if (!currentGamePlayerTurn) {
-                return;
-            }
+            // if (!currentGamePlayerTurn) {
+            //     return;
+            // }
             handlePlayerMove(event, currentGamePlayerMarker)
 
             // NEXT STEPS ::: only allow user to go 1 turn at a time, and once he does send that to server, so it will allow other player for turn
@@ -283,12 +310,12 @@ function App() {
             // Remove tile from scene
             sceneState.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
 
-            // Change state variable
-            setCurrentGamePlayerTurn(false);
+            // TODO - make sure player can only place one marker
 
-            // socket.emit("make-move", {
-            //     move_coordinate: tileCoord,
-            // });
+            // Emit socket for make move
+            socket.emit("make-move", {
+                move_coordinate: tileCoord,
+            });
         }
     };
 

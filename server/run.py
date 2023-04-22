@@ -48,7 +48,7 @@ def login_required(method_name):
 
 
 # Decorator requires admin privileges
-def admin_required(method_name):
+def admin_required():
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -245,7 +245,7 @@ def session_info():
 
 @socket.on('join-wait')
 @login_required(method_name="join-wait")
-# @not_in_another_game(method_name="join-wait")
+# TODO - @not_in_another_game(method_name="join-wait")
 def join_wait():
     """
     Pair 2 players for game and send out generic game data
@@ -274,16 +274,24 @@ def join_wait():
     player2 = json.loads(redis_client.lpop("wait-list"))
 
     # Randomly choose which player goes first
-    first_move = random.randint(1, 2)
+    first_move_player_number = random.randint(1, 2)
+    first_move_player_id = player1["user_id"] if first_move_player_number == 1 else player2["user_id"]
 
-    # Create game row in database
+    # Randomly assign marker to both players
+    player1_marker, player2_marker = random.sample(["x", "o"], k=2)
+
+    # Create game and game board
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO game (game_mode, player_1, player_2, first_turn) VALUES (?, ?, ?, ?)",
-        ('online', player1["user_id"], player2["user_id"], first_move),
+        "INSERT INTO game (game_mode, player_1, player_2, player_1_marker, player_2_marker) VALUES (?, ?, ?, ?, ?)",
+        ('online', player1["user_id"], player2["user_id"], player1_marker, player2_marker),
     )
     game_id = cursor.lastrowid
+    cursor.execute(
+        "INSERT INTO game_board (game_id, next_move_by) VALUES (?, ?)",
+        (game_id, first_move_player_id),
+    )
     db.commit()
 
     # Add both users to socket room
@@ -323,7 +331,7 @@ def join_wait():
 
 @socket.on('join-game')
 @login_required(method_name="join-game")
-# @not_in_another_game(method_name="join-game")
+# TODO - @not_in_another_game(method_name="join-wait")
 def join_game(data):
     """
     Init game and send response with game, player, and opponent specific data.
@@ -338,7 +346,8 @@ def join_game(data):
     # Retrieve game data from db
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM game WHERE id = ?", (game_id,))
+    cursor.execute("SELECT game.*, game_board.next_move_by FROM game JOIN game_board ON game.id = game_board.game_id "
+                   "WHERE game.id = ?", (game_id,))
     game_data = cursor.fetchone()
 
     # Check if user is part of this game
@@ -354,7 +363,7 @@ def join_game(data):
     # Player & opponent data
     room_id = 'game-' + str(game_id)
     player_number = 1 if game_data["player_1"] == user_id else 2
-    player_turn = player_number == game_data["first_turn"]
+    player_turn = user_id == game_data["next_move_by"]
     opponent_player_number = 2 if player_number == 1 else 1
     opponent_id = game_data["player_2"] if player_number == 1 else game_data["player_1"]
 
@@ -396,17 +405,171 @@ def join_game(data):
 
 
 @socket.on('make-move')
-@login_required(method_name="join-game")
-def make_move(data):
-    return
+@login_required(method_name="make-move")
+def make_move(response_data):
+    # Check if user has an ongoing game
+    if not session.get("has_game_ongoing"):
+        return
+
+    print("----------------has game")
+
+    # Check if response data was provided
+    if response_data is None:
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "No response data was provided.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Store response data
+    move_coordinate = response_data["move_coordinate"]
+    move_row = move_coordinate[0]
+    move_col = move_coordinate[1]
+
+    # Validate that provided data contains proper coordinate
+    if move_coordinate is None or not isinstance(move_coordinate, list) or not len(
+            move_coordinate) == 2 or not isinstance(move_coordinate[0], int) or not isinstance(move_coordinate[1], int):
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "Provided data does not contain proper coordinate",
+            "data": {},
+        }, room=request.sid)
+
+    # Retrieve session data
+    user_id = session.get("user_id")
+    game_id = session.get("ongoing_game_id")
+    room_id = session.get("ongoing_game_room_id")
+
+    # TODO - what to do if either is null?
+
+    # Retrieve game data from db
+    db = get_db()
+    cursor = db.cursor()
+    select_game_data_query = "SELECT game.*, game_board.* FROM game JOIN game_board ON game.id = game_board.game_id " \
+                             "WHERE game.id = ? "
+    cursor.execute(select_game_data_query, (game_id,))
+    game_data = cursor.fetchone()
+
+    # Check if the player is part of this game
+    if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "User is not part of this game.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Store game data
+    next_move_by = game_data["next_move_by"]
+    last_move_by = game_data["last_move_by"]
+    player_number = 1 if game_data["player_1"] == user_id else 2
+    player_marker = game_data[f"player_{player_number}_marker"]
+    opponent_number = 2 if player_number == 1 else 1
+    opponent_id = game_data[f"player_{opponent_number}"]
+
+    print(f"""
+        user id: {user_id},
+        player number: {player_number},
+        player marker: {player_marker},
+        opponent number: {opponent_number},
+        opponent id : {opponent_id},
+    
+    """)
+
+    # Check if it's the player's turn to make a move
+    if next_move_by != user_id:
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "Not user's turn to make a move.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Check if the player has already made a move
+    if last_move_by == user_id:
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "You already made a move.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Check if the game is still ongoing
+    if game_data["winner"] is not None:
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "The game has ended.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Check if the move coordinate is within the game board limits
+    if not (0 <= move_row <= 2 and 0 <= move_col <= 2):
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "Invalid move.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    # Compose cell name
+    cell_name = f"cell_{move_row}_{move_col}"
+
+    # TODO - handle if cell is not in game data
+    # if cell_name not in game_data:
+    #     return
+
+    # Check if the cell is already taken by another player
+    if game_data[cell_name] != "":
+        socket.emit("make-move", {
+            "success": False,
+            "error_code": 400,
+            "error_message": "Cell is already taken.",
+            "data": {},
+        }, room=request.sid)
+        return
+
+    update_player_move_query = f"UPDATE game_board SET {cell_name} = ?, next_move_by = ?, last_move_by = ? WHERE game_id = ?"
+    cursor.execute(update_player_move_query, (player_marker, opponent_id, user_id, game_id,))
+    db.commit()
+
+    socket.emit("move-made-successfully", {
+        "success": True,
+        "error_code": 200,
+        "message": "Your move was made successfully.",
+        "data": {}
+    }, room=request.sid)
+
+    # Emit event to the room with the move data
+    socket.emit("make-move", {
+        "success": True,
+        "error_code": 200,
+        "error_message": "",
+        "data": {
+            "previous_move": {
+                "player_id": user_id,
+                "player_marker": player_marker,
+                "move_coordinate": move_coordinate,
+            },
+            "next_move": {
+                "player_id": opponent_id,
+            },
+
+        },
+    }, room=room_id)
 
 
-####################
-# DEVELOPER EVENTS #
-####################
 @socket.on("clear-redis-db")
 @login_required(method_name="clear-radis-db")
-@admin_required(method_name="clear-radis-db")
+@admin_required()
 def clear_redis_db():
     redis_client.flushdb()
     print('Redis DB cleared.')
@@ -414,7 +577,7 @@ def clear_redis_db():
 
 @socket.on("remove-all-groups")
 @login_required(method_name="remove-all-groups")
-@admin_required(method_name="remove-all-groups")
+@admin_required()
 def remove_all_groups():
     socket.server.manager.disconnect_all()
     print('All SocketIO groups removed.')
