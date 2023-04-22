@@ -21,15 +21,15 @@ function component_Board(gamemode, xOffset, yOffset) {
     boardLines.add(mesh_BoardLine(4, 64, 4, 12 + xOffset, 0 + yOffset)); // right line
 
     // Construct hidden tiles for ray-casting
-    hiddenTiles.add(mesh_HiddenBoardTile(-24 + xOffset, 24 + yOffset)); // top-left tile
-    hiddenTiles.add(mesh_HiddenBoardTile(0 + xOffset, 24 + yOffset)); // top-mid tile
-    hiddenTiles.add(mesh_HiddenBoardTile(24 + xOffset, 24 + yOffset)); // top-right tile
-    hiddenTiles.add(mesh_HiddenBoardTile(-24 + xOffset, 0 + yOffset)); // mid-left tile
-    hiddenTiles.add(mesh_HiddenBoardTile(0 + xOffset, 0 + yOffset)); // mid-mid tile
-    hiddenTiles.add(mesh_HiddenBoardTile(24 + xOffset, 0 + yOffset)); // mid-right tile
-    hiddenTiles.add(mesh_HiddenBoardTile(-24 + xOffset, -24 + yOffset)); // bottom-left tile
-    hiddenTiles.add(mesh_HiddenBoardTile(0 + xOffset, -24 + yOffset)); // bottom-mid tile
-    hiddenTiles.add(mesh_HiddenBoardTile(24 + xOffset, -24 + yOffset)); // bottom-right tile
+    hiddenTiles.add(mesh_HiddenBoardTile(-24 + xOffset, 24 + yOffset, 0, 0)); // top-left tile
+    hiddenTiles.add(mesh_HiddenBoardTile(0 + xOffset, 24 + yOffset, 0, 1)); // top-mid tile
+    hiddenTiles.add(mesh_HiddenBoardTile(24 + xOffset, 24 + yOffset, 0, 2)); // top-right tile
+    hiddenTiles.add(mesh_HiddenBoardTile(-24 + xOffset, 0 + yOffset, 1, 0)); // mid-left tile
+    hiddenTiles.add(mesh_HiddenBoardTile(0 + xOffset, 0 + yOffset, 1, 1)); // mid-mid tile
+    hiddenTiles.add(mesh_HiddenBoardTile(24 + xOffset, 0 + yOffset, 1, 2)); // mid-right tile
+    hiddenTiles.add(mesh_HiddenBoardTile(-24 + xOffset, -24 + yOffset, 2, 0)); // bottom-left tile
+    hiddenTiles.add(mesh_HiddenBoardTile(0 + xOffset, -24 + yOffset, 2, 1)); // bottom-mid tile
+    hiddenTiles.add(mesh_HiddenBoardTile(24 + xOffset, -24 + yOffset, 2, 2)); // bottom-right tile
 
     return board;
 }

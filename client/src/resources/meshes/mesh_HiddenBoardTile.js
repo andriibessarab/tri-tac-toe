@@ -7,15 +7,23 @@ import * as THREE from "three";
  *
  * @param xOffset x position on the canvas
  * @param yOffset y position on the canvas
- * @returns {Mesh} hidden tile mesh
+ * @param row the row of the tile
+ * @param column the column of the tile
+ * @returns {Mesh} the hidden board tile mesh
  */
-function mesh_HiddenBoardTile(xOffset, yOffset) {
+function mesh_HiddenBoardTile(xOffset, yOffset, row, column) {
     const hiddenTileGeometry = new THREE.BoxGeometry(20, 20, 1);
-    const hiddenTileMaterial = new THREE.MeshNormalMaterial({transparent: true, opacity: 0.0});
+    const hiddenTileMaterial = new THREE.MeshNormalMaterial({
+        transparent: true,
+        opacity: 0.0
+    });
     const hiddenTile = new THREE.Mesh(hiddenTileGeometry, hiddenTileMaterial);
     hiddenTile.position.x = xOffset;
     hiddenTile.position.y = yOffset;
+    hiddenTile.row = row;
+    hiddenTile.column = column;
     return hiddenTile;
 }
+
 
 export default mesh_HiddenBoardTile;

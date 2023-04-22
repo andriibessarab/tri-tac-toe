@@ -7,6 +7,7 @@ import screen_MainMenu from "./resources/screens/screen_MainMenu";
 import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
+import {densityFog} from "three/nodes";
 
 function App() {
     // Scene variables
@@ -31,17 +32,14 @@ function App() {
     const [currentGameId, setCurrentGameID] = useState(null); // String to hold the current game's ID
     const [currentGameRoomId, setCurrentGameRoomID] = useState(null); // String to hold the current game's room ID
     const [currentGamePlayerNumber, setCurrentGamePlayerNumber] = useState(null); // Number to indicate the current player number (1 or 2)
-    const [currentGamePlayerMarker, setCurrentGamePlayerMarker] = useState(null); // String to hold the current player's marker (X or O)
-    const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null); // Number to indicate the current player's turn (1 or 2)
+    const [currentGamePlayerMarker, setCurrentGamePlayerMarker] = useState(null); // String to hold the current player's marker (x or o)
+    const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null); // Number to indicate whether the current player's turn (true or false)
     const [currentGameOpponentId, setCurrentGameOpponentId] = useState(null); // String to hold the current game's opponent ID
     const [currentGameOpponentUsername, setCurrentGameOpponentUsername] = useState(null); // String to hold the current game's opponent username
+    const [currentGameBoardCopy, setCurrentGameBoardCopy] = useState([["", "", ""], ["", "", ""], ["", "", ""],]);
 
     // Other state variables
     const [isSceneDefined, setIsSceneDefined] = useState(false); // Boolean to indicate whether the scene is defined or not
-
-    // Cookies - #TODO MOVE TO BACKEND
-    Cookies.set('currentScreen', '1');
-    Cookies.set('currentMarker', 'x');
 
     // Initialize Websocket
     useEffect(() => {
@@ -147,8 +145,6 @@ function App() {
                 setHasGameOngoing(true);
 
                 console.log(`Started a game[#${game_id}] against ${opponent_username}[#${opponent_id}] ${is_player_turn ? 'with your turn first' : 'with opponent\'s turn first'}`);
-
-
             });
         }
     }, [socket]);
@@ -188,7 +184,7 @@ function App() {
                 console.log("added elements");
                 break;
             default:
-                // scene.scene.children.splice(0, scene.scene.children.length);
+                sceneState.scene.children.splice(0, sceneState.scene.children.length);
                 break;
         }
     }, [sceneScreenState, sceneState]);
@@ -222,43 +218,10 @@ function App() {
         };
 
         animate();
-    }, [sceneState]);
+    }, [sceneScreenState, sceneState]);
 
     // Event listeners for scene
     useEffect(() => {
-        // Define function to handle player move
-        const handlePlayerMove = (event, marker) => {
-            // Obtain mouse's position
-            mouseState.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouseState.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            // Set up raycaster
-            raycasterState.setFromCamera(mouseState, sceneState.camera);
-
-            // Obtain list of objects raycaster intersects with
-            const intersectsTiles = raycasterState.intersectObjects(
-                sceneState.scene.getObjectByName("hiddenTilesGroup").children
-            );
-
-            // If raycaster intersects with any tile, identify it by UUID, and delete it
-            if (intersectsTiles.length > 0) {
-                const xOffset = intersectsTiles[0].object.position.x;
-                const yOffset = intersectsTiles[0].object.position.y;
-
-                // Draw marker depending on whose turn it is, update boardCopy, and mark
-                if (marker === "x") {
-                    sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
-                } else {
-                    sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
-                }
-
-                const index = sceneState.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
-                    (c) => c.uuid === intersectsTiles[0].object.uuid
-                );
-                sceneState.scene.getObjectByName("hiddenTilesGroup").children.splice(index, 1);
-            }
-        };
-
         // Check if the scene has been defined before adding event listeners
         if (!isSceneDefined) {
             return;
@@ -278,6 +241,56 @@ function App() {
         }, false);
     }, [sceneState, currentGamePlayerMarker, currentGamePlayerTurn]);
 
+    // Handle player move
+    const handlePlayerMove = (event, marker) => {
+        // Obtain mouse's position
+        mouseState.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseState.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Set up raycaster
+        raycasterState.setFromCamera(mouseState, sceneState.camera);
+
+        // Obtain list of objects raycaster intersects with
+        const intersectsTiles = raycasterState.intersectObjects(
+            sceneState.scene.getObjectByName("hiddenTilesGroup").children
+        );
+
+        // Check if raycaster intersects with any tile
+        if (intersectsTiles.length > 0) {
+            const xOffset = intersectsTiles[0].object.position.x;
+            const yOffset = intersectsTiles[0].object.position.y;
+
+            // Draw marker
+            if (marker === "x") {
+                sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+            } else {
+                sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+            }
+
+            let row, col;
+
+            // Find tile index
+            const tileIndex = sceneState.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
+                (c) => c.uuid === intersectsTiles[0].object.uuid
+            );
+
+            // Store tile coordinate
+            const tile = sceneState.scene.getObjectByName("hiddenTilesGroup").children[tileIndex];
+            const tileRow = tile.row;
+            const tileCol = tile.column;
+            const tileCoord = [tileRow, tileCol];
+
+            // Remove tile from scene
+            sceneState.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
+
+            // Change state variable
+            setCurrentGamePlayerTurn(false);
+
+            // socket.emit("make-move", {
+            //     move_coordinate: tileCoord,
+            // });
+        }
+    };
 
     const handleLogin = () => {
         // send login event to server with username and password
