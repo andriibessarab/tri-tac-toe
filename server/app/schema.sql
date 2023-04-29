@@ -42,18 +42,18 @@ CREATE TABLE game_board
 (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id      INTEGER UNIQUE NOT NULL REFERENCES game (id),
-    cell_0_0     TEXT      NOT NULL DEFAULT '' CHECK (cell_0_0 IN ('', 'x', 'o')),
-    cell_0_1     TEXT      NOT NULL DEFAULT '' CHECK (cell_0_1 IN ('', 'x', 'o')),
-    cell_0_2     TEXT      NOT NULL DEFAULT '' CHECK (cell_0_2 IN ('', 'x', 'o')),
-    cell_1_0     TEXT      NOT NULL DEFAULT '' CHECK (cell_1_0 IN ('', 'x', 'o')),
-    cell_1_1     TEXT      NOT NULL DEFAULT '' CHECK (cell_1_1 IN ('', 'x', 'o')),
-    cell_1_2     TEXT      NOT NULL DEFAULT '' CHECK (cell_1_2 IN ('', 'x', 'o')),
-    cell_2_0     TEXT      NOT NULL DEFAULT '' CHECK (cell_2_0 IN ('', 'x', 'o')),
-    cell_2_1     TEXT      NOT NULL DEFAULT '' CHECK (cell_2_1 IN ('', 'x', 'o')),
-    cell_2_2     TEXT      NOT NULL DEFAULT '' CHECK (cell_2_2 IN ('', 'x', 'o')),
-    next_move_by INTEGER   NOT NULL REFERENCES user (id),
-    last_move_by INTEGER            DEFAULT NULL REFERENCES user (id),
-    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    cell_0_0     TEXT           NOT NULL DEFAULT '' CHECK (cell_0_0 IN ('', 'x', 'o')),
+    cell_0_1     TEXT           NOT NULL DEFAULT '' CHECK (cell_0_1 IN ('', 'x', 'o')),
+    cell_0_2     TEXT           NOT NULL DEFAULT '' CHECK (cell_0_2 IN ('', 'x', 'o')),
+    cell_1_0     TEXT           NOT NULL DEFAULT '' CHECK (cell_1_0 IN ('', 'x', 'o')),
+    cell_1_1     TEXT           NOT NULL DEFAULT '' CHECK (cell_1_1 IN ('', 'x', 'o')),
+    cell_1_2     TEXT           NOT NULL DEFAULT '' CHECK (cell_1_2 IN ('', 'x', 'o')),
+    cell_2_0     TEXT           NOT NULL DEFAULT '' CHECK (cell_2_0 IN ('', 'x', 'o')),
+    cell_2_1     TEXT           NOT NULL DEFAULT '' CHECK (cell_2_1 IN ('', 'x', 'o')),
+    cell_2_2     TEXT           NOT NULL DEFAULT '' CHECK (cell_2_2 IN ('', 'x', 'o')),
+    next_move_by INTEGER        NOT NULL REFERENCES user (id),
+    last_move_by INTEGER                 DEFAULT NULL REFERENCES user (id),
+    created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 

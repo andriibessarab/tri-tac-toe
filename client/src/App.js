@@ -2,12 +2,10 @@ import {io} from "socket.io-client";
 import React, {useEffect, useState} from "react";
 import SceneInit from "./game_scenes/SceneInit";
 import {Raycaster, Vector2} from "three";
-import Cookies from "js-cookie";
 import screen_MainMenu from "./resources/screens/screen_MainMenu";
 import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
-import {densityFog} from "three/nodes";
 
 function App() {
     // Scene variables
@@ -22,9 +20,14 @@ function App() {
 
     // User authentication variables
     const [socket, setSocket] = useState(null); // Object to hold the socket connection instance
+    const [userId, setUserId] = useState(null); // String to hold the current user's id
+
+    // User authentication form
     const [username, setUsername] = useState(""); // String to hold the current user's username
     const [password, setPassword] = useState(""); // String to hold the current user's password
     const [email, setEmail] = useState(""); // String to hold the current user's email address
+
+    // ...
     const [isWaitingToJoinGame, setIsWaitingToJoinGame] = useState(false); // Boolean to indicate whether the user is waiting to join a game or not
 
     // Game state variables
@@ -77,9 +80,19 @@ function App() {
             });
 
             // Listen for login response
-            socket.on("login", (data) => {
-                // parse data received from server
-                console.log("Login response:", data);
+            socket.on("login", (res) => {
+                // Check if any error occurred
+                if (!res["success"]) {
+                    console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
+                    // #TODO - Handle error
+                    return;
+                }
+
+                const _userId = res["data"]["user_id"];
+                const _username = res["data"]["username"];
+                const _email = res["data"]["email"];
+
+                setUserId(_userId);
             });
 
             // Listen for logout response
@@ -110,9 +123,9 @@ function App() {
                 const game_id = res["data"]["game"]["game_id"]
 
                 // Join the game room
-                   socket.emit("join-game", {
-                        game_id: res["data"]["game"]["game_id"],
-                    });
+                socket.emit("join-game", {
+                    game_id: res["data"]["game"]["game_id"],
+                });
             });
 
             // Listen for join game response
@@ -129,7 +142,7 @@ function App() {
                 const game_id = res["data"]["game"]["game_id"]
                 const game_room_id = res["data"]["game"]["game_room_id"];
                 const player_number = res["data"]["player"]["player_number"];
-                const player_marker = player_number === 1 ? "x" : "o"
+                const player_marker =  res["data"]["player"]["player_marker"];
                 const is_player_turn = res["data"]["player"]["player_turn"]
                 const opponent_id = res["data"]["opponent"]["opponent_id"];
                 const opponent_username = res["data"]["opponent"]["opponent_username"];
@@ -144,33 +157,61 @@ function App() {
                 setCurrentGameOpponentUsername(opponent_username);
                 setHasGameOngoing(true);
 
-                console.log(`Started a game[#${game_id}] against ${opponent_username}[#${opponent_id}] ${is_player_turn ? 'with your turn first' : 'with opponent\'s turn first'}`);
+                console.log(`Started a game[#${game_id}] against ${opponent_username}[#${opponent_id}] ${is_player_turn ? 'with your turn first' : 'with opponent\'s turn first'} with this player's marker being: ${player_marker}`);
             });
 
             // Listen for join game response
             socket.on(`make-move`, (res) => {
-            //     // Store response data (p.s. using snake case
-            //     // to not interfere with globals)
-            //     const prev_move_player_id = res["data"]["previous_move"]["player_id"]
-            //     const prev_move_player_marker = res["data"]["previous_move"]["player_marker"]
-            //     const prev_move_coord = res["data"]["previous_move"]["move_coordinate"];
-            //     const next_move_player_id = res["data"]["next_move"]["player_id"];
+                //     // Store response data (p.s. using snake case
+                //     // to not interfere with globals)
+                const prev_move_player_id = res["data"]["previous_move"]["player_id"]
+                const prev_move_player_marker = res["data"]["previous_move"]["player_marker"]
+                const prev_move_coord = res["data"]["previous_move"]["move_coordinate"];
+                const prev_move_row = prev_move_coord[0];
+                const prev_move_col = prev_move_coord[1];
+                const next_move_player_id = res["data"]["next_move"]["player_id"];
 
                 console.log(res);
 
-                // if (!prev_move_player_id === userId) {
-                //     // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
-                //
-                //     // Draw other player's turn
-                //     if (prev_move_player_marker === "x") {
-                //         sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
-                //     } else {
-                //         sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
-                //     }
-                //
-                //     // Change state variables
-                //     setCurrentGamePlayerTurn(true);
-                // }
+                const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
+
+                if (notThisPlayerPrevMove) {
+                    console.log("were inlining")
+                    // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
+
+                    const hiddenTilesGroup = sceneState.scene.getObjectByName("hiddenTilesGroup");
+
+                    let targetTile;
+
+                    hiddenTilesGroup.children.forEach(tile => {
+                      if (tile.row === prev_move_row && tile.column === prev_move_col) {
+                        targetTile = tile;
+                      }
+                    });
+
+                    if (!targetTile) {
+                      // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
+                        return
+                    }
+
+                    const tile_x = targetTile.position.x;
+                    const tile_y = targetTile.position.y;
+
+                    console.log(prev_move_player_marker);
+
+                    // Draw other player's turn
+                    if (prev_move_player_marker === "x") {
+                        sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
+                    } else if(prev_move_player_marker === "o") {
+                        sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
+                    } else {
+                        // TODO - handle if invalid mve(in case something wrong was returned from db)
+                        return
+                    }
+
+                    // Change state variables
+                    setCurrentGamePlayerTurn(true);
+                }
             });
 
         }
@@ -263,8 +304,6 @@ function App() {
             //     return;
             // }
             handlePlayerMove(event, currentGamePlayerMarker)
-
-            // NEXT STEPS ::: only allow user to go 1 turn at a time, and once he does send that to server, so it will allow other player for turn
         }, false);
     }, [sceneState, currentGamePlayerMarker, currentGamePlayerTurn]);
 
