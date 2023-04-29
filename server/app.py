@@ -5,10 +5,10 @@ from flask_cors import CORS
 from flask_redis import Redis
 from flask_socketio import SocketIO
 
-from server.app import db
-from server.app.namespaces.auth_namespace import AuthNamespace
-from server.app.namespaces.game_namespace import GameNamespace
-from server.app.namespaces.root_namespace import RootNamespace
+from server import db
+from server.namespaces.auth_namespace import AuthNamespace
+from server.namespaces.game_namespace import GameNamespace
+from server.namespaces.root_namespace import RootNamespace
 
 # from server.app.app_utils.Session import Session
 # from server.app.app_utils.SessionKeys import SessionKeys

@@ -4,7 +4,7 @@ from flask import request
 from flask_socketio import Namespace, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from server.app.db import get_db
+from server.db import get_db
 from ..app_utils.Session import Session
 from ..app_utils.SessionKeys import SessionKeys
 
