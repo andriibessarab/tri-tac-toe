@@ -57,6 +57,15 @@ CREATE TABLE game_board
 );
 
 
+-- Create wait_room table that stores users that joined wait room
+CREATE TABLE waiting_room
+(
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id   TEXT      NOT NULL UNIQUE REFERENCES user (id),
+    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- Creat check_next_move_by trigger to ensures that the next_move_by field in the game_board table
 -- is either player_1 or player_2 in the corresponding game table, preventing any other user from making a move.
 CREATE TRIGGER check_next_move_by
@@ -73,7 +82,7 @@ BEGIN
 END;
 
 
--- Create check_last_move_by trigger to ensurethat the last_move_by field in the game_board table is either
+-- Create check_last_move_by trigger to ensure that the last_move_by field in the game_board table is either
 -- player_1 or player_2 in the corresponding game table, or NULL (indicating that no moves have been made yet).
 -- This prevents any other user from being recorded as having made a move.
 CREATE TRIGGER check_last_move_by
@@ -89,27 +98,3 @@ CREATE TRIGGER check_last_move_by
 BEGIN
     SELECT RAISE(FAIL, 'last_move_by must be either player_1 or player_2');
 END;
-
-
--- Currently not used
-CREATE TABLE game_move
-(
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    game_id      INTEGER   NOT NULL REFERENCES game (id),
-    user_id      INTEGER   NOT NULL REFERENCES user (id),
-    marker       TEXT      NOT NULL CHECK (marker IN ('x', 'o')),
-    row_index    INTEGER   NOT NULL CHECK (row_index >= 0 AND row_index <= 2),
-    column_index INTEGER   NOT NULL CHECK (column_index >= 0 AND column_index <= 2),
-    board_state  TEXT      NOT NULL, -- store the current state of the game board as a string
-    is_finished  INTEGER   NOT NULL DEFAULT 0 CHECK (is_finished = 0 OR is_finished = 1),
-    created      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-
--- Currently not used
-CREATE TABLE waiting_room
-(
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id   TEXT      NOT NULL UNIQUE REFERENCES user (id),
-    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);

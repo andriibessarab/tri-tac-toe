@@ -1,6 +1,3 @@
-from flask import session
-
-
 class SessionKeys:
     # Authenticated user
     USER_ID = "user-id"
@@ -12,5 +9,3 @@ class SessionKeys:
     HAS_ONGOING_GAME = "has-ongoing-game"
     ONGOING_GAME_ID = "ongoing-game-id"
     ONGOING_GAME_ROOM_ID = "ongoing-game-id"
-
-

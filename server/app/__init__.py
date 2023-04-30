@@ -3,19 +3,19 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_redis import Redis
-from flask_socketio import SocketIO
 
 from . import db
-from .namespaces.auth_namespace import AuthNamespace
-from .namespaces.game_namespace import GameNamespace
-from .namespaces.root_namespace import RootNamespace
+from flask_socketio import SocketIO
+
+from .events import SockerEvents
+
 
 def create_app():
     """
     Create and configure the Flask application instance.
 
     Returns:
-        Flask: The SocketIO instance.
+        Flask: Flask instance and SocketIO instance.
     """
 
     # Create a Flask-SocketIO server
@@ -44,8 +44,13 @@ def create_app():
         db.init_db()
 
         # Initialize Redis extension for Flask application.
-        redis = Redis()
-        redis.init_app(app)
+        redis = Redis(app)
         redis.flushdb()
 
-    return app, redis
+        # Create a Flask-SocketIO server
+        socket = SocketIO(app, cors_allowed_origins="*")
+
+        # Register the namespaces with the socketio object
+        socket.on_namespace(SockerEvents("/"))
+
+        return app, socket

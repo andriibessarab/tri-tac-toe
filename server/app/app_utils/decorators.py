@@ -4,6 +4,7 @@ from functools import wraps
 from flask import request, session
 
 
+
 # Require user to be authenticated
 def login_required(socket, event_name):
     def decorator(func):
