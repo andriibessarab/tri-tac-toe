@@ -2,8 +2,6 @@ import React, {useEffect, useState} from "react";
 import socket from "./socket";
 import Scene from "./game_scenes/Scene";
 import {Raycaster, Vector2} from "three";
-import screen_LogIn from "./resources/screens/screen_LogIn";
-import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
 import screen_Menu from "./resources/screens/screen_Menu";
 
 export default function App() {
@@ -59,6 +57,7 @@ export default function App() {
         };
     }, []);
 
+
     // Update scene screen based on state change
     useEffect(() => {
         if (!isSceneDefined) {
@@ -97,6 +96,47 @@ export default function App() {
         }
         animate();
     }, [scene]);
+
+
+    useEffect(() => {
+        // Check if the scene has been defined before adding event listeners
+        if (!isSceneDefined) {
+            return;
+        }
+
+        window.addEventListener("mousedown", (event) => {
+            // Obtain mouse's position
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Set up raycaster
+            raycaster.setFromCamera(mouse, scene.camera);
+
+            const intersects = raycaster.intersectObjects(
+                scene.scene.getObjectByName("buttonTiles").children
+            );
+
+            if (intersects.length > 0) {
+                const xOffset = intersects[0].object.position.x;
+                const yOffset = intersects[0].object.position.y;
+                console.log(scene.scene.getObjectByName("buttonTiles").children)
+
+                let row, col;
+
+                // Find tile index
+                const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
+                    (c) => c.uuid === intersects[0].object.uuid
+                );
+
+                // Store tile coordinate
+                const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
+                const buttonName = tile.buttonName;
+
+                console.log(buttonName);
+            }
+        }, false);
+    }, [isSceneDefined, mouse, raycaster, scene, screen]);
+
 
     return (
         <div className="App">

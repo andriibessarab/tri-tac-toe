@@ -9,7 +9,12 @@ import mesh_hiddenButtonTile from "../meshes/mesh_hiddenButtonTile";
 function screen_Menu() {
     const screenComponents = new THREE.Group();
 
+    const buttonTiles = new THREE.Group();
+
+    screenComponents.add(buttonTiles);
+
     screenComponents.name = "screenComponents";
+    buttonTiles.name = "buttonTiles";
 
     mesh_Text("Tic-Tac-Toe", 10, 2, 2, -35.8, 39, -2, false)
         .then((textMesh) => {
@@ -19,7 +24,7 @@ function screen_Menu() {
             console.error(error);
         });
 
-    screenComponents.add(mesh_hiddenButtonTile(33, 10, 1, 0, 11.5, "online-game"));
+    buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, 11.5, "online-game"));
 
     mesh_Text("Online Game", 4, 1, 2, -16, 10, -1, false)
         .then((textMesh) => {
@@ -29,7 +34,7 @@ function screen_Menu() {
             console.error(error);
         });
 
-    screenComponents.add(mesh_hiddenButtonTile(33, 10, 1, 0, -1.5 , "local-game"));
+    buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, -1.5 , "local-game"));
 
     mesh_Text("Local Game", 4, 1, 2, -14.3, -3, -1, false)
         .then((textMesh) => {
@@ -39,7 +44,7 @@ function screen_Menu() {
             console.error(error);
         });
 
-    screenComponents.add(mesh_hiddenButtonTile(33, 10, 1, 0, -14.5 , "single-player"));
+    buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, -14.5 , "single-player"));
 
     mesh_Text("Single Player", 4, 1, 2, -16.6, -16, -1, false)
         .then((textMesh) => {
@@ -49,7 +54,7 @@ function screen_Menu() {
             console.error(error);
         });
 
-    screenComponents.add(mesh_hiddenButtonTile(33, 10, 1, 0, -27.5 , "options"));
+    buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, -27.5 , "options"));
 
     mesh_Text("Options", 4, 1, 2, -11, -29, -1, false)
         .then((textMesh) => {
@@ -59,7 +64,7 @@ function screen_Menu() {
             console.error(error);
         });
 
-    screenComponents.add(mesh_hiddenButtonTile(33, 10, 1, 0, -40.5 , "options"));
+    buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, -40.5 , "account"));
 
     mesh_Text("Account", 4, 1, 2, -11, -42, -1, false)
         .then((textMesh) => {
@@ -68,8 +73,6 @@ function screen_Menu() {
         .catch((error) => {
             console.error(error);
         });
-
-    screenComponents.add(mesh_DecorCross(40, 30, -20, 3, 4, 5, false))
 
     generateRandomCrosses(25);
     generateRandomCircles(25);
