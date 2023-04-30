@@ -4,9 +4,9 @@ from flask import request
 from flask_socketio import Namespace, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from server.db import get_db
 from ..app_utils.Session import Session
 from ..app_utils.SessionKeys import SessionKeys
+from ..db import get_db
 
 # Regex patterns for username, email, and password validation
 USERNAME_PATTERN = r"^[a-zA-Z0-9_-]{3,16}$"
@@ -15,14 +15,55 @@ PASSWORD_PATTERN = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
 
 
 class AuthNamespace(Namespace):
+    """
+    The AuthNamespace class handles all authentication-related events for the Flask-SocketIO server.
+
+    Attributes:
+        None
+
+    Methods:
+        on_connect()
+            A SocketIO event handler for when a client connects to the server.
+
+        on_disconnect()
+            A SocketIO event handler for when a client disconnects from the server.
+
+        on_register(data: dict)
+            A SocketIO event handler for when a client registers for an account.
+
+        on_login(data: dict)
+            A SocketIO event handler for when a client logs into their account.
+
+        on_logout(data: dict)
+            A SocketIO event handler for when a client logs out of their account.
+
+        on_session(data: dict)
+            A SocketIO event handler for when a client requests their session data.
+    """
 
     def on_connect(self):
+        """
+        A SocketIO event handler for when a client connects to the server.
+        """
         pass
 
     def on_disconnect(self):
+        """
+        A SocketIO event handler for when a client connects to the server.
+        """
         pass
 
     def on_register(self, data):
+        """
+        A SocketIO event handler for when a client registers for an account.
+
+        Args:
+            data (dict): A dictionary containing the event data, including the username, email, and password.
+
+        Returns:
+            None
+        """
+
         # Fetch event data
         username = data["username"]
         email = data["email"]
@@ -86,6 +127,17 @@ class AuthNamespace(Namespace):
         return
 
     def on_login(self, data):
+        """
+        Event handler for 'login' event. Authenticates the user by checking if the username and password match an entry
+        in the database. If authentication succeeds, sets the session data and sends a success message to the client.
+
+        Args:
+            data (dict): The data sent with the event. Should contain keys 'username' and 'password' with string values.
+
+        Returns:
+            None.
+        """
+
         # Fetch event data
         username = data["username"]
         password = data["password"]
@@ -133,6 +185,16 @@ class AuthNamespace(Namespace):
         return
 
     def on_logout(self, data):
+        """
+        Event handler for 'logout' event. Clears the session and sends a success message to the client.
+
+        Args:
+            data (dict): The data sent with the event. Should be an empty dictionary.
+
+        Returns:
+            None.
+        """
+
         # Clear session
         Session.clear()
 
