@@ -3,37 +3,33 @@ import random
 import re
 import sqlite3
 
-from flask import request
+from flask import request, session
 from flask_socketio import Namespace, emit, join_room
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .app_utils.session_keys import SessionKeys
-from .app_utils.session_manager import Session
+from .app_utils.session_keys import SessionKeys as s
+from .app_utils.validation_patterns import ValidationPatterns as vp
 from .db import get_db
-
-# Regex patterns for username, email, and password validation
-USERNAME_PATTERN = r"^[a-zA-Z0-9_-]{3,16}$"
-EMAIL_PATTERN = r"^[\w-]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$"
-PASSWORD_PATTERN = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
 
 
 class SockerEvents(Namespace):
 
-    def on_connect(self):
+    def on_connect(self, data=None):
         print("WERE IN BABY")
         """
         A SocketIO event handler for when a client connects to the server.
         """
         pass
 
-    def on_disconnect(self):
+    def on_disconnect(self, data=None):
         print("WERE OUT BABY")
         """
         A SocketIO event handler for when a client connects to the server.
         """
         pass
 
-    def on_register(self, data):
+    def on_register(self, data=None):
+        print('regestring')
         """
         A SocketIO event handler for when a client registers for an account.
 
@@ -51,8 +47,8 @@ class SockerEvents(Namespace):
         db = get_db()
 
         # Validate username
-        if not re.match(USERNAME_PATTERN, username):
-            emit("register", {
+        if not re.match(vp.USERNAME_PATTERN, username):
+            emit("register-fail", {
                 "success": False,
                 "error_code": 422,
                 "error_message": "Username is invalid.",
@@ -61,8 +57,8 @@ class SockerEvents(Namespace):
             return
 
         # Validate email
-        if not re.match(EMAIL_PATTERN, email):
-            emit("register", {
+        if not re.match(vp.EMAIL_PATTERN, email):
+            emit("register-fail", {
                 "success": False,
                 "error_code": 422,
                 "error_message": "Email is invalid.",
@@ -71,8 +67,8 @@ class SockerEvents(Namespace):
             return
 
         # Validate password
-        if not re.match(PASSWORD_PATTERN, password):
-            emit("register", {
+        if not re.match(vp.PASSWORD_PATTERN, password):
+            emit("register-fail", {
                 "success": False,
                 "error_code": 422,
                 "error_message": "Password must contain at least 8 characters, one uppercase letter, one lowercase "
@@ -82,14 +78,13 @@ class SockerEvents(Namespace):
             return
 
         try:
-            # TODO user status must NOT be adm when deployed
             db.execute(
-                "INSERT INTO user (username, email, password, user_status) VALUES (?, ?, ?, ?)",
-                (username, email, generate_password_hash(password), "adm"),
+                "INSERT INTO user (username, email, password) VALUES (?, ?, ?)",
+                (username, email, generate_password_hash(password)),
             )
             db.commit()
         except db.IntegrityError:
-            emit("register", {
+            emit("register-fail", {
                 "success": False,
                 "error_code": 409,
                 "error_message": "Username or email is/are already in-use.",
@@ -97,7 +92,7 @@ class SockerEvents(Namespace):
             }, room=request.sid)
             return
         else:
-            emit("register", {
+            emit("register-success", {
                 "success": True,
                 "error_code": 200,
                 "error_message": "",
@@ -106,7 +101,7 @@ class SockerEvents(Namespace):
             print(f"Client registered: {username}")
         return
 
-    def on_login(self, data):
+    def on_login(self, data=None):
         """
         Event handler for 'login' event. Authenticates the user by checking if the username and password match an entry
         in the database. If authentication succeeds, sets the session data and sends a success message to the client.
@@ -132,7 +127,7 @@ class SockerEvents(Namespace):
 
         # Check if user doesn't exist
         if user is None or not check_password_hash(user["password"], password):
-            emit("login", {
+            emit("login-fail", {
                 "success": False,
                 "error_code": 401,
                 "error_message": "Incorrect username or password.",
@@ -143,17 +138,17 @@ class SockerEvents(Namespace):
         user_id = user["id"]
         username = user["username"]
         user_email = user["email"]
-        user_status = user["user_status"]
+        user_role = user["user_role"]
 
         # Clear session and add user
-        Session.clear()
-        Session.set(SessionKeys.USER_ID, user_id)
-        Session.set(SessionKeys.USER_NAME, username)
-        Session.set(SessionKeys.USER_EMAIL, user_email)
-        Session.set(SessionKeys.USER_STATUS, user_status)
+        session.clear()
+        session[s.USER_ID] = user_id
+        session[s.USER_NAME] = username
+        session[s.USER_EMAIL] = user_email
+        session[s.USER_ROLE] = user_role
 
         # Return 200 & user data
-        emit("login", {
+        emit("login-success", {
             "success": True,
             "error_code": 200,
             "error_message": "",
@@ -164,9 +159,10 @@ class SockerEvents(Namespace):
             },
         }, room=request.sid)
         print(f"Client logged in: {username}")
+        print(session.items())
         return
 
-    def on_logout(self, data):
+    def on_logout(self, data=None):
         """
         Event handler for 'logout' event. Clears the session and sends a success message to the client.
 
@@ -180,7 +176,7 @@ class SockerEvents(Namespace):
         """
 
         # Clear session
-        Session.clear()
+        session.clear()
 
         # Return 200
         emit("logout", {
@@ -190,6 +186,7 @@ class SockerEvents(Namespace):
             "data": {},
         }, room=request.sid)
         print(f"Client logged out: successfully")
+        print(session.items())
         return
 
     def on_session(self, data):

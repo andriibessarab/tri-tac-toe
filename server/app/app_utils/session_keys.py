@@ -3,7 +3,7 @@ class SessionKeys:
     USER_ID = "user-id"
     USER_NAME = "user-name"
     USER_EMAIL = "user_email"
-    USER_STATUS = "user-role"
+    USER_ROLE = "user-role"
 
     # Game data
     HAS_ONGOING_GAME = "has-ongoing-game"

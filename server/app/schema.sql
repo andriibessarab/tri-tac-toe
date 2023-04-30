@@ -15,7 +15,7 @@ CREATE TABLE user
     username    TEXT UNIQUE NOT NULL,
     email       TEXT UNIQUE NOT NULL,
     password    TEXT        NOT NULL,
-    user_status TEXT        NOT NULL DEFAULT 'reg' CHECK (user_status IN ('adm', 'reg', 'ban')),
+    user_role TEXT        NOT NULL DEFAULT 'usr' CHECK (user_role IN ('adm', 'usr', 'ban')),
     created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
