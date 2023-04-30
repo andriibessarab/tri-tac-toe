@@ -4,6 +4,7 @@ import Scene from "./game_scenes/Scene";
 import {Raycaster, Vector2} from "three";
 import screen_Menu from "./resources/screens/screen_Menu";
 import screen_inGame from "./resources/screens/screen_InGameScreen";
+import screen_LogIn from "./resources/screens/screen_LogIn";
 
 export default function App() {
     // Constants
@@ -70,97 +71,96 @@ export default function App() {
         switch (screen) {
             case "main-menu":
                 scene.scene.add(screen_Menu(userId !== null));
+                window.addEventListener("mousedown", handleMouseDownMenuScreen, false);
                 break;
             case "local-game":
                 scene.scene.add(screen_inGame(1));
                 break;
             case "online-game":
-                scene.scene.add(screen_inGame(2));
+                scene.scene.add(screen_inGame(0));
+                window.addEventListener("mousedown", handleMouseDownOnlineGame, false);
                 break;
             case "single-player":
                 scene.scene.add(screen_inGame(3));
                 break;
             case "log-in":
+                scene.scene.add(screen_LogIn());
                 break;
             case "register":
                 break;
             case "options":
                 break;
-            case "account":
+            case "log-":
                 break;
             default:
                 break;
         }
         const animate = () => {
-            // scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
-            // scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
-            // scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(animateSceneElement);
-            // scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
-            // scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
-            // scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
-
+            if (screen == "online-game") {
+                scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
+            }
             requestAnimationFrame(animate);
         }
         animate();
     }, [scene, screen, userId]);
 
 
-    useEffect(() => {
-        // Check if the scene has been defined before adding event listeners
-        if (!isSceneDefined) {
-            return;
-        }
-
-        window.addEventListener("mousedown", (event) => {
-            // Obtain mouse's position
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            // Set up raycaster
-            raycaster.setFromCamera(mouse, scene.camera);
-
-            switch (screen) {
-                case "main-menu":
-                    handleMouseDownMenuScreen();
-                    break;
-                case "local-game":
-                    break;
-                case "online-game":
-                    break;
-                case "single-player":
-                    break;
-                case "log-in":
-                    break;
-                case "register":
-                    break;
-                case "options":
-                    break;
-                case "account":
-                    break;
-                default:
-                    break;
-            }
-
-
-        }, false);
-    }, [isSceneDefined, mouse, raycaster, scene, screen]);
+    // useEffect(() => {
+    //     // Check if the scene has been defined before adding event listeners
+    //     if (!isSceneDefined) {
+    //         return;
+    //     }
+    //
+    //     window.addEventListener("mousedown", (event) => {
+    //         if (screen === "main-menu") {
+    //             handleMouseDownMenuScreen();
+    //         } else if ()
+    //     }, false);
+    // }, [handleMouseDownMenuScreen, isSceneDefined, mouse, raycaster, scene, screen]);
 
 
     return (
         <div className="App">
             <canvas id={sceneCanvasName}/>
             {screen}
+                    <div id={"debug"}>
+            <h2>Login</h2>
+            <input type="text" placeholder="Username" value={formUserName}
+                   onChange={(e) => setFormUserName(e.target.value)}/>
+            <input type="password" placeholder="Password" value={formUserPassword}
+                   onChange={(e) => setFormUserPassword(e.target.value)}/>
+            <button onClick={handleLogIn}>Login</button>
+
+            <h2>Registration</h2>
+            <input type="text" placeholder="Email" value={formUserEmail} onChange={(e) => setFormUserEmail(e.target.value)}/>
+            <input type="text" placeholder="Username" value={formUserName}
+                   onChange={(e) => setFormUserName(e.target.value)}/>
+            <input type="password" placeholder="Password" value={formUserPassword}
+                   onChange={(e) => setFormUserPassword(e.target.value)}/>
+            <button onClick={handleRegister}>Register</button>
+
+            <h2>Other Actions</h2>
+            <button onClick={() => socket.emit("logout")}>Log Out</button>
+        </div>
         </div>
     );
+
 
     function onConnect(data) {
         setIsConnected(true);
         console.log("Server connected.")
     }
 
+
     function onDisconnect(data) {
         setIsConnected(false);
     }
+
 
     function handleRegister() {
         const data = {
@@ -172,16 +172,19 @@ export default function App() {
         socket.emit("register", data);
     }
 
+
     function onRegisterSuccess(data) {
         console.log("register success")
     }
 
+
     function onRegisterFailed(data) {
         const errorCode = data["error_code"];
         const errorMessage = data["error_message"];
-
+        alert(errorMessage);
         console.error(`Error ${errorCode} while joining the game: ${errorMessage}`);
     }
+
 
     function handleLogIn() {
         const data = {
@@ -191,6 +194,7 @@ export default function App() {
         // send login event to server with username and password
         socket.emit("login", data);
     }
+
 
     function onLogInSuccess(data) {
         const _userId = data["data"]["user_id"];
@@ -205,12 +209,14 @@ export default function App() {
         console.log("login success");
     }
 
+
     function onLogInFailed(data) {
         const errorCode = data["error_code"];
         const errorMessage = data["error_message"];
-
+        alert(errorMessage);
         console.error(`Error ${errorCode} while joining the game: ${errorMessage}`);
     }
+
 
     function onLogOut(data) {
         setUserId(null);
@@ -235,6 +241,7 @@ export default function App() {
         setIsSceneDefined(true);
     }
 
+
     function animateSceneElement(obj) {
         if (obj.scale.x < 1) {
             obj.scale.x += 0.04;
@@ -247,7 +254,15 @@ export default function App() {
         }
     }
 
-    function handleMouseDownMenuScreen() {
+
+    function handleMouseDownMenuScreen(event) {
+        // Obtain mouse's position
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Set up raycaster
+        raycaster.setFromCamera(mouse, scene.camera);
+
         const intersects = raycaster.intersectObjects(
             scene.scene.getObjectByName("buttonTiles").children
         );
@@ -269,6 +284,7 @@ export default function App() {
             const buttonName = tile.buttonName;
 
             setScreen(buttonName);
+            window.removeEventListener("mousedown", handleMouseDownMenuScreen);
         }
     }
 };
