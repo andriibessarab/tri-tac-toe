@@ -3,6 +3,7 @@ import socket from "./socket";
 import Scene from "./game_scenes/Scene";
 import {Raycaster, Vector2} from "three";
 import screen_Menu from "./resources/screens/screen_Menu";
+import screen_inGame from "./resources/screens/screen_InGameScreen";
 
 export default function App() {
     // Constants
@@ -24,7 +25,7 @@ export default function App() {
 
     // Scene states
     const [scene, setScene] = useState(null);
-    const [screen, setScreen] = useState("log-in");
+    const [screen, setScreen] = useState("main-menu");
     const [mouse, setMouse] = useState(null);
     const [raycaster, setRaycaster] = useState(null);
 
@@ -66,24 +67,30 @@ export default function App() {
 
         scene.scene.children.splice(0, scene.scene.children.length);
 
-        // switch (screen) {
-        //     case "main-menu":
-        //         scene.scene.add(screen_MainMenu());
-        //         break;
-        //     case "log-in":
-        //         scene.scene.add(screen_LogIn());
-        //         break;
-        //     case "in-game":
-        //         scene.scene.add(screen_InGameScreen(0));
-        //         console.log("added elements");
-        //         break;
-        //     default:
-        //         break;
-        // }
-
-        scene.scene.add(screen_Menu());
-
-
+        switch (screen) {
+            case "main-menu":
+                scene.scene.add(screen_Menu(userId !== null));
+                break;
+            case "local-game":
+                scene.scene.add(screen_inGame(1));
+                break;
+            case "online-game":
+                scene.scene.add(screen_inGame(2));
+                break;
+            case "single-player":
+                scene.scene.add(screen_inGame(3));
+                break;
+            case "log-in":
+                break;
+            case "register":
+                break;
+            case "options":
+                break;
+            case "account":
+                break;
+            default:
+                break;
+        }
         const animate = () => {
             // scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
             // scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
@@ -95,7 +102,7 @@ export default function App() {
             requestAnimationFrame(animate);
         }
         animate();
-    }, [scene]);
+    }, [scene, screen, userId]);
 
 
     useEffect(() => {
@@ -112,28 +119,29 @@ export default function App() {
             // Set up raycaster
             raycaster.setFromCamera(mouse, scene.camera);
 
-            const intersects = raycaster.intersectObjects(
-                scene.scene.getObjectByName("buttonTiles").children
-            );
-
-            if (intersects.length > 0) {
-                const xOffset = intersects[0].object.position.x;
-                const yOffset = intersects[0].object.position.y;
-                console.log(scene.scene.getObjectByName("buttonTiles").children)
-
-                let row, col;
-
-                // Find tile index
-                const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
-                    (c) => c.uuid === intersects[0].object.uuid
-                );
-
-                // Store tile coordinate
-                const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
-                const buttonName = tile.buttonName;
-
-                console.log(buttonName);
+            switch (screen) {
+                case "main-menu":
+                    handleMouseDownMenuScreen();
+                    break;
+                case "local-game":
+                    break;
+                case "online-game":
+                    break;
+                case "single-player":
+                    break;
+                case "log-in":
+                    break;
+                case "register":
+                    break;
+                case "options":
+                    break;
+                case "account":
+                    break;
+                default:
+                    break;
             }
+
+
         }, false);
     }, [isSceneDefined, mouse, raycaster, scene, screen]);
 
@@ -141,6 +149,7 @@ export default function App() {
     return (
         <div className="App">
             <canvas id={sceneCanvasName}/>
+            {screen}
         </div>
     );
 
@@ -235,6 +244,31 @@ export default function App() {
         }
         if (obj.scale.z < 1) {
             obj.scale.z += 0.04;
+        }
+    }
+
+    function handleMouseDownMenuScreen() {
+        const intersects = raycaster.intersectObjects(
+            scene.scene.getObjectByName("buttonTiles").children
+        );
+
+        if (intersects.length > 0) {
+            const xOffset = intersects[0].object.position.x;
+            const yOffset = intersects[0].object.position.y;
+            console.log(scene.scene.getObjectByName("buttonTiles").children)
+
+            let row, col;
+
+            // Find tile index
+            const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
+                (c) => c.uuid === intersects[0].object.uuid
+            );
+
+            // Store tile coordinate
+            const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
+            const buttonName = tile.buttonName;
+
+            setScreen(buttonName);
         }
     }
 };
