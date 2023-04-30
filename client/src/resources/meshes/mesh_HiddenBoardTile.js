@@ -20,8 +20,8 @@ function mesh_HiddenBoardTile(xOffset, yOffset, row, column) {
     const hiddenTile = new THREE.Mesh(hiddenTileGeometry, hiddenTileMaterial);
     hiddenTile.position.x = xOffset;
     hiddenTile.position.y = yOffset;
-    hiddenTile.row = row;
-    hiddenTile.column = column;
+    hiddenTile.userData.row = row;
+    hiddenTile.userData.col = column;
     return hiddenTile;
 }
 
