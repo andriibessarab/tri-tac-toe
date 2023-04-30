@@ -12,7 +12,7 @@ function mesh_Text(text, fontSize, z, fontHeight, xOffset, yOffset, zOffset = 0,
                 size: fontSize,
                 height: fontHeight,
             });
-            const textMaterial = new THREE.MeshNormalMaterial({ color: 0x052356 })
+            const textMaterial = new THREE.MeshNormalMaterial()
             const textMesh = new THREE.Mesh(textGeometry, textMaterial);
             textMesh.position.x = xOffset;
             textMesh.position.y = yOffset;

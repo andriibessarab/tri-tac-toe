@@ -1,7 +1,10 @@
 import React, {useEffect, useState} from "react";
 import socket from "./socket";
-import SceneInit from "./game_scenes/SceneInit";
+import Scene from "./game_scenes/Scene";
 import {Raycaster, Vector2} from "three";
+import screen_LogIn from "./resources/screens/screen_LogIn";
+import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
+import screen_Menu from "./resources/screens/screen_Menu";
 
 export default function App() {
     // Constants
@@ -23,6 +26,7 @@ export default function App() {
 
     // Scene states
     const [scene, setScene] = useState(null);
+    const [screen, setScreen] = useState("log-in");
     const [mouse, setMouse] = useState(null);
     const [raycaster, setRaycaster] = useState(null);
 
@@ -55,6 +59,44 @@ export default function App() {
         };
     }, []);
 
+    // Update scene screen based on state change
+    useEffect(() => {
+        if (!isSceneDefined) {
+            return;
+        }
+
+        scene.scene.children.splice(0, scene.scene.children.length);
+
+        // switch (screen) {
+        //     case "main-menu":
+        //         scene.scene.add(screen_MainMenu());
+        //         break;
+        //     case "log-in":
+        //         scene.scene.add(screen_LogIn());
+        //         break;
+        //     case "in-game":
+        //         scene.scene.add(screen_InGameScreen(0));
+        //         console.log("added elements");
+        //         break;
+        //     default:
+        //         break;
+        // }
+
+        scene.scene.add(screen_Menu());
+
+
+        const animate = () => {
+            // scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
+            // scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
+            // scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(animateSceneElement);
+            // scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
+            // scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
+            // scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }, [scene]);
 
     return (
         <div className="App">
@@ -129,7 +171,7 @@ export default function App() {
 
     function initScene() {
         // Initialize scene
-        const _scene = new SceneInit(sceneCanvasName);
+        const _scene = new Scene(sceneCanvasName);
         _scene.initScene();
         _scene.animate();
 
@@ -142,6 +184,18 @@ export default function App() {
         setMouse(_mouse);
         setRaycaster(_raycaster);
         setIsSceneDefined(true);
+    }
+
+    function animateSceneElement(obj) {
+        if (obj.scale.x < 1) {
+            obj.scale.x += 0.04;
+        }
+        if (obj.scale.y < 1) {
+            obj.scale.y += 0.04;
+        }
+        if (obj.scale.z < 1) {
+            obj.scale.z += 0.04;
+        }
     }
 };
 

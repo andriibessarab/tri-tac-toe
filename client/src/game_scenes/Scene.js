@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
-export default class SceneInit {
+export default class Scene {
     constructor(canvasID, camera, scene, controls, renderer, fov = 36) {
         this.fov = fov;
         this.scene = scene;

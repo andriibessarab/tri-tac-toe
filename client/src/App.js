@@ -1,15 +1,13 @@
-import {io} from "socket.io-client";
 import React, {useEffect, useState} from "react";
-import SceneInit from "./game_scenes/SceneInit";
-import {Raycaster, Vector2} from "three";
-import screen_MainMenu from "./resources/screens/screen_MainMenu";
+import Scene from "./game_scenes/Scene";
+import screen_MainMenu from "./resources/screens/screen_LogIn";
 import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
 
 function App() {
     // Scene variables
-    const [sceneState, setSceneState] = useState(new SceneInit("3jsCanvas")); // Object to hold the 3JS scene instance
+    const [sceneState, setSceneState] = useState(new Scene("3jsCanvas")); // Object to hold the 3JS scene instance
 
     // Mouse and raycaster variables
     const [mouseState, setMouseState] = useState(null); // Object to hold the current mouse state
@@ -44,369 +42,297 @@ function App() {
     // Other state variables
     const [isSceneDefined, setIsSceneDefined] = useState(false); // Boolean to indicate whether the scene is defined or not
 
-    // Initialize Websocket
-    useEffect(() => {
-        // Create websocket/connect
-        const newSocket = io();
-
-        // Runs when connection with server established
-        newSocket.on("connect", (data) => {
-            // parse data received from server
-            console.log("Connected to server", data);
-        });
-
-        // Runs when connection with server lost
-        newSocket.on("disconnect", (data) => {
-            // parse data received from server
-            console.log("Disconnected from server", data);
-        });
-
-        // Save socket to state
-        setSocket(newSocket);
-
-        // Disconnect socket when component unmounts
-        return () => {
-            newSocket.disconnect();
-        };
-    }, []);
 
     // Websocket event listeners
     useEffect(() => {
-        if (socket) {
-            // listen for registration response
-            socket.on("register", (data) => {
-                // parse data received from server
-                console.log("Registration response:", data);
-            });
 
-            // Listen for login response
-            socket.on("login", (res) => {
-                // Check if any error occurred
-                if (!res["success"]) {
-                    console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
-                    // #TODO - Handle error
-                    return;
-                }
+        // Listen for join wait response
+        socket.on("join-wait", (res) => {
+            // Enable play online button
+            setIsWaitingToJoinGame(false);
 
-                const _userId = res["data"]["user_id"];
-                const _username = res["data"]["username"];
-                const _email = res["data"]["email"];
-
-                setUserId(_userId);
-            });
-
-            // Listen for logout response
-            socket.on("logout", (data) => {
-                // parse data received from server
-                console.log("Logout response:", data);
-            });
-
-            // Listen for session response
-            socket.on("session", (data) => {
-                // parse data received from server
-                console.log("Session data:", data);
-            });
-
-            // Listen for join wait response
-            socket.on("join-wait", (res) => {
-                // Enable play online button
-                setIsWaitingToJoinGame(false);
-
-                // Check if any error occurred
-                if (!res["success"]) {
-                    console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
-                    // #TODO - Handle error
-                    return;
-                }
-
-                // Store response
-                const game_id = res["data"]["game"]["game_id"]
-
-                // Join the game room
-                socket.emit("join-game", {
-                    game_id: res["data"]["game"]["game_id"],
-                });
-            });
-
-            // Listen for join game response
-            socket.on(`join-game`, (res) => {
-                // Check if any error occurred
-                if (!res["success"]) {
-                    console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
-                    // #TODO - Handle error
-                    return;
-                }
-
-                // Store response data (p.s. using snake case
-                // to not interfere with globals)
-                const game_id = res["data"]["game"]["game_id"]
-                const game_room_id = res["data"]["game"]["game_room_id"];
-                const player_number = res["data"]["player"]["player_number"];
-                const player_marker =  res["data"]["player"]["player_marker"];
-                const is_player_turn = res["data"]["player"]["player_turn"]
-                const opponent_id = res["data"]["opponent"]["opponent_id"];
-                const opponent_username = res["data"]["opponent"]["opponent_username"];
-
-                // Update necessary state variables
-                setCurrentGameID(game_id);
-                setCurrentGameRoomID(game_room_id);
-                setCurrentGamePlayerNumber(player_number);
-                setCurrentGamePlayerMarker(player_marker);
-                setCurrentGamePlayerTurn(is_player_turn);
-                setCurrentGameOpponentId(opponent_id);
-                setCurrentGameOpponentUsername(opponent_username);
-                setHasGameOngoing(true);
-
-                console.log(`Started a game[#${game_id}] against ${opponent_username}[#${opponent_id}] ${is_player_turn ? 'with your turn first' : 'with opponent\'s turn first'} with this player's marker being: ${player_marker}`);
-            });
-
-            // Listen for join game response
-            socket.on(`make-move`, (res) => {
-                //     // Store response data (p.s. using snake case
-                //     // to not interfere with globals)
-                const prev_move_player_id = res["data"]["previous_move"]["player_id"]
-                const prev_move_player_marker = res["data"]["previous_move"]["player_marker"]
-                const prev_move_coord = res["data"]["previous_move"]["move_coordinate"];
-                const prev_move_row = prev_move_coord[0];
-                const prev_move_col = prev_move_coord[1];
-                const next_move_player_id = res["data"]["next_move"]["player_id"];
-
-                console.log(res);
-
-                const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
-
-                if (notThisPlayerPrevMove) {
-                    console.log("were inlining")
-                    // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
-
-                    const hiddenTilesGroup = sceneState.scene.getObjectByName("hiddenTilesGroup");
-
-                    let targetTile;
-
-                    hiddenTilesGroup.children.forEach(tile => {
-                      if (tile.row === prev_move_row && tile.column === prev_move_col) {
-                        targetTile = tile;
-                      }
-                    });
-
-                    if (!targetTile) {
-                      // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
-                        return
-                    }
-
-                    const tile_x = targetTile.position.x;
-                    const tile_y = targetTile.position.y;
-
-                    console.log(prev_move_player_marker);
-
-                    // Draw other player's turn
-                    if (prev_move_player_marker === "x") {
-                        sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
-                    } else if(prev_move_player_marker === "o") {
-                        sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
-                    } else {
-                        // TODO - handle if invalid mve(in case something wrong was returned from db)
-                        return
-                    }
-
-                    // Change state variables
-                    setCurrentGamePlayerTurn(true);
-                }
-            });
-
-        }
-    }, [socket]);
-
-    // Initialize 3JS Scene
-    useEffect(() => {
-        // Initialize scene
-        const scene = new SceneInit("3jsCanvas");
-        scene.initScene();
-        scene.animate();
-
-        // Instances of mouse and raycaster
-        const mouse = new Vector2();
-        const raycaster = new Raycaster();
-
-        // Set state variables
-        setSceneState(scene);
-        setMouseState(mouse);
-        setRaycasterState(raycaster);
-        setIsSceneDefined(true);
-    }, [])
-
-    // Update scene screen based on state change
-    useEffect(() => {
-        if (!isSceneDefined) {
-            return;
-        }
-
-        switch (sceneScreenState) {
-            case "main-menu":
-                sceneState.scene.children.splice(0, sceneState.scene.children.length);
-                sceneState.scene.add(screen_MainMenu());
-                break;
-            case "in-game":
-                sceneState.scene.children.splice(0, sceneState.scene.children.length);
-                sceneState.scene.add(screen_InGameScreen(0));
-                console.log("added elements");
-                break;
-            default:
-                sceneState.scene.children.splice(0, sceneState.scene.children.length);
-                break;
-        }
-    }, [sceneScreenState, sceneState]);
-
-    // Animate scene elements
-    useEffect(() => {
-        const animate = () => {
-            const scaleUp = (obj) => {
-                if (obj.scale.x < 1) {
-                    obj.scale.x += 0.04;
-                }
-                if (obj.scale.y < 1) {
-                    obj.scale.y += 0.04;
-                }
-                if (obj.scale.z < 1) {
-                    obj.scale.z += 0.04;
-                }
-            };
-
-            if (!isSceneDefined) {
+            // Check if any error occurred
+            if (!res["success"]) {
+                console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
+                // #TODO - Handle error
                 return;
             }
-            sceneState.scene.getObjectByName("titleGroup").children.forEach(scaleUp);
-            sceneState.scene.getObjectByName("boardLinesGroup").children.forEach(scaleUp);
-            sceneState.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(scaleUp);
-            sceneState.scene.getObjectByName("controlButtonsTextGroup").children.forEach(scaleUp);
-            sceneState.scene.getObjectByName("crossMarkerGroup").children.forEach(scaleUp);
-            sceneState.scene.getObjectByName("circleMarkerGroup").children.forEach(scaleUp);
 
-            requestAnimationFrame(animate);
+            // Store response
+            const game_id = res["data"]["game"]["game_id"]
+
+            // Join the game room
+            socket.emit("join-game", {
+                game_id: res["data"]["game"]["game_id"],
+            });
+        });
+
+        // Listen for join game response
+        socket.on(`join-game`, (res) => {
+            // Check if any error occurred
+            if (!res["success"]) {
+                console.error(`Error ${res["error_code"]} while joining the game: ${res["error_message"]}`);
+                // #TODO - Handle error
+                return;
+            }
+
+            // Store response data (p.s. using snake case
+            // to not interfere with globals)
+            const game_id = res["data"]["game"]["game_id"]
+            const game_room_id = res["data"]["game"]["game_room_id"];
+            const player_number = res["data"]["player"]["player_number"];
+            const player_marker = res["data"]["player"]["player_marker"];
+            const is_player_turn = res["data"]["player"]["player_turn"]
+            const opponent_id = res["data"]["opponent"]["opponent_id"];
+            const opponent_username = res["data"]["opponent"]["opponent_username"];
+
+            // Update necessary state variables
+            setCurrentGameID(game_id);
+            setCurrentGameRoomID(game_room_id);
+            setCurrentGamePlayerNumber(player_number);
+            setCurrentGamePlayerMarker(player_marker);
+            setCurrentGamePlayerTurn(is_player_turn);
+            setCurrentGameOpponentId(opponent_id);
+            setCurrentGameOpponentUsername(opponent_username);
+            setHasGameOngoing(true);
+
+            console.log(`Started a game[#${game_id}] against ${opponent_username}[#${opponent_id}] ${is_player_turn ? 'with your turn first' : 'with opponent\'s turn first'} with this player's marker being: ${player_marker}`);
+        });
+
+        // Listen for join game response
+        socket.on(`make-move`, (res) => {
+            //     // Store response data (p.s. using snake case
+            //     // to not interfere with globals)
+            const prev_move_player_id = res["data"]["previous_move"]["player_id"]
+            const prev_move_player_marker = res["data"]["previous_move"]["player_marker"]
+            const prev_move_coord = res["data"]["previous_move"]["move_coordinate"];
+            const prev_move_row = prev_move_coord[0];
+            const prev_move_col = prev_move_coord[1];
+            const next_move_player_id = res["data"]["next_move"]["player_id"];
+
+            console.log(res);
+
+            const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
+
+            if (notThisPlayerPrevMove) {
+                console.log("were inlining")
+                // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
+
+                const hiddenTilesGroup = sceneState.scene.getObjectByName("hiddenTilesGroup");
+
+                let targetTile;
+
+                hiddenTilesGroup.children.forEach(tile => {
+                    if (tile.row === prev_move_row && tile.column === prev_move_col) {
+                        targetTile = tile;
+                    }
+                });
+
+                if (!targetTile) {
+                    // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
+                    return
+                }
+
+                const tile_x = targetTile.position.x;
+                const tile_y = targetTile.position.y;
+
+                console.log(prev_move_player_marker);
+
+                // Draw other player's turn
+                if (prev_move_player_marker === "x") {
+                    sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
+                } else if (prev_move_player_marker === "o") {
+                    sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
+                } else {
+                    // TODO - handle if invalid mve(in case something wrong was returned from db)
+                    return
+                }
+
+                // Change state variables
+                setCurrentGamePlayerTurn(true);
+            }
+        });
+
+    }
+}
+
+,
+[socket]
+)
+
+
+// Update scene screen based on state change
+useEffect(() => {
+    if (!isSce) {
+        return;
+    }
+
+    switch (sceneScreenState) {
+        case "main-menu":
+            sceneState.scene.children.splice(0, sceneState.scene.children.length);
+            sceneState.scene.add(screen_MainMenu());
+            break;
+        case "in-game":
+            sceneState.scene.children.splice(0, sceneState.scene.children.length);
+            sceneState.scene.add(screen_InGameScreen(0));
+            console.log("added elements");
+            break;
+        default:
+            sceneState.scene.children.splice(0, sceneState.scene.children.length);
+            break;
+    }
+}, [sceneScreenState, sceneState]);
+
+// Animate scene elements
+useEffect(() => {
+    const animate = () => {
+        const scaleUp = (obj) => {
+            if (obj.scale.x < 1) {
+                obj.scale.x += 0.04;
+            }
+            if (obj.scale.y < 1) {
+                obj.scale.y += 0.04;
+            }
+            if (obj.scale.z < 1) {
+                obj.scale.z += 0.04;
+            }
         };
 
-        animate();
-    }, [sceneScreenState, sceneState]);
-
-    // Event listeners for scene
-    useEffect(() => {
-        // Check if the scene has been defined before adding event listeners
         if (!isSceneDefined) {
             return;
         }
+        sceneState.scene.getObjectByName("titleGroup").children.forEach(scaleUp);
+        sceneState.scene.getObjectByName("boardLinesGroup").children.forEach(scaleUp);
+        sceneState.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(scaleUp);
+        sceneState.scene.getObjectByName("controlButtonsTextGroup").children.forEach(scaleUp);
+        sceneState.scene.getObjectByName("crossMarkerGroup").children.forEach(scaleUp);
+        sceneState.scene.getObjectByName("circleMarkerGroup").children.forEach(scaleUp);
 
-        // Add event listener for player move
-        window.addEventListener("mousedown", (event) => {
-            if (!hasGameOngoing) {
-                return;
-            }
-            // if (!currentGamePlayerTurn) {
-            //     return;
-            // }
-            handlePlayerMove(event, currentGamePlayerMarker)
-        }, false);
-    }, [sceneState, currentGamePlayerMarker, currentGamePlayerTurn]);
+        requestAnimationFrame(animate);
+    };
 
-    // Handle player move
-    const handlePlayerMove = (event, marker) => {
-        // Obtain mouse's position
-        mouseState.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouseState.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    animate();
+}, [sceneScreenState, sceneState]);
 
-        // Set up raycaster
-        raycasterState.setFromCamera(mouseState, sceneState.camera);
+// Event listeners for scene
+useEffect(() => {
+    // Check if the scene has been defined before adding event listeners
+    if (!isSceneDefined) {
+        return;
+    }
 
-        // Obtain list of objects raycaster intersects with
-        const intersectsTiles = raycasterState.intersectObjects(
-            sceneState.scene.getObjectByName("hiddenTilesGroup").children
+    // Add event listener for player move
+    window.addEventListener("mousedown", (event) => {
+        if (!hasGameOngoing) {
+            return;
+        }
+        // if (!currentGamePlayerTurn) {
+        //     return;
+        // }
+        handlePlayerMove(event, currentGamePlayerMarker)
+    }, false);
+}, [sceneState, currentGamePlayerMarker, currentGamePlayerTurn]);
+
+// Handle player move
+const handlePlayerMove = (event, marker) => {
+    // Obtain mouse's position
+    mouseState.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouseState.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Set up raycaster
+    raycasterState.setFromCamera(mouseState, sceneState.camera);
+
+    // Obtain list of objects raycaster intersects with
+    const intersectsTiles = raycasterState.intersectObjects(
+        sceneState.scene.getObjectByName("hiddenTilesGroup").children
+    );
+
+    // Check if raycaster intersects with any tile
+    if (intersectsTiles.length > 0) {
+        const xOffset = intersectsTiles[0].object.position.x;
+        const yOffset = intersectsTiles[0].object.position.y;
+
+        // Draw marker
+        if (marker === "x") {
+            sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+        } else {
+            sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+        }
+
+        let row, col;
+
+        // Find tile index
+        const tileIndex = sceneState.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
+            (c) => c.uuid === intersectsTiles[0].object.uuid
         );
 
-        // Check if raycaster intersects with any tile
-        if (intersectsTiles.length > 0) {
-            const xOffset = intersectsTiles[0].object.position.x;
-            const yOffset = intersectsTiles[0].object.position.y;
+        // Store tile coordinate
+        const tile = sceneState.scene.getObjectByName("hiddenTilesGroup").children[tileIndex];
+        const tileRow = tile.row;
+        const tileCol = tile.column;
+        const tileCoord = [tileRow, tileCol];
 
-            // Draw marker
-            if (marker === "x") {
-                sceneState.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
-            } else {
-                sceneState.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
-            }
+        // Remove tile from scene
+        sceneState.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
 
-            let row, col;
+        // TODO - make sure player can only place one marker
 
-            // Find tile index
-            const tileIndex = sceneState.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
-                (c) => c.uuid === intersectsTiles[0].object.uuid
-            );
+        // Emit socket for make move
+        socket.emit("make-move", {
+            move_coordinate: tileCoord,
+        });
+    }
+};
 
-            // Store tile coordinate
-            const tile = sceneState.scene.getObjectByName("hiddenTilesGroup").children[tileIndex];
-            const tileRow = tile.row;
-            const tileCol = tile.column;
-            const tileCoord = [tileRow, tileCol];
+const handleLogin = () => {
+    // send login event to server with username and password
+    socket.emit("login", {username, password});
+};
 
-            // Remove tile from scene
-            sceneState.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
+const handleRegistration = () => {
+    // send registration event to server with email, username and password
+    socket.emit("register", {email, username, password});
+};
 
-            // TODO - make sure player can only place one marker
+const handleJoinGame = () => {
+    // send registration event to server with email, username and password
+    setIsWaitingToJoinGame(true);
+    socket.emit("join-wait")
 
-            // Emit socket for make move
-            socket.emit("make-move", {
-                move_coordinate: tileCoord,
-            });
-        }
-    };
+};
 
-    const handleLogin = () => {
-        // send login event to server with username and password
-        socket.emit("login", {username, password});
-    };
+return (
+    <div className="App">
+        <canvas id="3jsCanvas"/>
+        <div id={"debug"}>
+            <h2>Login</h2>
+            <input type="text" placeholder="Username" value={username}
+                   onChange={(e) => setUsername(e.target.value)}/>
+            <input type="password" placeholder="Password" value={password}
+                   onChange={(e) => setPassword(e.target.value)}/>
+            <button onClick={handleLogin}>Login</button>
 
-    const handleRegistration = () => {
-        // send registration event to server with email, username and password
-        socket.emit("register", {email, username, password});
-    };
+            <h2>Registration</h2>
+            <input type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}/>
+            <input type="text" placeholder="Username" value={username}
+                   onChange={(e) => setUsername(e.target.value)}/>
+            <input type="password" placeholder="Password" value={password}
+                   onChange={(e) => setPassword(e.target.value)}/>
+            <button onClick={handleRegistration}>Register</button>
 
-    const handleJoinGame = () => {
-        // send registration event to server with email, username and password
-        setIsWaitingToJoinGame(true);
-        socket.emit("join-wait")
+            <h2>Other Actions</h2>
+            <button onClick={() => socket.emit("logout")}>Log Out</button>
+            <button onClick={() => socket.emit("session")}>Session Info</button>
+            <button onClick={handleJoinGame} disabled={isWaitingToJoinGame}>
+                {isWaitingToJoinGame ? "Waiting for opponent..." : "Play Online"}
+            </button>
 
-    };
-
-    return (
-        <div className="App">
-            <canvas id="3jsCanvas"/>
-            <div id={"debug"}>
-                <h2>Login</h2>
-                <input type="text" placeholder="Username" value={username}
-                       onChange={(e) => setUsername(e.target.value)}/>
-                <input type="password" placeholder="Password" value={password}
-                       onChange={(e) => setPassword(e.target.value)}/>
-                <button onClick={handleLogin}>Login</button>
-
-                <h2>Registration</h2>
-                <input type="text" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}/>
-                <input type="text" placeholder="Username" value={username}
-                       onChange={(e) => setUsername(e.target.value)}/>
-                <input type="password" placeholder="Password" value={password}
-                       onChange={(e) => setPassword(e.target.value)}/>
-                <button onClick={handleRegistration}>Register</button>
-
-                <h2>Other Actions</h2>
-                <button onClick={() => socket.emit("logout")}>Log Out</button>
-                <button onClick={() => socket.emit("session")}>Session Info</button>
-                <button onClick={handleJoinGame} disabled={isWaitingToJoinGame}>
-                    {isWaitingToJoinGame ? "Waiting for opponent..." : "Play Online"}
-                </button>
-
-                <h2>Admin Actions</h2>
-                <button onClick={() => socket.emit("clear-redis-db")}>Clear Redis DB</button>
-                <button onClick={() => socket.emit("remove-all-groups")}>Remove All Socket Groups</button>
-            </div>
+            <h2>Admin Actions</h2>
+            <button onClick={() => socket.emit("clear-redis-db")}>Clear Redis DB</button>
+            <button onClick={() => socket.emit("remove-all-groups")}>Remove All Socket Groups</button>
         </div>
-    );
+    </div>
+);
 }
 
 export default App;
