@@ -1,8 +1,13 @@
 import React, {useEffect, useState} from "react";
 import socket from "./socket";
+import SceneInit from "./game_scenes/SceneInit";
+import {Raycaster, Vector2} from "three";
 
 export default function App() {
-    // Socket state
+    // Constants
+    const sceneCanvasName = "3jsCanvas";
+
+    // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
 
     // User auth states
@@ -13,10 +18,23 @@ export default function App() {
     // Auth forms states
     const [formUserName, setFormUserName] = useState("");
     const [formUserEmail, setFormUserEmail] = useState("");
-    const [formUserPassword, setFormUserPassword] = useState("")
 
+    const [formUserPassword, setFormUserPassword] = useState("");
 
+    // Scene states
+    const [scene, setScene] = useState(null);
+    const [mouse, setMouse] = useState(null);
+    const [raycaster, setRaycaster] = useState(null);
+
+    // Misc states
+    const [isSceneDefined, setIsSceneDefined] = useState(false);
+
+    // Init effect
     useEffect(() => {
+        // Init scene
+        initScene();
+
+        // Init socket events
         socket.on("connect", onConnect);
         socket.on("disconnect", onDisconnect);
         socket.on("register-success", onRegisterSuccess);
@@ -26,6 +44,7 @@ export default function App() {
         socket.on("logout", onLogOut);
 
         return () => {
+            // Disconnect socket events
             socket.off("connect", onConnect);
             socket.off("disconnect", onDisconnect);
             socket.off("register-success", onRegisterSuccess);
@@ -39,30 +58,7 @@ export default function App() {
 
     return (
         <div className="App">
-            <canvas id="3jsCanvas"/>
-            <div id={"debug"}>
-                <h2>Login</h2>
-                <input type="text" placeholder="Username" value={formUserName}
-                       onChange={(e) => setFormUserName(e.target.value)}/>
-                <input type="password" placeholder="Password" value={formUserPassword}
-                       onChange={(e) => setFormUserPassword(e.target.value)}/>
-                <button onClick={handleLogIn}>Login</button>
-
-                <h2>Registration</h2>
-                <input type="text" placeholder="Email" value={formUserEmail} onChange={(e) => setFormUserEmail(e.target.value)}/>
-                <input type="text" placeholder="Username" value={formUserName}
-                       onChange={(e) => setFormUserName(e.target.value)}/>
-                <input type="password" placeholder="Password" value={formUserPassword}
-                       onChange={(e) => setFormUserPassword(e.target.value)}/>
-                <button onClick={handleRegister}>Register</button>
-
-                <h2>Other Actions</h2>
-                <button onClick={() => socket.emit("logout")}>Log Out</button>
-                {/*<button onClick={() => socket.emit("session")}>Session Info</button>*/}
-                {/*<button onClick={handleJoinGame} disabled={isWaitingToJoinGame}>*/}
-                {/*    {isWaitingToJoinGame ? "Waiting for opponent..." : "Play Online"}*/}
-                {/*</button>*/}
-            </div>
+            <canvas id={sceneCanvasName}/>
         </div>
     );
 
@@ -129,6 +125,23 @@ export default function App() {
         setUserId(null);
         setUserName(null);
         setUserEmail(null);
+    }
+
+    function initScene() {
+        // Initialize scene
+        const _scene = new SceneInit(sceneCanvasName);
+        _scene.initScene();
+        _scene.animate();
+
+        // Instances of mouse and raycaster
+        const _mouse = new Vector2();
+        const _raycaster = new Raycaster();
+
+        // Set state variables
+        setScene(_scene);
+        setMouse(_mouse);
+        setRaycaster(_raycaster);
+        setIsSceneDefined(true);
     }
 };
 

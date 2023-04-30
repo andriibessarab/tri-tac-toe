@@ -189,19 +189,7 @@ class SockerEvents(Namespace):
         print(session.items())
         return
 
-    def on_session(self, data):
-        # Return 200 & session data
-        emit("session", {
-            "success": True,
-            "error_code": 200,
-            "error_message": "",
-            "data": {
-                "user_id": Session.get(SessionKeys.USER_ID),
-                "username": Session.get(SessionKeys.USER_NAME),
-                "email": Session.get(SessionKeys.USER_EMAIL),
-            }}, room=request.sid)
-        print(f"Client requested session info: {Session.get(SessionKeys.USER_NAME)}")
-        return
+    # DON'T TOUCH ONES ABOVE
 
     def on_join_wait(self, data):
         """
