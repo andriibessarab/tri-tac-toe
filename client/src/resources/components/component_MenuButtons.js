@@ -60,7 +60,7 @@ export default component_InGameControlButtons;
 
 
 
-    screenComponents.add()   .createMeshText("Play Online", 11, 2.5, 2, -40, 0, 0, true)
+    screenComponents.add().createMeshText("Play Online", 11, 2.5, 2, -40, 0, 0, true)
             .then((textMesh) => {
                 this.menuText.add(textMesh);
             })

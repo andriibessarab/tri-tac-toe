@@ -7,6 +7,10 @@ import screen_inGame from "./resources/screens/screen_InGameScreen";
 import screen_LogIn from "./resources/screens/screen_LogIn";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
+import component_Board from "./resources/components/component_Board";
+import component_RestartGameBoard from "./resources/components/component_RestartGameBoard";
+import mesh_Button from "./resources/meshes/mesh_Button";
+import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
 
 export default function Old() {
     // Constants
@@ -14,11 +18,12 @@ export default function Old() {
 
     // Local game vars
     let localGameMarker = "x";
+    let localGameTurnsGone = 0;
     let localGameBoardCopy = [
         ["", "", ""],
         ["", "", ""],
         ["", "", ""],
-    ]
+    ];
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -84,11 +89,17 @@ export default function Old() {
 
     // Update scene screen based on state change
     useEffect(() => {
-        if (!isSceneDefined) {
+
+        if (!isSceneDefined || scene === undefined) {
+            console.log("no scene")
             return;
         }
 
-        scene.scene.children.splice(0, scene.scene.children.length);
+        const sceneElements = scene.scene.children;
+
+        if (!(sceneElements === undefined || sceneElements === null)) {
+            scene.scene.children.splice(0, scene.scene.children.length);
+        }
 
         switch (screen) {
             case "main-menu":
@@ -118,33 +129,8 @@ export default function Old() {
             default:
                 break;
         }
-        const animate = () => {
-            if (screen === "online-game" || screen === "local-game") {
-                scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
-                scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
-                scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(animateSceneElement);
-                scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
-                scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
-                scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
-            }
-            requestAnimationFrame(animate);
-        }
         animate();
-    }, [scene, screen, userId]);
-
-
-    // useEffect(() => {
-    //     // Check if the scene has been defined before adding event listeners
-    //     if (!isSceneDefined) {
-    //         return;
-    //     }
-    //
-    //     window.addEventListener("mousedown", (event) => {
-    //         if (screen === "main-menu") {
-    //             handleMouseDownMenuScreen();
-    //         } else if ()
-    //     }, false);
-    // }, [handleMouseDownMenuScreen, isSceneDefined, mouse, raycaster, scene, screen]);
+    }, [isSceneDefined, scene, screen, userId]);
 
 
     return (
@@ -248,6 +234,7 @@ export default function Old() {
         setUserEmail(null);
     }
 
+
     function initScene() {
         // Initialize scene
         const _scene = new Scene(sceneCanvasName);
@@ -264,6 +251,19 @@ export default function Old() {
         setRaycaster(_raycaster);
         setIsSceneDefined(true);
     }
+
+
+    function animate() {
+            if (screen === "online-game" || screen === "local-game") {
+                scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
+            }
+            requestAnimationFrame(animate);
+        }
 
 
     function animateSceneElement(obj) {
@@ -355,10 +355,28 @@ export default function Old() {
             }
 
         }
+
+        const intersectsButtons = raycaster.intersectObjects(
+            scene.scene.getObjectByName("controlButtonsButtonsGroup").children
+        );
+
+        // If raycaster intersects with any button, do the corresponding action
+        if (intersectsButtons.length > 0) {
+            const clickedButtonID = scene.scene.getObjectByName("controlButtonsButtonsGroup").children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
+
+            if (clickedButtonID === "mainMenuButton") {
+                console.log("to title")
+                setScene("main-menu");
+                // gameOngoing = false;
+                // turnsGone = 0;
+            } else if (clickedButtonID === "restartGameButton") {
+                restartLocalGame();
+            }
+        }
     }
 
 
-    function handleMouseDownOnlineGameScreen(event) {
+    function handleMouseDownOnlineGameScreen(event, marker) {
         // Obtain mouse's position
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -415,6 +433,34 @@ export default function Old() {
         console.table(localGameBoardCopy)
     }
 
-};
+    function restartLocalGame() {
+        localGameMarker = "x";
+        localGameTurnsGone = 0;
+        localGameBoardCopy = [
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""],
+        ];
+
+        // Remove all old elements
+        scene.scene.getObjectByName("hiddenTilesGroup").children.splice(0, scene.scene.getObjectByName("hiddenTilesGroup").children.length);
+        scene.scene.getObjectByName("crossMarkerGroup").children.splice(0, scene.scene.getObjectByName("crossMarkerGroup").children.length);
+        scene.scene.getObjectByName("circleMarkerGroup").children.splice(0, scene.scene.getObjectByName("circleMarkerGroup").children.length);
+
+        // TODO should be done in seperate file altogether without repeating the code here
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, 22, 0, 0)); // top-left tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(0, 22, 0, 1)); // top-mid tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24, 22, 0, 2)); // top-right tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, -2, 1, 0)); // mid-left tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(0, -2, 1, 1)); // mid-mid tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24 , -2, 1, 2)); // mid-right tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, -26, 2, 0)); // bottom-left tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(0, -26, 2, 1)); // bottom-mid tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24, -26, 2, 2)); // bottom-right tile
+
+        console.log(scene.scene.getObjectByName("hiddenTilesGroup"));
+    }
+}
+
 
 
