@@ -7,9 +7,6 @@ import screen_inGame from "./resources/screens/screen_InGameScreen";
 import screen_LogIn from "./resources/screens/screen_LogIn";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
-import component_Board from "./resources/components/component_Board";
-import component_RestartGameBoard from "./resources/components/component_RestartGameBoard";
-import mesh_Button from "./resources/meshes/mesh_Button";
 import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
 
 export default function Old() {
@@ -56,6 +53,7 @@ export default function Old() {
 
     // Misc states
     const [isSceneDefined, setIsSceneDefined] = useState(false);
+    const [isScreenChanged, setIsScreenChanged] = useState(false);
     const [isWaitingToJoinGame, setIsWaitingToJoinGame] = useState(false); // Boolean to indicate whether the user is waiting to join a game or not
     const [hasGameOngoing, setHasGameOngoing] = useState(false); // Boolean to indicate whether there is an ongoing game or not
 
@@ -129,6 +127,7 @@ export default function Old() {
             default:
                 break;
         }
+        console.log(screen);
         animate();
     }, [isSceneDefined, scene, screen, userId]);
 
@@ -254,16 +253,26 @@ export default function Old() {
 
 
     function animate() {
-            if (screen === "online-game" || screen === "local-game") {
+        if (screen === "main-menu") {
+
+        } else if (screen === "online-game" || screen === "local-game") {
+            try {
                 scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("controlButtonsButtonsGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
+            } catch (err) {
+                return
             }
+
+
+
             requestAnimationFrame(animate);
         }
+
+    }
 
 
     function animateSceneElement(obj) {
@@ -365,8 +374,11 @@ export default function Old() {
             const clickedButtonID = scene.scene.getObjectByName("controlButtonsButtonsGroup").children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
 
             if (clickedButtonID === "mainMenuButton") {
-                console.log("to title")
-                setScene("main-menu");
+                setIsSceneDefined(false);
+                restartLocalGame();
+                window.removeEventListener("mousedown", handleMouseDownLocalGameScreen);
+                setScreen("main-menu");
+                setIsSceneDefined(true);
                 // gameOngoing = false;
                 // turnsGone = 0;
             } else if (clickedButtonID === "restartGameButton") {
@@ -453,12 +465,10 @@ export default function Old() {
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24, 22, 0, 2)); // top-right tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, -2, 1, 0)); // mid-left tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(0, -2, 1, 1)); // mid-mid tile
-        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24 , -2, 1, 2)); // mid-right tile
+        scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24, -2, 1, 2)); // mid-right tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, -26, 2, 0)); // bottom-left tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(0, -26, 2, 1)); // bottom-mid tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24, -26, 2, 2)); // bottom-right tile
-
-        console.log(scene.scene.getObjectByName("hiddenTilesGroup"));
     }
 }
 
