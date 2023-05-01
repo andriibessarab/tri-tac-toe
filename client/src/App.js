@@ -10,6 +10,7 @@ import mesh_Circle from "./resources/meshes/mesh_Circle";
 import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
 import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 import Minimax from 'tic-tac-toe-minimax'
+import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
 
 export default function Old() {
     // Constants
@@ -26,7 +27,7 @@ export default function Old() {
     ];
 
     let singlePlayerGameCurrentTurn = "X";
-    const { ComputerMove } = Minimax;
+    const {ComputerMove} = Minimax;
     let singlePlayerGameHuPlayer = "X";
     let singlePlayerGameAiPlayer = "O";
     let singlePlayerGameSymbols = {
@@ -34,7 +35,7 @@ export default function Old() {
         aiPlayer: singlePlayerGameAiPlayer
     }
     let singlePlayerGameDifficulty = "Hard";
-    let singlePlayerGameBoard = [0, 1, 2, 3, 4 ,5 ,6 ,7, 8];
+    let singlePlayerGameBoard = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -137,7 +138,9 @@ export default function Old() {
                 break;
             case "options":
                 break;
-            case "log-":
+            case "choose-difficulty":
+                scene.scene.add(screen_ChooseDifficulty());
+                window.addEventListener("mousedown", handleMouseDownChooseDifficultyScreen, false);
                 break;
             default:
                 break;
@@ -337,10 +340,61 @@ export default function Old() {
 
             if (buttonName === "log-out") {
                 socket.emit("logout")
+            } else if (buttonName === "single-player") {
+                setScreen("choose-difficulty");
             } else {
                 setScreen(buttonName);
             }
             window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+        }
+    }
+
+
+    function handleMouseDownChooseDifficultyScreen(event) {
+        // Obtain mouse's position
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Set up raycaster
+        raycaster.setFromCamera(mouse, scene.camera);
+
+        // TODO I don't like using try catch
+        let intersects;
+        try {
+            intersects = raycaster.intersectObjects(
+                scene.scene.getObjectByName("buttonTiles").children
+            );
+        } catch (err) {
+            return;
+        }
+
+
+        if (intersects.length > 0) {
+            const xOffset = intersects[0].object.position.x;
+            const yOffset = intersects[0].object.position.y;
+
+            // Find tile index
+            const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
+                (c) => c.uuid === intersects[0].object.uuid
+            );
+
+            // Store tile coordinate
+            const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
+            const buttonName = tile.buttonName;
+
+            switch (buttonName) {
+                case "easy-mode":
+                    singlePlayerGameDifficulty = "Easy";
+                    break;
+                case "normal-mode":
+                    singlePlayerGameDifficulty = "Normal";
+                    break;
+                case "hard-mode":
+                    singlePlayerGameDifficulty = "Hard";
+                    break;
+            }
+            setScreen("single-player");
+            window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
         }
     }
 
@@ -362,12 +416,11 @@ export default function Old() {
         try {
             // Obtain list of objects raycaster intersects with
             intersectsTiles = raycaster.intersectObjects(
-            scene.scene.getObjectByName("hiddenTilesGroup").children
-        );} catch(err) {
+                scene.scene.getObjectByName("hiddenTilesGroup").children
+            );
+        } catch (err) {
             return;
         }
-
-
 
 
         // Check if raycaster intersects with any tile
@@ -411,7 +464,7 @@ export default function Old() {
             intersectsButtons = raycaster.intersectObjects(
                 scene.scene.getObjectByName("controlButtonsButtonsGroup").children
             );
-        } catch(err) {
+        } catch (err) {
             return;
         }
 
@@ -479,10 +532,6 @@ export default function Old() {
             updateGameBoardCopy(tileRow, tileCol, singlePlayerGameCurrentTurn);
             localGameTurnsGone++;
 
-            if (checkWin() || localGameTurnsGone === 9) {
-                localGameOngoing = false;
-            }
-
             // Draw marker
             if (singlePlayerGameCurrentTurn === "X") {
                 scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
@@ -492,19 +541,25 @@ export default function Old() {
                 localGameMarker = "X";
             }
 
+            if (checkWin() || localGameTurnsGone === 9) {
+                localGameOngoing = false;
+                return;
+            }
+
             singlePlayerGameCurrentTurn = singlePlayerGameCurrentTurn === "X" ? "O" : "X";
 
             // Perform computer move
-            const computerMove = ComputerMove(singlePlayerGameBoard,singlePlayerGameSymbols, singlePlayerGameDifficulty)
+            const computerMove = ComputerMove(singlePlayerGameBoard, singlePlayerGameSymbols, singlePlayerGameDifficulty)
 
             const compMoveRow = Math.floor(computerMove / 3);
             const compMoveCol = computerMove % 3;
 
             updateGameBoardCopy(compMoveRow, compMoveCol, singlePlayerGameCurrentTurn);
+            localGameTurnsGone++;
 
             // Find the index of the tile with the given row and col
             const movePerformedOnTileWithIndex = scene.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
-              (tile) => tile.userData.row === compMoveRow && tile.userData.col === compMoveCol
+                (tile) => tile.userData.row === compMoveRow && tile.userData.col === compMoveCol
             );
 
             // Get the tile at the given index
@@ -614,7 +669,7 @@ export default function Old() {
     function updateGameBoardCopy(i, j, marker) {
         console.log("in update baord", i, j)
         localGameBoardCopy[i][j] = marker;
-        singlePlayerGameBoard[i*3+j] = "X" ? "X" : "O";
+        singlePlayerGameBoard[i * 3 + j] = "X" ? "X" : "O";
         console.table(localGameBoardCopy);
     }
 
@@ -629,15 +684,15 @@ export default function Old() {
             ["7", "8", "9"],
         ];
 
-         singlePlayerGameCurrentTurn = "X";
-         singlePlayerGameHuPlayer = "X";
-         singlePlayerGameAiPlayer = "O";
-         singlePlayerGameSymbols = {
+        singlePlayerGameCurrentTurn = "X";
+        singlePlayerGameHuPlayer = "X";
+        singlePlayerGameAiPlayer = "O";
+        singlePlayerGameSymbols = {
             huPlayer: singlePlayerGameHuPlayer,
             aiPlayer: singlePlayerGameAiPlayer
         }
         singlePlayerGameDifficulty = "Hard";
-        singlePlayerGameBoard = [0, 1, 2, 3, 4 ,5 ,6 ,7, 8];
+        singlePlayerGameBoard = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
         // Remove all old elements
         scene.scene.getObjectByName("hiddenTilesGroup").children.splice(0, scene.scene.getObjectByName("hiddenTilesGroup").children.length);
