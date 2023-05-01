@@ -8,6 +8,7 @@ import screen_LogIn from "./resources/screens/screen_LogIn";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
 import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
+import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 
 export default function Old() {
     // Constants
@@ -16,11 +17,12 @@ export default function Old() {
     // Local game vars
     let localGameMarker = "x";
     let localGameTurnsGone = 0;
+    let localGameOngoing = true;
     let localGameBoardCopy = [
-        ["", "", ""],
-        ["", "", ""],
-        ["", "", ""],
-    ];
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
+        ];
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -322,6 +324,11 @@ export default function Old() {
 
 
     function handleMouseDownLocalGameScreen(event) {
+        if (!localGameOngoing) {
+            restartLocalGame();
+            localGameOngoing = true;
+        }
+
         // Obtain mouse's position
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -353,6 +360,10 @@ export default function Old() {
             scene.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
 
             updateGameBoardCopy(tileRow, tileCol, localGameMarker);
+            localGameTurnsGone++;
+            if (checkWin() || localGameTurnsGone === 9) {
+                localGameOngoing = false;
+            }
 
             // Draw marker
             if (localGameMarker === "x") {
@@ -379,8 +390,6 @@ export default function Old() {
                 window.removeEventListener("mousedown", handleMouseDownLocalGameScreen);
                 setScreen("main-menu");
                 setIsSceneDefined(true);
-                // gameOngoing = false;
-                // turnsGone = 0;
             } else if (clickedButtonID === "restartGameButton") {
                 restartLocalGame();
             }
@@ -446,12 +455,13 @@ export default function Old() {
     }
 
     function restartLocalGame() {
+        localGameOngoing = true;
         localGameMarker = "x";
         localGameTurnsGone = 0;
         localGameBoardCopy = [
-            ["", "", ""],
-            ["", "", ""],
-            ["", "", ""],
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
         ];
 
         // Remove all old elements
@@ -469,6 +479,88 @@ export default function Old() {
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, -26, 2, 0)); // bottom-left tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(0, -26, 2, 1)); // bottom-mid tile
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(24, -26, 2, 2)); // bottom-right tile
+    }
+
+
+        // Check if either marker won
+    function checkWin() {
+        let strike;
+        const board = localGameBoardCopy
+
+        for (let n = 0; n < 3; n++) {
+            if (_checkHorizontalWin(n, board)) {
+                strike = mesh_WinLine(64, 2, 4);
+                strike.position.y = _roundYOffset(n);
+                scene.scene.add(strike);
+                return true;
+            }
+            if (_checkVerticalWin(n, board)) {
+                strike = mesh_WinLine(2, 64, 4);
+                strike.position.x = _roundXOffset(n);
+                strike.position.y = -2
+                scene.scene.add(strike);
+                return true;
+            }
+        }
+
+        if (_checkRightLeaningDiagonalWin(board)) {
+            strike = mesh_WinLine(90, 2, 4);
+            strike.rotation.z = -Math.PI / 4;
+                strike.position.y = -2
+            scene.scene.add(strike);
+            return true;
+        }
+
+        if (_checkLeftLeaningDiagonalWin(board)) {
+            strike = mesh_WinLine(90, 2, 4);
+            strike.rotation.z = Math.PI / 4;
+            strike.position.y = -2
+            scene.scene.add(strike);
+            return true;
+        }
+        return false
+    }
+
+        // Check for win in horizontal line
+    function _checkHorizontalWin(i, board) {
+        return (board[i][0] === board[i][1] && board[i][0] === board[i][2]);
+    }
+
+    // Check for win in vertical line
+    function _checkVerticalWin(i, board) {
+        return (board[0][i] === board[1][i] && board[0][i] === board[2][i]);
+    }
+
+    // Check for win in right leaning diagonal line
+    function _checkRightLeaningDiagonalWin(board) {
+        return (board[0][0] === board[1][1] && board[0][0] === board[2][2]);
+    }
+
+    // Check for win in left leaning diagonal line
+    function _checkLeftLeaningDiagonalWin(board) {
+        return (board[0][2] === board[1][1] && board[0][2] === board[2][0]);
+    }
+
+        // Change xOffset to appropriate offset for column
+    function _roundXOffset(n) {
+        if (n === 0) {
+            return -24;
+        } else if (n === 1) {
+            return 0;
+        } else {
+            return 24;
+        }
+    }
+
+    // Change yOffset to appropriate offset for row
+    function _roundYOffset(n) {
+        if (n === 0) {
+            return 22;
+        } else if (n === 1) {
+            return -2;
+        } else {
+            return -26;
+        }
     }
 }
 
