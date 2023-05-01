@@ -42,7 +42,7 @@ function component_InGameTitle(xOffset, yOffset, screen, gamemode = -1) {
                     });
                 break;
             case 2:
-                mesh_Text("AI Game", fontSize, z, fontHeight, -25.7 + xOffset, 41 + yOffset, zOffset, setScaleToZeros)
+                mesh_Text("Single Player", fontSize, z, fontHeight, -41.4 + xOffset, 41 + yOffset, zOffset, setScaleToZeros)
                     .then((textMesh) => {
                         title.add(textMesh);
                     })
