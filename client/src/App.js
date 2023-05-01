@@ -19,10 +19,10 @@ export default function Old() {
     let localGameTurnsGone = 0;
     let localGameOngoing = true;
     let localGameBoardCopy = [
-            ["1", "2", "3"],
-            ["4", "5", "6"],
-            ["7", "8", "9"],
-        ];
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+    ];
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -256,7 +256,7 @@ export default function Old() {
 
     function animate() {
         if (screen === "main-menu") {
-
+            return;
         } else if (screen === "online-game" || screen === "local-game") {
             try {
                 scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
@@ -265,10 +265,10 @@ export default function Old() {
                 scene.scene.getObjectByName("controlButtonsTextGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
+                scene.scene.getObjectByName("winLineGroup").children.forEach(animateSceneElement);
             } catch (err) {
                 return
             }
-
 
 
             requestAnimationFrame(animate);
@@ -468,6 +468,7 @@ export default function Old() {
         scene.scene.getObjectByName("hiddenTilesGroup").children.splice(0, scene.scene.getObjectByName("hiddenTilesGroup").children.length);
         scene.scene.getObjectByName("crossMarkerGroup").children.splice(0, scene.scene.getObjectByName("crossMarkerGroup").children.length);
         scene.scene.getObjectByName("circleMarkerGroup").children.splice(0, scene.scene.getObjectByName("circleMarkerGroup").children.length);
+        scene.scene.getObjectByName("winLineGroup").children.splice(0, scene.scene.getObjectByName("winLineGroup").children.length);
 
         // TODO should be done in seperate file altogether without repeating the code here
         scene.scene.getObjectByName("hiddenTilesGroup").add(mesh_HiddenBoardTile(-24, 22, 0, 0)); // top-left tile
@@ -482,7 +483,7 @@ export default function Old() {
     }
 
 
-        // Check if either marker won
+    // Check if either marker won
     function checkWin() {
         let strike;
         const board = localGameBoardCopy
@@ -491,14 +492,16 @@ export default function Old() {
             if (_checkHorizontalWin(n, board)) {
                 strike = mesh_WinLine(64, 2, 4);
                 strike.position.y = _roundYOffset(n);
-                scene.scene.add(strike);
+                scene.scene.getObjectByName("winLineGroup").add(strike);
+                animate();
                 return true;
             }
             if (_checkVerticalWin(n, board)) {
                 strike = mesh_WinLine(2, 64, 4);
                 strike.position.x = _roundXOffset(n);
-                strike.position.y = -2
-                scene.scene.add(strike);
+                strike.position.y = -2;
+                scene.scene.getObjectByName("winLineGroup").add(strike);
+                animate();
                 return true;
             }
         }
@@ -506,8 +509,9 @@ export default function Old() {
         if (_checkRightLeaningDiagonalWin(board)) {
             strike = mesh_WinLine(90, 2, 4);
             strike.rotation.z = -Math.PI / 4;
-                strike.position.y = -2
-            scene.scene.add(strike);
+            strike.position.y = -2;
+            scene.scene.getObjectByName("winLineGroup").add(strike);
+            animate();
             return true;
         }
 
@@ -515,13 +519,14 @@ export default function Old() {
             strike = mesh_WinLine(90, 2, 4);
             strike.rotation.z = Math.PI / 4;
             strike.position.y = -2
-            scene.scene.add(strike);
+            scene.scene.getObjectByName("winLineGroup").add(strike);
+            animate();
             return true;
         }
         return false
     }
 
-        // Check for win in horizontal line
+    // Check for win in horizontal line
     function _checkHorizontalWin(i, board) {
         return (board[i][0] === board[i][1] && board[i][0] === board[i][2]);
     }
@@ -541,7 +546,7 @@ export default function Old() {
         return (board[0][2] === board[1][1] && board[0][2] === board[2][0]);
     }
 
-        // Change xOffset to appropriate offset for column
+    // Change xOffset to appropriate offset for column
     function _roundXOffset(n) {
         if (n === 0) {
             return -24;

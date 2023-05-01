@@ -12,10 +12,13 @@ function screen_inGame(gamemode) {
     // Empty Groups
     const crosses = new THREE.Group();
     const circles = new THREE.Group();
+    const winLine = new THREE.Group();
     crosses.name = "crossMarkerGroup";
     circles.name = "circleMarkerGroup";
+    winLine.name = "winLineGroup";
     screenComponents.add(crosses);
     screenComponents.add(circles);
+    screenComponents.add(winLine);
 
     screenComponents.name = "screenComponents";
 
