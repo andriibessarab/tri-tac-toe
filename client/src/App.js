@@ -154,9 +154,6 @@ export default function Old() {
                 <input type="password" placeholder="Password" value={formUserPassword}
                        onChange={(e) => setFormUserPassword(e.target.value)}/>
                 <button onClick={handleRegister}>Register</button>
-
-                <h2>Other Actions</h2>
-                <button onClick={() => socket.emit("logout")}>Log Out</button>
             </div>
         </div>
     );
@@ -256,8 +253,9 @@ export default function Old() {
 
     function animate() {
         if (screen === "main-menu") {
-            return;
+           return;
         } else if (screen === "online-game" || screen === "local-game") {
+            // TODO I don't like using try catch
             try {
                 scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("boardLinesGroup").children.forEach(animateSceneElement);
@@ -298,9 +296,16 @@ export default function Old() {
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
 
-        const intersects = raycaster.intersectObjects(
-            scene.scene.getObjectByName("buttonTiles").children
-        );
+        // TODO I don't like using try catch
+        let intersects;
+        try {
+            intersects = raycaster.intersectObjects(
+                scene.scene.getObjectByName("buttonTiles").children
+            );
+        } catch(err) {
+            return;
+        }
+
 
         if (intersects.length > 0) {
             const xOffset = intersects[0].object.position.x;
@@ -317,7 +322,11 @@ export default function Old() {
             const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
             const buttonName = tile.buttonName;
 
-            setScreen(buttonName);
+            if (buttonName === "log-out") {
+                socket.emit("logout")
+            } else {
+                setScreen(buttonName);
+            }
             window.removeEventListener("mousedown", handleMouseDownMenuScreen);
         }
     }
@@ -454,6 +463,7 @@ export default function Old() {
         console.table(localGameBoardCopy)
     }
 
+
     function restartLocalGame() {
         localGameOngoing = true;
         localGameMarker = "x";
@@ -526,25 +536,30 @@ export default function Old() {
         return false
     }
 
+
     // Check for win in horizontal line
     function _checkHorizontalWin(i, board) {
         return (board[i][0] === board[i][1] && board[i][0] === board[i][2]);
     }
+
 
     // Check for win in vertical line
     function _checkVerticalWin(i, board) {
         return (board[0][i] === board[1][i] && board[0][i] === board[2][i]);
     }
 
+
     // Check for win in right leaning diagonal line
     function _checkRightLeaningDiagonalWin(board) {
         return (board[0][0] === board[1][1] && board[0][0] === board[2][2]);
     }
 
+
     // Check for win in left leaning diagonal line
     function _checkLeftLeaningDiagonalWin(board) {
         return (board[0][2] === board[1][1] && board[0][2] === board[2][0]);
     }
+
 
     // Change xOffset to appropriate offset for column
     function _roundXOffset(n) {
@@ -556,6 +571,7 @@ export default function Old() {
             return 24;
         }
     }
+
 
     // Change yOffset to appropriate offset for row
     function _roundYOffset(n) {
