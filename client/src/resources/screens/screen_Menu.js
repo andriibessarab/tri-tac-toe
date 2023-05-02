@@ -11,12 +11,17 @@ function screen_Menu(userLoggedIn) {
 
     const buttonTiles = new THREE.Group();
 
+    const waitRoomElement = new THREE.Group();
+
     screenComponents.add(buttonTiles);
+    screenComponents.add(waitRoomElement);
 
     screenComponents.name = "screenComponents";
     buttonTiles.name = "buttonTiles";
+    waitRoomElement.name = "waitRoom";
 
-    mesh_Text("Tic-Tac-Toe", 10, 2, 2, -35.8, 39, -2, false)
+
+    mesh_Text("Tic-Tac-Toe", 10, 2, 2, -35.8, 39, -2, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -26,7 +31,7 @@ function screen_Menu(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(31, 10, 1, 0, 11.5, "online-game"));
 
-    mesh_Text("Online Game", 4, 1, 2, -16, 10, -1, false)
+    mesh_Text("Online Game", 4, 1, 2, -16, 10, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -36,7 +41,7 @@ function screen_Menu(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(28, 10, 1, 0, -1.5, "local-game"));
 
-    mesh_Text("Local Game", 4, 1, 2, -14.3, -3, -1, false)
+    mesh_Text("Local Game", 4, 1, 2, -14.3, -3, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -46,7 +51,7 @@ function screen_Menu(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, -14.5, "single-player"));
 
-    mesh_Text("Single Player", 4, 1, 2, -16.6, -16, -1, false)
+    mesh_Text("Single Player", 4, 1, 2, -16.6, -16, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -56,7 +61,7 @@ function screen_Menu(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(22, 10, 1, 0, -27.5, "options"));
 
-    mesh_Text("Options", 4, 1, 2, -10, -29, -1, false)
+    mesh_Text("Options", 4, 1, 2, -10, -29, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -67,7 +72,7 @@ function screen_Menu(userLoggedIn) {
     if (userLoggedIn) {
         buttonTiles.add(mesh_hiddenButtonTile(20, 10, 1, 0, -40.5, "log-out"));
 
-        mesh_Text("Log Out", 4, 1, 2, -9, -42, -1, false)
+        mesh_Text("Log Out", 4, 1, 2, -9, -42, -1, true)
             .then((textMesh) => {
                 screenComponents.add(textMesh);
             })
@@ -77,7 +82,7 @@ function screen_Menu(userLoggedIn) {
     } else {
         buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "log-in"));
 
-        mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, false)
+        mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, true)
             .then((textMesh) => {
                 screenComponents.add(textMesh);
             })
@@ -85,6 +90,14 @@ function screen_Menu(userLoggedIn) {
                 console.error(error);
             });
     }
+
+    mesh_Text("© Andrii Bessarab 2023", 2, 1, 0.5, -14.5, -54, -1, true)
+        .then((textMesh) => {
+            screenComponents.add(textMesh);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
 
     generateRandomCrosses(25);
     generateRandomCircles(25);

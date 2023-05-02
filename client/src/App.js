@@ -11,6 +11,7 @@ import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
 import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
+import mesh_Text from "./resources/meshes/mesh_Text";
 
 export default function Old() {
     // Constants
@@ -124,8 +125,8 @@ export default function Old() {
                 window.addEventListener("mousedown", handleMouseDownLocalGameScreen, false);
                 break;
             case "online-game":
-                // scene.scene.add(screen_inGame(0));
-                // window.addEventListener("mousedown", handleMouseDownOnlineGameScreen, false);
+                scene.scene.add(screen_inGame(0));
+                window.addEventListener("mousedown", handleMouseDownOnlineGameScreen, false);
                 break;
             case "single-player":
                 scene.scene.add(screen_inGame(2));
@@ -153,7 +154,6 @@ export default function Old() {
     return (
         <div className="App">
             <canvas id={sceneCanvasName}/>
-            {screen}
             <div id={"debug"}>
                 <h2>Login</h2>
                 <input type="text" placeholder="Username" value={formUserName}
@@ -268,9 +268,7 @@ export default function Old() {
 
 
     function animate() {
-        if (screen === "main-menu") {
-
-        } else if (screen === "online-game" || screen === "local-game" || screen == "single-player") {
+        if (screen === "online-game" || screen === "local-game" || screen == "single-player") {
             // TODO I don't like using try catch
             try {
                 scene.scene.getObjectByName("titleGroup").children.forEach(animateSceneElement);
@@ -280,6 +278,15 @@ export default function Old() {
                 scene.scene.getObjectByName("crossMarkerGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("circleMarkerGroup").children.forEach(animateSceneElement);
                 scene.scene.getObjectByName("winLineGroup").children.forEach(animateSceneElement);
+            } catch (err) {
+                return
+            }
+
+
+            requestAnimationFrame(animate);
+        } else if (screen === "choose-difficulty" || screen === "main-menu") {
+            try {
+                scene.scene.getObjectByName("screenComponents").children.forEach(animateSceneElement);
             } catch (err) {
                 return
             }
@@ -305,6 +312,9 @@ export default function Old() {
 
 
     function handleMouseDownMenuScreen(event) {
+        if(isWaitingToJoinGame) {
+            return;
+        }
         // Obtain mouse's position
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -342,6 +352,17 @@ export default function Old() {
                 socket.emit("logout")
             } else if (buttonName === "single-player") {
                 setScreen("choose-difficulty");
+            } else if (buttonName === "online-game") {
+                mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -2, false)
+                    .then((textMesh) => {
+                        console.log("bla");
+                        scene.scene.add(textMesh);
+                        setIsWaitingToJoinGame(true);
+                        socket.emit("join-wait");
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
             } else {
                 setScreen(buttonName);
             }
@@ -801,6 +822,21 @@ export default function Old() {
             return -2;
         } else {
             return -26;
+        }
+    }
+
+    function animateOnLaunch() {
+
+
+        function animateSceneCameraFadeIn() {
+            if (scene.scene.camera.position.z > 128) {
+                scene.scene.camera.position.z -= 5;
+            }
+
+            animateSceneCameraFadeIn();
+
+
+            requestAnimationFrame(animateSceneCameraFadeIn)
         }
     }
 }

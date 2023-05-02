@@ -16,7 +16,7 @@ function screen_ChooseDifficulty(userLoggedIn) {
     screenComponents.name = "screenComponents";
     buttonTiles.name = "buttonTiles";
 
-    mesh_Text("Choose Difficulty", 10, 2, 2, -54, 39, -2, false)
+    mesh_Text("Choose Difficulty", 10, 2, 2, -54, 39, -2, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -26,7 +26,7 @@ function screen_ChooseDifficulty(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(20, 8, 1, 0, 11.5, "easy-mode"));
 
-    mesh_Text("Easy", 4, 1, 2, -6.5, 10, -1, false)
+    mesh_Text("Easy", 4, 1, 2, -6.5, 10, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -36,7 +36,7 @@ function screen_ChooseDifficulty(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(27, 8, 1, 0, -5.5, "normal-mode"));
 
-    mesh_Text("Normal", 4, 1, 2, -10.6, -7, -1, false)
+    mesh_Text("Normal", 4, 1, 2, -10.6, -7, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -46,7 +46,7 @@ function screen_ChooseDifficulty(userLoggedIn) {
 
     buttonTiles.add(mesh_hiddenButtonTile(20, 8, 1, 0, -22.5, "hard-mode"));
 
-    mesh_Text("Hard", 4, 1, 2, -6.5, -24, -1, false)
+    mesh_Text("Hard", 4, 1, 2, -6.5, -24, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
