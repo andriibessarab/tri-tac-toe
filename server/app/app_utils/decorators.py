@@ -2,16 +2,18 @@ import sqlite3
 from functools import wraps
 
 from flask import request, session
+from flask_socketio import emit
 
+from .session_keys import SessionKeys
 
 
 # Require user to be authenticated
-def login_required(socket, event_name):
+def login_required(event_name):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if 'user_id' not in session:
-                socket.emit(event_name, {
+            if SessionKeys.USER_ID not in session:
+                emit(event_name, {
                     "success": False,
                     "error_code": 401,
                     "error_message": "User is not authorized.",

@@ -11,7 +11,7 @@ import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
 import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
-import mesh_Text from "./resources/meshes/mesh_Text";
+import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
 
 export default function Old() {
     // Constants
@@ -59,7 +59,6 @@ export default function Old() {
     const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null); // Number to indicate whether the current player's turn (true or false)
     const [currentGameOpponentId, setCurrentGameOpponentId] = useState(null); // String to hold the current game's opponent ID
     const [currentGameOpponentUsername, setCurrentGameOpponentUsername] = useState(null); // String to hold the current game's opponent username
-    const [currentGameBoardCopy, setCurrentGameBoardCopy] = useState([["", "", ""], ["", "", ""], ["", "", ""],]);
 
     // Scene states
     const [scene, setScene] = useState(null);
@@ -87,6 +86,9 @@ export default function Old() {
         socket.on("login-success", onLogInSuccess);
         socket.on("login-fail", onLogInFailed);
         socket.on("logout", onLogOut);
+        socket.on("join_wait_fail", onJoinWaitFail);
+        socket.on("join_wait_success", onJoinWaitSuccess);
+        socket.on("make_move_success", onMakeMoveSuccess);
 
         return () => {
             // Disconnect socket events
@@ -97,6 +99,9 @@ export default function Old() {
             socket.off("login-success", onLogInSuccess);
             socket.off("login-fail", onLogInFailed);
             socket.off("logout", onLogOut);
+            socket.off("join_wait_fail", onJoinWaitFail);
+            socket.off("join_wait_success", onJoinWaitSuccess);
+            socket.off("make_move_success", onMakeMoveSuccess);
         };
     }, []);
 
@@ -123,6 +128,10 @@ export default function Old() {
             case "local-game":
                 scene.scene.add(screen_inGame(1));
                 window.addEventListener("mousedown", handleMouseDownLocalGameScreen, false);
+                break;
+            case "join-online-game":
+                scene.scene.add(screen_OnlineGameSettings(0));
+                window.addEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen, false);
                 break;
             case "online-game":
                 scene.scene.add(screen_inGame(0));
@@ -170,6 +179,11 @@ export default function Old() {
                 <input type="password" placeholder="Password" value={formUserPassword}
                        onChange={(e) => setFormUserPassword(e.target.value)}/>
                 <button onClick={handleRegister}>Register</button>
+
+                <button onClick={() => {
+                    socket.emit("test")
+                }}>Test
+                </button>
             </div>
         </div>
     );
@@ -249,6 +263,115 @@ export default function Old() {
     }
 
 
+    function onJoinWaitFail(data) {
+        const errorCode = data["error_code"];
+        const errorMessage = data["error_message"];
+        if (errorCode === 401) {
+            setScreen("log-in");
+        } else {
+            alert(errorMessage);
+        }
+    }
+
+
+    function onJoinWaitSuccess(data) {
+        // Store response
+        const _gameId = data["data"]["game"]["game_id"]
+        console.log("we joined", _gameId)
+
+        setCurrentGameID(_gameId);
+
+        // Join the game room
+        socket.emit("join_game", {
+            game_id: _gameId,
+        });
+    }
+
+
+    // function onJoinGameFail(data) {
+    //     const errorCode = data["error_code"];
+    //     const errorMessage = data["error_message"];
+    //     alert(errorMessage);
+    // }
+
+
+    // function onJoinGameSuccess(data) {
+    //     // Store response data (p.s. using snake case
+    //     // to not interfere with globals)
+    //     const game_id = data["data"]["game"]["game_id"]
+    //     const game_room_id = data["data"]["game"]["game_room_id"];
+    //     const player_number = data["data"]["player"]["player_number"];
+    //     const player_marker = data["data"]["player"]["player_marker"];
+    //     const is_player_turn = data["data"]["player"]["player_turn"]
+    //     const opponent_id = data["data"]["opponent"]["opponent_id"];
+    //     const opponent_username = data["data"]["opponent"]["opponent_username"];
+    //
+    //     // Update necessary state variables
+    //     setCurrentGameID(game_id);
+    //     setCurrentGameRoomID(game_room_id);
+    //     setCurrentGamePlayerNumber(player_number);
+    //     setCurrentGamePlayerMarker(player_marker);
+    //     setCurrentGamePlayerTurn(is_player_turn);
+    //     setCurrentGameOpponentId(opponent_id);
+    //     setCurrentGameOpponentUsername(opponent_username);
+    //     setHasGameOngoing(true);
+    //
+    //     window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+    //     setScreen("online-game");
+    // }
+
+
+    function onMakeMoveSuccess(data) {
+        //     // Store response data (p.s. using snake case
+        //     // to not interfere with globals)
+        const prev_move_player_id = data["data"]["previous_move"]["player_id"]
+        const prev_move_player_marker = data["data"]["previous_move"]["player_marker"]
+        const prev_move_coord = data["data"]["previous_move"]["move_coordinate"];
+        const prev_move_row = prev_move_coord[0];
+        const prev_move_col = prev_move_coord[1];
+        const next_move_player_id = data["data"]["next_move"]["player_id"];
+        const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
+
+        if (notThisPlayerPrevMove) {
+            console.log("were inlining")
+            // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
+
+            const hiddenTilesGroup = scene.scene.getObjectByName("hiddenTilesGroup");
+
+            let targetTile;
+
+            hiddenTilesGroup.children.forEach(tile => {
+                if (tile.row === prev_move_row && tile.column === prev_move_col) {
+                    targetTile = tile;
+                }
+            });
+
+            if (!targetTile) {
+                // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
+                return
+            }
+
+            const tile_x = targetTile.position.x;
+            const tile_y = targetTile.position.y;
+
+            console.log(prev_move_player_marker);
+
+            // Draw other player's turn
+            if (prev_move_player_marker === "x") {
+                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
+            } else if (prev_move_player_marker === "o") {
+                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
+            } else {
+                // TODO - handle if invalid mve(in case something wrong was returned from db)
+                return
+            }
+
+            // Change state variables
+            setCurrentGamePlayerTurn(true);
+        }
+    }
+
+
     function initScene() {
         // Initialize scene
         const _scene = new Scene(sceneCanvasName);
@@ -312,7 +435,7 @@ export default function Old() {
 
 
     function handleMouseDownMenuScreen(event) {
-        if(isWaitingToJoinGame) {
+        if (isWaitingToJoinGame) {
             return;
         }
         // Obtain mouse's position
@@ -351,22 +474,100 @@ export default function Old() {
             if (buttonName === "log-out") {
                 socket.emit("logout")
             } else if (buttonName === "single-player") {
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen("choose-difficulty");
             } else if (buttonName === "online-game") {
-                mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -2, false)
-                    .then((textMesh) => {
-                        console.log("bla");
-                        scene.scene.add(textMesh);
-                        setIsWaitingToJoinGame(true);
-                        socket.emit("join-wait");
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                    });
+                // mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -0.5, false)
+                //     .then((textMesh) => {
+                //         try {
+                //
+                //             if (!isWaitingToJoinGame) {
+                //                 scene.scene.add(textMesh);
+                //                 socket.emit("join_wait");
+                //                 setIsWaitingToJoinGame(true);
+                //             }
+                //
+                //         } catch (err) {
+                //
+                //         }
+                //     })
+                //     .catch((error) => {
+                //         console.error(error);
+                //     });
+
+                setScreen("join-online-game")
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
             } else {
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen(buttonName);
             }
-            window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+        }
+    }
+
+    function handleMouseDownOnlineGameSettingsScreen(event) {
+        // Obtain mouse's position
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Set up raycaster
+        raycaster.setFromCamera(mouse, scene.camera);
+
+        // TODO I don't like using try catch
+        let intersects;
+        try {
+            intersects = raycaster.intersectObjects(
+                scene.scene.getObjectByName("buttonTiles").children
+            );
+        } catch (err) {
+            return;
+        }
+
+
+        if (intersects.length > 0) {
+            const xOffset = intersects[0].object.position.x;
+            const yOffset = intersects[0].object.position.y;
+
+            let row, col;
+
+            // Find tile index
+            const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
+                (c) => c.uuid === intersects[0].object.uuid
+            );
+
+            // Store tile coordinate
+            const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
+            const buttonName = tile.buttonName;
+
+            if (buttonName === "log-out") {
+                socket.emit("logout")
+            } else if (buttonName === "single-player") {
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+                setScreen("choose-difficulty");
+            } else if (buttonName === "online-game") {
+                // mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -0.5, false)
+                //     .then((textMesh) => {
+                //         try {
+                //
+                //             if (!isWaitingToJoinGame) {
+                //                 scene.scene.add(textMesh);
+                //                 socket.emit("join_wait");
+                //                 setIsWaitingToJoinGame(true);
+                //             }
+                //
+                //         } catch (err) {
+                //
+                //         }
+                //     })
+                //     .catch((error) => {
+                //         console.error(error);
+                //     });
+
+                setScreen("join-online-game")
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+            } else {
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+                setScreen(buttonName);
+            }
         }
     }
 
@@ -680,7 +881,7 @@ export default function Old() {
             // TODO - make sure player can only place one marker
 
             // Emit socket for make move
-            socket.emit("make-move", {
+            socket.emit("make_move", {
                 move_coordinate: tileCoord,
             });
         }
@@ -688,7 +889,6 @@ export default function Old() {
 
 
     function updateGameBoardCopy(i, j, marker) {
-        console.log("in update baord", i, j)
         localGameBoardCopy[i][j] = marker;
         singlePlayerGameBoard[i * 3 + j] = "X" ? "X" : "O";
         console.table(localGameBoardCopy);
@@ -824,6 +1024,7 @@ export default function Old() {
             return -26;
         }
     }
+
 
     function animateOnLaunch() {
 

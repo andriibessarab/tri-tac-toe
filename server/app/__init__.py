@@ -51,6 +51,6 @@ def create_app():
         socket = SocketIO(app, cors_allowed_origins="*")
 
         # Register the namespaces with the socketio object
-        socket.on_namespace(SockerEvents("/"))
+        socket.on_namespace(SockerEvents("/", redis=redis))
 
         return app, socket

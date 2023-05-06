@@ -7,12 +7,20 @@ from flask import request, session
 from flask_socketio import Namespace, emit, join_room
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .app_utils.session_keys import SessionKeys as s
+from .app_utils.decorators import login_required
+from .app_utils.session_keys import SessionKeys as s, SessionKeys
 from .app_utils.validation_patterns import ValidationPatterns as vp
 from .db import get_db
 
 
 class SockerEvents(Namespace):
+
+    def __init__(self, namespace=None, redis=None):
+        super().__init__(namespace)
+        if redis is None:
+            raise TypeError("Redis DB must not be None.")
+
+        self._redis = redis
 
     def on_connect(self, data=None):
         print("WERE IN BABY")
@@ -191,34 +199,35 @@ class SockerEvents(Namespace):
 
     # DON'T TOUCH ONES ABOVE
 
-    def on_join_wait(self, data):
+    @login_required(event_name="join_wait_fail")
+    def on_join_wait(self, data=None):
         """
         Pair 2 players for game and send out generic game data
         :return: nothing
         """
 
-        # Check if the user is already in Redis, and remove the old request
-        wait_list = redis.lrange("wait-list", 0, -1)
+        # Check if the user is already in Redis
+        wait_list = self._redis.lrange("wait-list", 0, -1)
         for user in wait_list:
-            if json.loads(user)["user_id"] == Session.get(SessionKeys.USER_ID):
-                redis.lrem("wait-list", 0, json.dumps({"user_id": Session.get(SessionKeys.USER_ID)}))
+            if json.loads(user)["user_id"] == session.get(SessionKeys.USER_ID):
+                return
 
         # Add user data to redis db
-        redis.rpush("wait-list", json.dumps({
-            "user_id": Session.get(SessionKeys.USER_ID),
-            "username": Session.get(SessionKeys.USER_NAME),
+        self._redis.rpush("wait-list", json.dumps({
+            "user_id": session.get(SessionKeys.USER_ID),
+            "username": session.get(SessionKeys.USER_NAME),
             "request_id": request.sid
         }))
 
         # Check if wait list has less than two users
-        if redis.llen("wait-list") < 2:
+        if self._redis.llen("wait-list") < 2:
             return
 
         # Pick two players for game
-        player1 = json.loads(redis.lpop("wait-list"))
+        player1 = json.loads(self._redis.lpop("wait-list"))
         player1_user_id = player1["user_id"]
         player1_request_id = player1["request_id"]
-        player2 = json.loads(redis.lpop("wait-list"))
+        player2 = json.loads(self._redis.lpop("wait-list"))
         player2_user_id = player2["user_id"]
         player2_request_id = player2["request_id"]
 
@@ -239,6 +248,7 @@ class SockerEvents(Namespace):
                 ('online', player1_user_id, player2_user_id, player1_marker, player2_marker),
             )
         except sqlite3.IntegrityError as e:
+            print("HHEHEHEHEHEHEHEHHEHE", e)
             if "CHECK constraint failed" in str(e):
                 emit("join-wait", {
                     "success": True,
@@ -270,7 +280,7 @@ class SockerEvents(Namespace):
             join_room(room_id, sid=player1_request_id)
             join_room(room_id, sid=player2_request_id)
         except KeyError:  # If KeyError occurs return a 520 response
-            emit("join-wait", {
+            emit("join_wait_fail", {
                 "success": True,
                 "error_code": 520,
                 "error_message": "Unknown server error occurred. Try to refresh the page!",
@@ -278,7 +288,7 @@ class SockerEvents(Namespace):
             }, room=player1_request_id)
 
             # Response for player 2
-            emit("join-wait", {
+            emit("join_wait_fail", {
                 "success": True,
                 "error_code": 520,
                 "error_message": "Unknown server error occurred. Try to refresh the page!",
@@ -287,7 +297,7 @@ class SockerEvents(Namespace):
             return
 
         # Response for player 1
-        emit("join-wait", {
+        emit("join_wait_success", {
             "success": True,
             "error_code": 200,
             "error_message": "",
@@ -299,7 +309,7 @@ class SockerEvents(Namespace):
             }}, room=player1_request_id)
 
         # Response for player 2
-        emit("join-wait", {
+        emit("join_wait_success", {
             "success": True,
             "error_code": 200,
             "error_message": "",
@@ -310,8 +320,21 @@ class SockerEvents(Namespace):
                 },
             }}, room=player2_request_id)
 
-        print(f"Game #{game_id} started between player #{player1['user_id']} and player #{player2['user_id']}")
+        # Check if the user is already in Redis, and remove the old request
+        wait_list = self._redis.lrange("wait-list", 0, -1)
+        for user in wait_list:
+            print(f"----------{json.loads(user)['user_id']} {session.get(SessionKeys.USER_ID)}")
 
+            if json.loads(user)["user_id"] == session.get(SessionKeys.USER_ID):
+                self._redis.lrem("wait-list", 0, json.dumps({"user_id": session.get(SessionKeys.USER_ID)}))
+                print("""
+                
+                DUMBED
+                
+                
+                """)
+
+    @login_required(event_name="join_wait_fail")
     def on_join_game(self, data):
         """
         Init game and send response with game, player, and opponent specific data.
@@ -321,7 +344,7 @@ class SockerEvents(Namespace):
         game_id = data["game_id"]
 
         # Retrieve needed session data
-        user_id = Session.get(SessionKeys.USER_ID)
+        user_id = session.get(SessionKeys.USER_ID)
 
         # Retrieve game data from db
         db = get_db()
@@ -333,7 +356,7 @@ class SockerEvents(Namespace):
 
         # Check if user is part of this game
         if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
-            emit("join-game", {
+            emit("join_game_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "You are not part of this game.",
@@ -355,9 +378,9 @@ class SockerEvents(Namespace):
         opponent_username = opponent_data["username"]
 
         # Update session info w/ game data
-        Session.set(SessionKeys.HAS_ONGOING_GAME, True)
-        Session.set(SessionKeys.ONGOING_GAME_ID, game_id)
-        Session.set(SessionKeys.ONGOING_GAME_ROOM_ID, room_id)
+        session[SessionKeys.HAS_ONGOING_GAME] = True
+        session[SessionKeys.ONGOING_GAME_ID] = game_id
+        session[SessionKeys.ONGOING_GAME_ROOM_ID] = room_id
 
         # I don't think I ever use or update these
         # session["ongoing_game_player_number"] = player_number
@@ -366,7 +389,7 @@ class SockerEvents(Namespace):
         # session["ongoing_game_opponent_username"] = opponent_username
 
         # Send event with game, player, and opponent data
-        emit("join-game", {
+        emit("join_game_success", {
             "success": True,
             "error_code": 200,
             "error_message": "",
@@ -386,16 +409,28 @@ class SockerEvents(Namespace):
                     "opponent_player_number": opponent_player_number
                 },
             }}, room=request.sid)
-        return
 
-    def make_move(self, response_data):
+    def on_test(self):
+        print(f"""
+
+            SESSION: {session.items()}
+
+
+            REDIS: {self._redis.lrange("wait-list", 0, -1)}
+
+        """)
+
+    @login_required(event_name="join_wait_fail")
+    def on_make_move(self, response_data):
         # Check if user has an ongoing game
-        if not Session.get(SessionKeys.HAS_ONGOING_GAME):
-            return
+        # if not session.get(SessionKeys.HAS_ONGOING_GAME):
+        #     return
+
+        print("WRE ARE MAKING MOVE RNxs")
 
         # Check if response data was provided
         if response_data is None:
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "No response data was provided.",
@@ -412,7 +447,7 @@ class SockerEvents(Namespace):
         if move_coordinate is None or not isinstance(move_coordinate, list) or not len(
                 move_coordinate) == 2 or not isinstance(move_coordinate[0], int) or not isinstance(move_coordinate[1],
                                                                                                    int):
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "Provided data does not contain proper coordinate",
@@ -420,9 +455,9 @@ class SockerEvents(Namespace):
             }, room=request.sid)
 
         # Retrieve session data
-        user_id = Session.get(SessionKeys.USER_ID)
-        game_id = Session.get(SessionKeys.ONGOING_GAME_ID)
-        room_id = Session.get(SessionKeys.ONGOING_GAME_ROOM_ID)
+        user_id = session.get(SessionKeys.USER_ID)
+        game_id = session.get(SessionKeys.ONGOING_GAME_ID)
+        room_id = session.get(SessionKeys.ONGOING_GAME_ROOM_ID)
 
         # TODO - what to do if either is null?
 
@@ -436,7 +471,7 @@ class SockerEvents(Namespace):
 
         # Check if the player is part of this game
         if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "User is not part of this game.",
@@ -454,7 +489,7 @@ class SockerEvents(Namespace):
 
         # Check if it's the player's turn to make a move
         if next_move_by != user_id:
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "Not user's turn to make a move.",
@@ -464,7 +499,7 @@ class SockerEvents(Namespace):
 
         # Check if the player has already made a move
         if last_move_by == user_id:
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "You already made a move.",
@@ -474,7 +509,7 @@ class SockerEvents(Namespace):
 
         # Check if the game is still ongoing
         if game_data["winner"] is not None:
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "The game has ended.",
@@ -484,7 +519,7 @@ class SockerEvents(Namespace):
 
         # Check if the move coordinate is within the game board limits
         if not (0 <= move_row <= 2 and 0 <= move_col <= 2):
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "Invalid move.",
@@ -501,7 +536,7 @@ class SockerEvents(Namespace):
 
         # Check if the cell is already taken by another player
         if game_data[cell_name] != "":
-            emit("make-move", {
+            emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "Cell is already taken.",
@@ -514,7 +549,7 @@ class SockerEvents(Namespace):
         cursor.execute(update_player_move_query, (player_marker, opponent_id, user_id, game_id,))
         db.commit()
 
-        emit("move-made-successfully", {
+        emit("make_move_success", {
             "success": True,
             "error_code": 200,
             "message": "Your move was made successfully.",
@@ -522,7 +557,7 @@ class SockerEvents(Namespace):
         }, room=request.sid)
 
         # Emit event to the room with the move data
-        emit("make-move", {
+        emit("make_move_success", {
             "success": True,
             "error_code": 200,
             "error_message": "",
