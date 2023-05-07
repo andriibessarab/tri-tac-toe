@@ -12,7 +12,7 @@ import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
-import {setMousePosition} from "./screenHandlers";
+import {getRaycasterIntersects, setMousePosition} from "./screenHandlers";
 
 export default function App() {
     // Constants
@@ -282,7 +282,6 @@ export default function App() {
     }
 
 
-
     function onJoinWaitFail(data) {
         const errorCode = data["error_code"];
         const errorMessage = data["error_message"];
@@ -459,23 +458,12 @@ export default function App() {
             return;
         }
 
-        setMousePosition(mouse, event);
+        setMousePosition(event, mouse);
 
-        // Set up raycaster
-        raycaster.setFromCamera(mouse, scene.camera);
-
-        // TODO I don't like using try catch
-        let intersects;
-        try {
-            intersects = raycaster.intersectObjects(
-                scene.scene.getObjectByName("buttonTiles").children
-            );
-        } catch (err) {
-            return;
-        }
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, "buttonTiles");
 
 
-        if (intersects.length > 0) {
+        if (intersects !== undefined && intersects.length > 0) {
             const xOffset = intersects[0].object.position.x;
             const yOffset = intersects[0].object.position.y;
 
@@ -525,20 +513,9 @@ export default function App() {
 
 
     function handleMouseDownOnlineGameSettingsScreen(event) {
-        setMousePosition(mouse, event);
+        setMousePosition(event, mouse);
 
-        // Set up raycaster
-        raycaster.setFromCamera(mouse, scene.camera);
-
-        // TODO I don't like using try catch
-        let intersects;
-        try {
-            intersects = raycaster.intersectObjects(
-                scene.scene.getObjectByName("buttonTiles").children
-            );
-        } catch (err) {
-            return;
-        }
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, "buttonTiles");
 
 
         if (intersects.length > 0) {
@@ -592,20 +569,12 @@ export default function App() {
 
 
     function handleMouseDownChooseDifficultyScreen(event) {
-                setMousePosition(mouse, event);
+        setMousePosition(event, mouse);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
 
-        // TODO I don't like using try catch
-        let intersects;
-        try {
-            intersects = raycaster.intersectObjects(
-                scene.scene.getObjectByName("buttonTiles").children
-            );
-        } catch (err) {
-            return;
-        }
+                const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, "buttonTiles");
 
 
         if (intersects.length > 0) {
@@ -644,20 +613,9 @@ export default function App() {
             localGameOngoing = true;
         }
 
-        setMousePosition(mouse, event);
+        setMousePosition(event, mouse);
 
-        // Set up raycaster
-        raycaster.setFromCamera(mouse, scene.camera);
-
-        let intersectsTiles;
-        try {
-            // Obtain list of objects raycaster intersects with
-            intersectsTiles = raycaster.intersectObjects(
-                scene.scene.getObjectByName("hiddenTilesGroup").children
-            );
-        } catch (err) {
-            return;
-        }
+                const intersectsTiles = getRaycasterIntersects(event, scene, mouse, raycaster, "hiddenTilesGroup");
 
 
         // Check if raycaster intersects with any tile
@@ -695,16 +653,7 @@ export default function App() {
 
         }
 
-        let intersectsButtons;
-
-        try {
-            intersectsButtons = raycaster.intersectObjects(
-                scene.scene.getObjectByName("controlButtonsButtonsGroup").children
-            );
-        } catch (err) {
-            return;
-        }
-
+        const intersectsButtons = getRaycasterIntersects(event, scene, mouse, raycaster, "controlButtonsButtonsGroup");
 
         // If raycaster intersects with any button, do the corresponding action
         if (intersectsButtons.length > 0) {
@@ -729,21 +678,12 @@ export default function App() {
             localGameOngoing = true;
         }
 
-        setMousePosition(mouse, event);
+        setMousePosition(event, mouse);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
 
-        let intersectsTiles;
-
-        // Obtain list of objects raycaster intersects with
-        try {
-            intersectsTiles = raycaster.intersectObjects(
-                scene.scene.getObjectByName("hiddenTilesGroup").children
-            );
-        } catch (err) {
-            return;
-        }
+                const intersectsTiles = getRaycasterIntersects(event, scene, mouse, raycaster, "hiddenTilesGroup");
 
 
         // Check if raycaster intersects with any tile
@@ -823,15 +763,7 @@ export default function App() {
 
         }
 
-        let intersectsButtons;
-        try {
-            intersectsButtons = raycaster.intersectObjects(
-                scene.scene.getObjectByName("controlButtonsButtonsGroup").children
-            );
-        } catch (err) {
-            return;
-        }
-
+        const intersectsButtons = getRaycasterIntersects(event, scene, mouse, raycaster, "controlButtonsButtonsGroup");
 
         // If raycaster intersects with any button, do the corresponding action
         if (intersectsButtons.length > 0) {
@@ -851,15 +783,9 @@ export default function App() {
 
 
     function handleMouseDownOnlineGameScreen(event, marker) {
-        setMousePosition(mouse, event);
+        setMousePosition(event, mouse);
 
-        // Set up raycaster
-        raycaster.setFromCamera(mouse, scene.camera);
-
-        // Obtain list of objects raycaster intersects with
-        const intersectsTiles = raycaster.intersectObjects(
-            scene.scene.getObjectByName("hiddenTilesGroup").children
-        );
+        const intersectsTiles = getRaycasterIntersects(event, scene, mouse, raycaster, "hiddenTilesGroup");
 
         // Check if raycaster intersects with any tile
         if (intersectsTiles.length > 0) {
