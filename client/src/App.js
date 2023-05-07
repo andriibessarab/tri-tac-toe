@@ -48,10 +48,11 @@ export default function App() {
     const [userName, setUserName] = useState(null);
     const [userEmail, setUserEmail] = useState(null);
 
-    // Auth forms states
+    // Forms states
     const [formUserName, setFormUserName] = useState("");
     const [formUserEmail, setFormUserEmail] = useState("");
     const [formUserPassword, setFormUserPassword] = useState("");
+    const [formJoinCode, setFormJoinCode] = useState("");
 
     // Game state variables
     const [currentGameId, setCurrentGameID] = useState(null); // String to hold the current game's ID
@@ -188,6 +189,11 @@ export default function App() {
                        onChange={(e) => setFormUserPassword(e.target.value)}/>
                 <button onClick={handleRegister}>Register</button>
 
+                <h2>Join Game</h2>
+                <input type="text" placeholder="Join Code(6 digit)x" value={formJoinCode}
+                       onChange={(e) => setFormJoinCode(e.target.value)}/>
+                <button onClick={handleJoinGame} disabled={userId === null || hasGameOngoing || formJoinCode.length !== 6}>Join Game</button>
+
                 <button onClick={() => {
                     socket.emit("test")
                 }}>Test
@@ -216,6 +222,14 @@ export default function App() {
         }
         // send login event to server with username and password
         socket.emit("register", data);
+    }
+
+    function handleJoinGame() {
+        const data = {
+            "join_code": formJoinCode,
+        }
+        // send login event to server with username and password
+        socket.emit("join_game", data);
     }
 
 

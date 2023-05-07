@@ -144,8 +144,6 @@ function screen_InviteCode(joinCode) {
             screenComponents.add(circle);
         }
     }
-
-
 }
 
 export default screen_InviteCode;
