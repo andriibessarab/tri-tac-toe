@@ -12,7 +12,7 @@ import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
-import {getRaycasterIntersects, setMousePosition} from "./screenHandlers";
+import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./interactionUtils";
 
 export default function App() {
     // Constants
@@ -460,54 +460,34 @@ export default function App() {
 
         setMousePosition(event, mouse);
 
-        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, "buttonTiles");
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
 
+        if (intersectsLength === 0) {
+            return;
+        }
 
-        if (intersects !== undefined && intersects.length > 0) {
-            const xOffset = intersects[0].object.position.x;
-            const yOffset = intersects[0].object.position.y;
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
 
-            let row, col;
-
-            // Find tile index
-            const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
-                (c) => c.uuid === intersects[0].object.uuid
-            );
-
-            // Store tile coordinate
-            const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
-            const buttonName = tile.buttonName;
-
-            if (buttonName === "log-out") {
-                socket.emit("logout")
-            } else if (buttonName === "single-player") {
+        switch (buttonName) {
+            case "log-out":
+                socket.emit("logout");
+                break;
+            case "single-player":
                 window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen("choose-difficulty");
-            } else if (buttonName === "online-game") {
-                // mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -0.5, false)
-                //     .then((textMesh) => {
-                //         try {
-                //
-                //             if (!isWaitingToJoinGame) {
-                //                 scene.scene.add(textMesh);
-                //                 socket.emit("join_wait");
-                //                 setIsWaitingToJoinGame(true);
-                //             }
-                //
-                //         } catch (err) {
-                //
-                //         }
-                //     })
-                //     .catch((error) => {
-                //         console.error(error);
-                //     });
-
-                setScreen("join-online-game")
+                break;
+            case "online-game":
                 window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-            } else {
+                setScreen("join-online-game")
+                break;
+            default:
                 window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen(buttonName);
-            }
         }
     }
 
@@ -515,55 +495,33 @@ export default function App() {
     function handleMouseDownOnlineGameSettingsScreen(event) {
         setMousePosition(event, mouse);
 
-        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, "buttonTiles");
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
 
+        if (intersectsLength === 0) {
+            return;
+        }
 
-        if (intersects.length > 0) {
-            const xOffset = intersects[0].object.position.x;
-            const yOffset = intersects[0].object.position.y;
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
 
-            let row, col;
-
-            // Find tile index
-            const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
-                (c) => c.uuid === intersects[0].object.uuid
-            );
-
-            // Store tile coordinate
-            const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
-            const buttonName = tile.buttonName;
-
-            if (buttonName === "back") {
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "back":
                 window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
                 setScreen("main-menu");
-            } else if (buttonName === "create-game") {
-                socket.emit("create_game", {});
+                break;
+            case "create-game":
                 window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
-            } else if (buttonName === "online-game") {
-                // mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -0.5, false)
-                //     .then((textMesh) => {
-                //         try {
-                //
-                //             if (!isWaitingToJoinGame) {
-                //                 scene.scene.add(textMesh);
-                //                 socket.emit("join_wait");
-                //                 setIsWaitingToJoinGame(true);
-                //             }
-                //
-                //         } catch (err) {
-                //
-                //         }
-                //     })
-                //     .catch((error) => {
-                //         console.error(error);
-                //     });
-
+                socket.emit("create_game", {});
+                break;
+            case "join-online-game":
+                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen("join-online-game")
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-            } else {
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-                setScreen(buttonName);
-            }
+                break;
         }
     }
 
@@ -571,39 +529,33 @@ export default function App() {
     function handleMouseDownChooseDifficultyScreen(event) {
         setMousePosition(event, mouse);
 
-        // Set up raycaster
-        raycaster.setFromCamera(mouse, scene.camera);
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
 
-                const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, "buttonTiles");
-
-
-        if (intersects.length > 0) {
-            const xOffset = intersects[0].object.position.x;
-            const yOffset = intersects[0].object.position.y;
-
-            // Find tile index
-            const tileIndex = scene.scene.getObjectByName("buttonTiles").children.findIndex(
-                (c) => c.uuid === intersects[0].object.uuid
-            );
-
-            // Store tile coordinate
-            const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
-            const buttonName = tile.buttonName;
-
-            switch (buttonName) {
-                case "easy-mode":
-                    singlePlayerGameDifficulty = "Easy";
-                    break;
-                case "normal-mode":
-                    singlePlayerGameDifficulty = "Normal";
-                    break;
-                case "hard-mode":
-                    singlePlayerGameDifficulty = "Hard";
-                    break;
-            }
-            setScreen("single-player");
-            window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
+        if (intersectsLength === 0) {
+            return;
         }
+
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
+
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "easy-mode":
+                singlePlayerGameDifficulty = "Easy";
+                break;
+            case "normal-mode":
+                singlePlayerGameDifficulty = "Normal";
+                break;
+            case "hard-mode":
+                singlePlayerGameDifficulty = "Hard";
+                break;
+        }
+        window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
+        setScreen("single-player");
     }
 
 
@@ -615,26 +567,23 @@ export default function App() {
 
         setMousePosition(event, mouse);
 
-                const intersectsTiles = getRaycasterIntersects(event, scene, mouse, raycaster, "hiddenTilesGroup");
+        const tilesTargetGroupName = "hiddenTilesGroup";
+        const tilesIntersects = getRaycasterIntersects(event, scene, mouse, raycaster, tilesTargetGroupName);
+        const tilesIntersectsLength = tilesIntersects.length;
 
-
-        // Check if raycaster intersects with any tile
-        if (intersectsTiles.length > 0) {
-            const xOffset = intersectsTiles[0].object.position.x;
-            const yOffset = intersectsTiles[0].object.position.y;
-
-            // Find tile index
-            const tileIndex = scene.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
-                (c) => c.uuid === intersectsTiles[0].object.uuid
-            );
-
-            // Store tile coordinate
-            const tile = scene.scene.getObjectByName("hiddenTilesGroup").children[tileIndex];
-            const tileRow = tile.userData.row;
-            const tileCol = tile.userData.col;
+        if (tilesIntersectsLength > 0) {
+            const tileIntersect = tilesIntersects[0];
+            const tileInfo = getIntersectInfo(scene, tileIntersect, tilesTargetGroupName);
+            const tileIndex = tileInfo.index;
+            const tileObject = tileInfo.object;
+            const tilePosition = tileInfo.position;
+            const tilePositionX = tilePosition.x;
+            const tilePositionY = tilePosition.y;
+            const tileRow = tileObject.userData.row;
+            const tileCol = tileObject.userData.col;
 
             // Remove tile from scene
-            scene.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
+            scene.scene.getObjectByName(tilesTargetGroupName).children.splice(tileIndex, 1);
 
             updateGameBoardCopy(tileRow, tileCol, localGameMarker);
             localGameTurnsGone++;
@@ -644,29 +593,38 @@ export default function App() {
 
             // Draw marker
             if (localGameMarker === "X") {
-                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tilePositionX, tilePositionY));
                 localGameMarker = "O";
             } else {
-                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tilePositionX, tilePositionY));
                 localGameMarker = "X";
             }
-
         }
 
-        const intersectsButtons = getRaycasterIntersects(event, scene, mouse, raycaster, "controlButtonsButtonsGroup");
+        const buttonsTargetGroupName = "controlButtonsButtonsGroup";
+        const buttonsIntersects = getRaycasterIntersects(event, scene, mouse, raycaster, buttonsTargetGroupName);
+        const buttonsIntersectsLength = buttonsIntersects.length;
 
-        // If raycaster intersects with any button, do the corresponding action
-        if (intersectsButtons.length > 0) {
-            const clickedButtonID = scene.scene.getObjectByName("controlButtonsButtonsGroup").children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
+        if (buttonsIntersectsLength > 0) {
+            const buttonIntersect = buttonsIntersects[0];
+            const buttonInfo = getIntersectInfo(scene, buttonIntersect, buttonsTargetGroupName);
+            const buttonObject = buttonInfo.object;
+            const buttonName = buttonObject.userData.id;
 
-            if (clickedButtonID === "mainMenuButton") {
-                setIsSceneDefined(false);
-                restartLocalGame();
-                window.removeEventListener("mousedown", handleMouseDownLocalGameScreen);
-                setScreen("main-menu");
-                setIsSceneDefined(true);
-            } else if (clickedButtonID === "restartGameButton") {
-                restartLocalGame();
+            console.log(buttonName)
+
+            // eslint-disable-next-line default-case
+            switch (buttonName) {
+                case "mainMenuButton":
+                    setIsSceneDefined(false);
+                    restartLocalGame();
+                    window.removeEventListener("mousedown", handleMouseDownLocalGameScreen);
+                    setScreen("main-menu");
+                    setIsSceneDefined(true);
+                    break;
+                case "restartGameButton":
+                    restartLocalGame();
+                    break;
             }
         }
     }
@@ -680,42 +638,36 @@ export default function App() {
 
         setMousePosition(event, mouse);
 
-        // Set up raycaster
-        raycaster.setFromCamera(mouse, scene.camera);
+        const tilesTargetGroupName = "hiddenTilesGroup";
+        const tilesIntersects = getRaycasterIntersects(event, scene, mouse, raycaster, tilesTargetGroupName);
+        const tilesIntersectsLength = tilesIntersects.length;
 
-                const intersectsTiles = getRaycasterIntersects(event, scene, mouse, raycaster, "hiddenTilesGroup");
-
-
-        // Check if raycaster intersects with any tile
-        if (intersectsTiles.length > 0) {
-            const xOffset = intersectsTiles[0].object.position.x;
-            const yOffset = intersectsTiles[0].object.position.y;
-
-            // Find tile index
-            const tileIndex = scene.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
-                (c) => c.uuid === intersectsTiles[0].object.uuid
-            );
-
-            // Store tile coordinate
-            const tile = scene.scene.getObjectByName("hiddenTilesGroup").children[tileIndex];
-            const tileRow = tile.userData.row;
-            const tileCol = tile.userData.col;
+        if (tilesIntersectsLength > 0) {
+            const tileIntersect = tilesIntersects[0];
+            const tileInfo = getIntersectInfo(scene, tileIntersect, tilesTargetGroupName);
+            const tileIndex = tileInfo.index;
+            const tileObject = tileInfo.object;
+            const tilePosition = tileInfo.position;
+            const tilePositionX = tilePosition.x;
+            const tilePositionY = tilePosition.y;
+            const tileRow = tileObject.userData.row;
+            const tileCol = tileObject.userData.col;
 
             // Remove tile from scene
-            scene.scene.getObjectByName("hiddenTilesGroup").children.splice(tileIndex, 1);
+            scene.scene.getObjectByName(tilesTargetGroupName).children.splice(tileIndex, 1);
 
             updateGameBoardCopy(tileRow, tileCol, singlePlayerGameCurrentTurn);
-            localGameTurnsGone++;
 
             // Draw marker
-            if (singlePlayerGameCurrentTurn === "X") {
-                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+            if (localGameMarker === "X") {
+                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tilePositionX, tilePositionY));
                 localGameMarker = "O";
             } else {
-                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tilePositionX, tilePositionY));
                 localGameMarker = "X";
             }
 
+                        localGameTurnsGone++;
             if (checkWin() || localGameTurnsGone === 9) {
                 localGameOngoing = false;
                 return;
@@ -731,17 +683,19 @@ export default function App() {
 
             updateGameBoardCopy(compMoveRow, compMoveCol, singlePlayerGameCurrentTurn);
             localGameTurnsGone++;
+            console.log(localGameTurnsGone)
 
             // Find the index of the tile with the given row and col
-            const movePerformedOnTileWithIndex = scene.scene.getObjectByName("hiddenTilesGroup").children.findIndex(
+            const movePerformedOnTileWithIndex = scene.scene.getObjectByName(tilesTargetGroupName).children.findIndex(
                 (tile) => tile.userData.row === compMoveRow && tile.userData.col === compMoveCol
             );
 
             // Get the tile at the given index
-            const movePerformedOnTile = scene.scene.getObjectByName("hiddenTilesGroup").children[movePerformedOnTileWithIndex];
+            const movePerformedOnTile = scene.scene.getObjectByName(tilesTargetGroupName).children[movePerformedOnTileWithIndex];
 
             const compMoveX = movePerformedOnTile.position.x;
             const compMoveY = movePerformedOnTile.position.y;
+
 
             //Draw marker
             if (singlePlayerGameCurrentTurn === "X") {
@@ -752,32 +706,44 @@ export default function App() {
                 localGameMarker = "X";
             }
 
-            if (checkWin() || localGameTurnsGone === 9) {
+                        if (checkWin() || localGameTurnsGone === 9) {
                 localGameOngoing = false;
+                return;
             }
 
             singlePlayerGameCurrentTurn = singlePlayerGameCurrentTurn === "X" ? "O" : "X";
 
             // Remove tile from scene
             scene.scene.getObjectByName("hiddenTilesGroup").children.splice(movePerformedOnTileWithIndex, 1);
-
         }
 
-        const intersectsButtons = getRaycasterIntersects(event, scene, mouse, raycaster, "controlButtonsButtonsGroup");
+        const buttonsTargetGroupName = "controlButtonsButtonsGroup";
+        const buttonsIntersects = getRaycasterIntersects(event, scene, mouse, raycaster, buttonsTargetGroupName);
+        const buttonsIntersectsLength = buttonsIntersects.length;
 
-        // If raycaster intersects with any button, do the corresponding action
-        if (intersectsButtons.length > 0) {
-            const clickedButtonID = scene.scene.getObjectByName("controlButtonsButtonsGroup").children.find((c) => c.uuid === intersectsButtons[0].object.uuid).userData.id;
+        if (buttonsIntersectsLength === 0) {
+            return;
+        }
 
-            if (clickedButtonID === "mainMenuButton") {
+        const buttonIntersect = buttonsIntersects[0];
+        const buttonInfo = getIntersectInfo(scene, buttonIntersect, buttonsTargetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.userData.id;
+
+        console.log(buttonName)
+
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "mainMenuButton":
                 setIsSceneDefined(false);
                 restartLocalGame();
                 window.removeEventListener("mousedown", handleMouseDownSinglePlayerScreen);
                 setScreen("main-menu");
                 setIsSceneDefined(true);
-            } else if (clickedButtonID === "restartGameButton") {
-                restartLocalGame(); /// TODO
-            }
+                break;
+            case "restartGameButton":
+                restartLocalGame();
+                break;
         }
     }
 
@@ -871,7 +837,7 @@ export default function App() {
     }
 
 
-    // Check if either marker won
+// Check if either marker won
     function checkWin() {
         let strike;
         const board = localGameBoardCopy
@@ -915,31 +881,31 @@ export default function App() {
     }
 
 
-    // Check for win in horizontal line
+// Check for win in horizontal line
     function _checkHorizontalWin(i, board) {
         return (board[i][0] === board[i][1] && board[i][0] === board[i][2]);
     }
 
 
-    // Check for win in vertical line
+// Check for win in vertical line
     function _checkVerticalWin(i, board) {
         return (board[0][i] === board[1][i] && board[0][i] === board[2][i]);
     }
 
 
-    // Check for win in right leaning diagonal line
+// Check for win in right leaning diagonal line
     function _checkRightLeaningDiagonalWin(board) {
         return (board[0][0] === board[1][1] && board[0][0] === board[2][2]);
     }
 
 
-    // Check for win in left leaning diagonal line
+// Check for win in left leaning diagonal line
     function _checkLeftLeaningDiagonalWin(board) {
         return (board[0][2] === board[1][1] && board[0][2] === board[2][0]);
     }
 
 
-    // Change xOffset to appropriate offset for column
+// Change xOffset to appropriate offset for column
     function _roundXOffset(n) {
         if (n === 0) {
             return -24;
@@ -951,7 +917,7 @@ export default function App() {
     }
 
 
-    // Change yOffset to appropriate offset for row
+// Change yOffset to appropriate offset for row
     function _roundYOffset(n) {
         if (n === 0) {
             return 22;
