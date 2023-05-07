@@ -12,8 +12,9 @@ import mesh_WinLine from "./resources/meshes/mesh_WinLine";
 import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
+import {setMousePosition} from "./screenHandlers";
 
-export default function Old() {
+export default function App() {
     // Constants
     const sceneCanvasName = "3jsCanvas";
 
@@ -86,9 +87,11 @@ export default function Old() {
         socket.on("login-success", onLogInSuccess);
         socket.on("login-fail", onLogInFailed);
         socket.on("logout", onLogOut);
-        socket.on("join_wait_fail", onJoinWaitFail);
-        socket.on("join_wait_success", onJoinWaitSuccess);
-        socket.on("make_move_success", onMakeMoveSuccess);
+        socket.on("create_game_fail", onCreateGameFail);
+        socket.on("create_game_success", onCreateGameSuccess);
+        // socket.on("join_wait_fail", onJoinWaitFail);
+        // socket.on("join_wait_success", onJoinWaitSuccess);
+        // socket.on("make_move_success", onMakeMoveSuccess);
 
         return () => {
             // Disconnect socket events
@@ -99,9 +102,8 @@ export default function Old() {
             socket.off("login-success", onLogInSuccess);
             socket.off("login-fail", onLogInFailed);
             socket.off("logout", onLogOut);
-            socket.off("join_wait_fail", onJoinWaitFail);
-            socket.off("join_wait_success", onJoinWaitSuccess);
-            socket.off("make_move_success", onMakeMoveSuccess);
+            socket.off("create_game_fail", onCreateGameFail);
+            socket.off("create_game_success", onCreateGameSuccess);
         };
     }, []);
 
@@ -261,6 +263,24 @@ export default function Old() {
         setUserName(null);
         setUserEmail(null);
     }
+
+
+    function onCreateGameFail(data) {
+        const errorCode = data["error_code"];
+        const errorMessage = data["error_message"];
+        if (errorCode === 401) {
+            setScreen("log-in");
+        } else {
+            alert(errorMessage);
+        }
+    }
+
+    function onCreateGameSuccess(data) {
+        // Store response
+        const _joinCode = data["data"]["game"]["join_code"]
+        console.log("we joined", _joinCode)
+    }
+
 
 
     function onJoinWaitFail(data) {
@@ -438,9 +458,8 @@ export default function Old() {
         if (isWaitingToJoinGame) {
             return;
         }
-        // Obtain mouse's position
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        setMousePosition(mouse, event);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
@@ -504,10 +523,9 @@ export default function Old() {
         }
     }
 
+
     function handleMouseDownOnlineGameSettingsScreen(event) {
-        // Obtain mouse's position
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        setMousePosition(mouse, event);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
@@ -538,11 +556,12 @@ export default function Old() {
             const tile = scene.scene.getObjectByName("buttonTiles").children[tileIndex];
             const buttonName = tile.buttonName;
 
-            if (buttonName === "log-out") {
-                socket.emit("logout")
-            } else if (buttonName === "single-player") {
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-                setScreen("choose-difficulty");
+            if (buttonName === "back") {
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+                setScreen("main-menu");
+            } else if (buttonName === "create-game") {
+                socket.emit("create_game", {});
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
             } else if (buttonName === "online-game") {
                 // mesh_Text("(waiting for opponent ...)", 2, 0.5, 0.5, -15.5, 7.5, -0.5, false)
                 //     .then((textMesh) => {
@@ -573,9 +592,7 @@ export default function Old() {
 
 
     function handleMouseDownChooseDifficultyScreen(event) {
-        // Obtain mouse's position
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                setMousePosition(mouse, event);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
@@ -627,9 +644,7 @@ export default function Old() {
             localGameOngoing = true;
         }
 
-        // Obtain mouse's position
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        setMousePosition(mouse, event);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
@@ -714,9 +729,7 @@ export default function Old() {
             localGameOngoing = true;
         }
 
-        // Obtain mouse's position
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        setMousePosition(mouse, event);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);
@@ -838,9 +851,7 @@ export default function Old() {
 
 
     function handleMouseDownOnlineGameScreen(event, marker) {
-        // Obtain mouse's position
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        setMousePosition(mouse, event);
 
         // Set up raycaster
         raycaster.setFromCamera(mouse, scene.camera);

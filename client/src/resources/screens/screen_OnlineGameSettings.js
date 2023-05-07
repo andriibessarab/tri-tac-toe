@@ -29,7 +29,7 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(31, 10, 1, 0, 11.5, "online-game"));
+    buttonTiles.add(mesh_hiddenButtonTile(25, 10, 1, 0, -14, "join-game"));
 
     mesh_Text("Join Game", 4, 1, 2, -12.7, -15, -1, true)
         .then((textMesh) => {
@@ -39,7 +39,7 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(28, 10, 1, 0, -1.5, "local-game"));
+    buttonTiles.add(mesh_hiddenButtonTile(31, 10, 1, 0, 11, "create-game"));
 
     mesh_Text("Create Game", 4, 1, 2, -16, 10, -1, true)
         .then((textMesh) => {
@@ -49,17 +49,9 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    mesh_Text("Join Game", 4, 1, 2, -12.7, -15, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+    buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -49, "back"));
 
-    buttonTiles.add(mesh_hiddenButtonTile(28, 10, 1, 0, -1.5, "local-game"));
-
-    mesh_Text("Back", 3, 1, 2, -4.4, -50, -1, true)
+    mesh_Text("Back", 3, 1, 1.5, -4.4, -50, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })

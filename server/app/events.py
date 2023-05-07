@@ -198,6 +198,63 @@ class SockerEvents(Namespace):
         return
 
     # DON'T TOUCH ONES ABOVE
+    @login_required(event_name="create_game_fail")
+    def on_create_game(self, data=None):
+        print("""
+1
+        CREATNIG GAME1111
+
+
+        """)
+        user_id = session.get(SessionKeys.USER_ID)
+
+        # Randomly choose which player goes first
+        first_move_player_number = random.randint(1, 2)
+
+        # Randomly assign marker to both players
+        player1_marker, player2_marker = random.sample(["x", "o"], k=2)
+
+        # Randomly generate join code
+        join_code = random.randint(100000, 999999)
+
+        # Create game and game board
+        db = get_db()
+        cursor = db.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO game (game_mode, join_code, player_1, player_2, player_1_marker, player_2_marker) VALUES "
+                "(?, ?, ?, ?, ?, ?)",
+                ('online', join_code, user_id, None, player1_marker, player2_marker),
+            )
+        except sqlite3.IntegrityError as e:
+            if "CHECK constraint failed" in str(e):
+                emit("create_game_fail", {
+                    "success": True,
+                    "error_code": 520,
+                    "error_message": "Unknown server error occurred while creating a game. Try to refresh the page!",
+                    "data": {},
+                }, room=request.sid)
+
+        game_id = cursor.lastrowid
+        db.commit()
+
+        # Response
+        emit("create_game_success", {
+            "success": True,
+            "error_code": 200,
+            "error_message": "",
+            "data": {
+                "game": {
+                    "join_code": join_code
+                },
+            }}, room=request.sid)
+
+        print("""
+
+        CREATNIG GAME
+
+
+        """)
 
     @login_required(event_name="join_wait_fail")
     def on_join_wait(self, data=None):
