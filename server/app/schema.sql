@@ -25,7 +25,7 @@ CREATE TABLE game
 (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     game_mode       TEXT      NOT NULL CHECK (game_mode IN ('local', 'online', 'ai')),
-    join_code       INTEGER   UNIQUE CHECK ((game_mode <> 'online' AND join_code IS NULL) OR (game_mode = 'online' AND join_code IS NOT NULL)),
+    join_code       TEXT   UNIQUE CHECK ((game_mode <> 'online' AND join_code IS NULL) OR (game_mode = 'online' AND join_code IS NOT NULL)),
     player_1        INTEGER   NOT NULL REFERENCES user (id),
     player_2        INTEGER            REFERENCES user (id),
     player_1_marker TEXT      NOT NULL CHECK (player_1_marker IN ('x', 'o')),

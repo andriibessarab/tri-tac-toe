@@ -4,9 +4,8 @@ import mesh_Text from "../meshes/mesh_Text";
 import * as THREE from "three";
 import mesh_DecorCross from "../meshes/mesh_DecorCross";
 import mesh_DecorCircle from "../meshes/mesh_DecorCircle";
-import mesh_hiddenButtonTile from "../meshes/mesh_hiddenButtonTile";
 
-function screen_Menu(userLoggedIn) {
+function screen_InviteCode(joinCode) {
     const screenComponents = new THREE.Group();
 
     const buttonTiles = new THREE.Group();
@@ -20,8 +19,10 @@ function screen_Menu(userLoggedIn) {
     buttonTiles.name = "buttonTiles";
     waitRoomElement.name = "waitRoom";
 
+    const blah = 7;
 
-    mesh_Text("Tic-Tac-Toe", 10, 2, 2, -35.8, 39, -2, true)
+
+    mesh_Text("Invite Code", 10, 2, 2, -35, 39, -2, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -29,9 +30,7 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(31, 10, 1, 0, 11.5, "online-game"));
-
-    mesh_Text("Online Game", 4, 1, 2, -16, 10, -1, true)
+    mesh_Text(joinCode[0], 15, 1, 5, -57, -7, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -39,9 +38,7 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(28, 10, 1, 0, -1.5, "local-game"));
-
-    mesh_Text("Local Game", 4, 1, 2, -14.3, -3, -1, true)
+    mesh_Text(joinCode[1], 15, 1, 5, -37, -7, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -49,9 +46,7 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(33, 10, 1, 0, -14.5, "single-player"));
-
-    mesh_Text("Single Player", 4, 1, 2, -16.6, -16, -1, true)
+    mesh_Text(joinCode[2], 15, 1, 5, -17, -7, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -59,9 +54,7 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(22, 10, 1, 0, -27.5, "options"));
-
-    mesh_Text("Options", 4, 1, 2, -10, -29, -1, true)
+    mesh_Text(joinCode[3], 15, 1, 5, 3, -7, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -69,29 +62,25 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    if (userLoggedIn) {
-        buttonTiles.add(mesh_hiddenButtonTile(20, 10, 1, 0, -40.5, "log-out"));
+    mesh_Text(joinCode[4], 15, 1, 5, 23, -7, -1, true)
+        .then((textMesh) => {
+            screenComponents.add(textMesh);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
 
-        mesh_Text("Log Out", 4, 1, 2, -9, -42, -1, true)
-            .then((textMesh) => {
-                screenComponents.add(textMesh);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    } else {
-        buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "log-in"));
+    mesh_Text(joinCode[5], 15, 1, 5, 43, -7, -1, true)
+        .then((textMesh) => {
+            screenComponents.add(textMesh);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
 
-        mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, true)
-            .then((textMesh) => {
-                screenComponents.add(textMesh);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }
+    const descText = `Provide the opponent with the code ${joinCode} in order \nfor them to join the game. Once the code is entered \nyou will be automatically redirected to game page.`
 
-    mesh_Text("© Andrii Bessarab 2023", 2, 1, 0.5, -14.5, -52, -0, true)
+    mesh_Text(descText, 2, 1, 0.5, -33, -42, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -159,7 +148,7 @@ function screen_Menu(userLoggedIn) {
 
 }
 
-export default screen_Menu;
+export default screen_InviteCode;
 
 
 

@@ -13,6 +13,7 @@ import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
 import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./interactionUtils";
+import screen_InviteCode from "./resources/screens/screen_InviteCode";
 
 export default function App() {
     // Constants
@@ -60,6 +61,8 @@ export default function App() {
     const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null); // Number to indicate whether the current player's turn (true or false)
     const [currentGameOpponentId, setCurrentGameOpponentId] = useState(null); // String to hold the current game's opponent ID
     const [currentGameOpponentUsername, setCurrentGameOpponentUsername] = useState(null); // String to hold the current game's opponent username
+    const [joinCode, setJoinCode] = useState("000000"); // String to hold the current game's opponent username
+
 
     // Scene states
     const [scene, setScene] = useState(null);
@@ -72,7 +75,6 @@ export default function App() {
     const [isScreenChanged, setIsScreenChanged] = useState(false);
     const [isWaitingToJoinGame, setIsWaitingToJoinGame] = useState(false); // Boolean to indicate whether the user is waiting to join a game or not
     const [hasGameOngoing, setHasGameOngoing] = useState(false); // Boolean to indicate whether there is an ongoing game or not
-
 
     // Init effect
     useEffect(() => {
@@ -142,7 +144,10 @@ export default function App() {
             case "single-player":
                 scene.scene.add(screen_inGame(2));
                 window.addEventListener("mousedown", handleMouseDownSinglePlayerScreen, false);
-                console.log("BLLLAHAHAHGHJYGTHNJUYTGBHNJGFGHJKJHGF HELLOs")
+                break;
+            case "invite-code":
+                scene.scene.add(screen_InviteCode(joinCode));
+                //window.addEventListener("mousedown", handleMouseDownSinglePlayerScreen, false);
                 break;
             case "log-in":
                 scene.scene.add(screen_LogIn());
@@ -279,7 +284,9 @@ export default function App() {
     function onCreateGameSuccess(data) {
         // Store response
         const _joinCode = data["data"]["game"]["join_code"]
-        console.log("we joined", _joinCode)
+        setJoinCode(_joinCode);
+        console.log(_joinCode, joinCode)
+        setScreen("invite-code");
     }
 
 

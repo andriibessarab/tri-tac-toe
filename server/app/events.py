@@ -209,7 +209,7 @@ class SockerEvents(Namespace):
         player1_marker, player2_marker = random.sample(["x", "o"], k=2)
 
         # Randomly generate join code
-        join_code = random.randint(100000, 999999)
+        join_code = str(random.randint(100000, 999999))
 
         # Create game and game board
         db = get_db()
