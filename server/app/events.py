@@ -276,6 +276,7 @@ class SockerEvents(Namespace):
 
         # Retrieve needed session data
         user_id = session.get(SessionKeys.USER_ID)
+        user_name = session.get(SessionKeys.USER_NAME)
 
         # Retrieve game data from db
         db = get_db()
@@ -312,7 +313,21 @@ class SockerEvents(Namespace):
 
         join_room(game_room, sid=request.sid, namespace="/")
 
-        emit("game_starts", {}, room=game_room)
+        emit("game_starts", {
+            "success": True,
+            "error_code": 200,
+            "error_message": "",
+            "data": {
+                "player_1": {
+                    "user_id": game_data["player_1"],
+                    "marker": game_data["player_1_marker"],
+                },
+                "player_2": {
+                    "user_id": user_id,
+                    "marker": game_data["player_2_marker"],
+                }
+            },
+        }, room=game_room)
 
         # # Check if user is part of this game
         # if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):

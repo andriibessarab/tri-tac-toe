@@ -107,6 +107,8 @@ export default function App() {
             socket.off("logout", onLogOut);
             socket.off("create_game_fail", onCreateGameFail);
             socket.off("create_game_success", onCreateGameSuccess);
+            socket.off("join_game_fail", onJoinGameFail);
+            socket.off("game_starts", onOnlineGameStarts);
         };
     }, []);
 
@@ -316,8 +318,8 @@ export default function App() {
 
 
     function onOnlineGameStarts(data) {
+        console.log(data)
         setScreen("online-game");
-
     }
 
 
