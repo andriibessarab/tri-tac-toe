@@ -200,12 +200,6 @@ class SockerEvents(Namespace):
     # DON'T TOUCH ONES ABOVE
     @login_required(event_name="create_game_fail")
     def on_create_game(self, data=None):
-        print("""
-1
-        CREATNIG GAME1111
-
-
-        """)
         user_id = session.get(SessionKeys.USER_ID)
 
         # Randomly choose which player goes first
@@ -227,16 +221,18 @@ class SockerEvents(Namespace):
                 ('online', join_code, user_id, None, player1_marker, player2_marker),
             )
         except sqlite3.IntegrityError as e:
-            if "CHECK constraint failed" in str(e):
-                emit("create_game_fail", {
+            emit("create_game_fail", {
                     "success": True,
                     "error_code": 520,
                     "error_message": "Unknown server error occurred while creating a game. Try to refresh the page!",
                     "data": {},
                 }, room=request.sid)
+            return
 
         game_id = cursor.lastrowid
         db.commit()
+
+        session[SessionKeys.ONGOING_GAME_ID] = game_id
 
         # Response
         emit("create_game_success", {
@@ -248,13 +244,6 @@ class SockerEvents(Namespace):
                     "join_code": join_code
                 },
             }}, room=request.sid)
-
-        print("""
-
-        CREATNIG GAME
-
-
-        """)
 
     @login_required(event_name="join_wait_fail")
     def on_join_wait(self, data=None):

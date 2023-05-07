@@ -454,7 +454,7 @@ export default function App() {
     }
 
 
-    function handleMouseDownMenuScreen(event) {        console.log("222222s")
+    function handleMouseDownMenuScreen(event) {
         if (isWaitingToJoinGame) {
             return;
         }
@@ -556,7 +556,8 @@ export default function App() {
                 break;
         }
         window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
-        setScreen("single-player");console.log("bllaaaaah single")
+        setScreen("single-player");
+        console.log("bllaaaaah single")
     }
 
 
@@ -668,7 +669,7 @@ export default function App() {
                 localGameMarker = "X";
             }
 
-                        localGameTurnsGone++;
+            localGameTurnsGone++;
             if (checkWin() || localGameTurnsGone === 9) {
                 localGameOngoing = false;
                 return;
@@ -707,7 +708,7 @@ export default function App() {
                 localGameMarker = "X";
             }
 
-                        if (checkWin() || localGameTurnsGone === 9) {
+            if (checkWin() || localGameTurnsGone === 9) {
                 localGameOngoing = false;
                 return;
             }
