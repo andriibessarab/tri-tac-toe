@@ -11,12 +11,12 @@ DROP TRIGGER IF EXISTS check_last_move_by;
 -- Create user table that stores information about the registered users of the system.
 CREATE TABLE user
 (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    username    TEXT UNIQUE NOT NULL,
-    email       TEXT UNIQUE NOT NULL,
-    password    TEXT        NOT NULL,
-    user_role TEXT        NOT NULL DEFAULT 'usr' CHECK (user_role IN ('adm', 'usr', 'ban')),
-    created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    username   TEXT UNIQUE NOT NULL,
+    email      TEXT UNIQUE NOT NULL,
+    password   TEXT        NOT NULL,
+    user_role  TEXT        NOT NULL DEFAULT 'usr' CHECK (user_role IN ('adm', 'usr', 'ban')),
+    created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -25,6 +25,7 @@ CREATE TABLE game
 (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     game_mode       TEXT      NOT NULL CHECK (game_mode IN ('local', 'online', 'ai')),
+    join_code       INTEGER   UNIQUE CHECK ((game_mode <> 'online' AND join_code IS NULL) OR (game_mode = 'online' AND join_code IS NOT NULL)),
     player_1        INTEGER   NOT NULL REFERENCES user (id),
     player_2        INTEGER   NOT NULL REFERENCES user (id),
     player_1_marker TEXT      NOT NULL CHECK (player_1_marker IN ('x', 'o')),
@@ -78,7 +79,7 @@ CREATE TRIGGER check_next_move_by
                                                                                 FROM game
                                                                                 WHERE id = NEW.game_id))
 BEGIN
-    SELECT RAISE(FAIL, 'next_move_by must be either player_1 or player_2');
+SELECT RAISE(FAIL, 'next_move_by must be either player_1 or player_2');
 END;
 
 
@@ -96,5 +97,5 @@ CREATE TRIGGER check_last_move_by
                                FROM game
                                WHERE id = NEW.game_id))
 BEGIN
-    SELECT RAISE(FAIL, 'last_move_by must be either player_1 or player_2');
+SELECT RAISE(FAIL, 'last_move_by must be either player_1 or player_2');
 END;
