@@ -132,7 +132,7 @@ export default function App() {
                 window.addEventListener("mousedown", handleMouseDownLocalGameScreen, false);
                 break;
             case "join-online-game":
-                scene.scene.add(screen_OnlineGameSettings(0));
+                scene.scene.add(screen_OnlineGameSettings());
                 window.addEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen, false);
                 break;
             case "online-game":
@@ -142,6 +142,7 @@ export default function App() {
             case "single-player":
                 scene.scene.add(screen_inGame(2));
                 window.addEventListener("mousedown", handleMouseDownSinglePlayerScreen, false);
+                console.log("BLLLAHAHAHGHJYGTHNJUYTGBHNJGFGHJKJHGF HELLOs")
                 break;
             case "log-in":
                 scene.scene.add(screen_LogIn());
@@ -453,7 +454,7 @@ export default function App() {
     }
 
 
-    function handleMouseDownMenuScreen(event) {
+    function handleMouseDownMenuScreen(event) {        console.log("222222s")
         if (isWaitingToJoinGame) {
             return;
         }
@@ -473,21 +474,21 @@ export default function App() {
         const buttonObject = buttonInfo.object;
         const buttonName = buttonObject.buttonName;
 
+        window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+        // eslint-disable-next-line default-case
         switch (buttonName) {
             case "log-out":
                 socket.emit("logout");
                 break;
             case "single-player":
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen("choose-difficulty");
                 break;
             case "online-game":
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
                 setScreen("join-online-game")
                 break;
-            default:
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-                setScreen(buttonName);
+            case "local-game":
+                setScreen("local-game")
+                break;
         }
     }
 
@@ -555,7 +556,7 @@ export default function App() {
                 break;
         }
         window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
-        setScreen("single-player");
+        setScreen("single-player");console.log("bllaaaaah single")
     }
 
 

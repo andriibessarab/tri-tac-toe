@@ -6,7 +6,7 @@ import mesh_DecorCross from "../meshes/mesh_DecorCross";
 import mesh_DecorCircle from "../meshes/mesh_DecorCircle";
 import mesh_hiddenButtonTile from "../meshes/mesh_hiddenButtonTile";
 
-function screen_Menu(userLoggedIn) {
+function screen_Menu() {
     const screenComponents = new THREE.Group();
 
     const buttonTiles = new THREE.Group();
