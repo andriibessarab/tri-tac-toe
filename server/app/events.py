@@ -231,11 +231,11 @@ class SockerEvents(Namespace):
             db.commit()
         except sqlite3.IntegrityError as e:
             emit("create_game_fail", {
-                    "success": True,
-                    "error_code": 520,
-                    "error_message": "Unknown server error occurred while creating a game. Try to refresh the page!",
-                    "data": {},
-                }, room=request.sid)
+                "success": True,
+                "error_code": 520,
+                "error_message": "Unknown server error occurred while creating a game. Try to refresh the page!",
+                "data": {},
+            }, room=request.sid)
             return
 
         cursor.execute("SELECT game_room FROM game WHERE id=?", (game_id,))
@@ -264,6 +264,16 @@ class SockerEvents(Namespace):
         # Store response data
         join_code = data["join_code"]
 
+        # Check if join_code is valid
+        if not re.match(vp.JOIN_CODE_PATTERN, join_code):
+            emit("join_game_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": f"Invalid join code.",
+                "data": {},
+            }, room=request.sid)
+            return
+
         # Retrieve needed session data
         user_id = session.get(SessionKeys.USER_ID)
 
@@ -273,15 +283,36 @@ class SockerEvents(Namespace):
         cursor.execute(
             "SELECT * FROM game WHERE join_code = ?", (join_code,))
         game_data = cursor.fetchone()
+
+        if game_data is None:
+            emit("join_game_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": f"Game with code {join_code} does not exist.",
+                "data": {},
+            }, room=request.sid)
+            return
+
+        if game_data["player_1"] == user_id:
+            emit("join_game_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": f"Cannot join your own game:)",
+                "data": {},
+            }, room=request.sid)
+            return
+
         cursor.execute(
             "UPDATE game SET player_2 = ? WHERE join_code = ?",
             (user_id, join_code)
         )
         db.commit()
 
+        game_room = game_data["game_room"]
 
+        join_room(game_room, sid=request.sid, namespace="/")
 
-
+        emit("game_starts", {}, room=game_room)
 
         # # Check if user is part of this game
         # if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):

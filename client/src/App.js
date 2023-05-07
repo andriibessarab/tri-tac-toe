@@ -92,8 +92,8 @@ export default function App() {
         socket.on("logout", onLogOut);
         socket.on("create_game_fail", onCreateGameFail);
         socket.on("create_game_success", onCreateGameSuccess);
-        // socket.on("join_wait_fail", onJoinWaitFail);
-        // socket.on("join_wait_success", onJoinWaitSuccess);
+        socket.on("join_game_fail", onJoinGameFail);
+        socket.on("game_starts", onOnlineGameStarts);
         // socket.on("make_move_success", onMakeMoveSuccess);
 
         return () => {
@@ -304,7 +304,7 @@ export default function App() {
     }
 
 
-    function onJoinWaitFail(data) {
+    function onJoinGameFail(data) {
         const errorCode = data["error_code"];
         const errorMessage = data["error_message"];
         if (errorCode === 401) {
@@ -315,17 +315,9 @@ export default function App() {
     }
 
 
-    function onJoinWaitSuccess(data) {
-        // Store response
-        const _gameId = data["data"]["game"]["game_id"]
-        console.log("we joined", _gameId)
+    function onOnlineGameStarts(data) {
+        setScreen("online-game");
 
-        setCurrentGameID(_gameId);
-
-        // Join the game room
-        socket.emit("join_game", {
-            game_id: _gameId,
-        });
     }
 
 
