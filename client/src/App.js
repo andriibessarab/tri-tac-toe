@@ -106,6 +106,7 @@ export default function App() {
         socket.on("create_game_success", onCreateGameSuccess);
         socket.on("join_game_fail", onJoinGameFail);
         socket.on("game_starts", onOnlineGameStarts);
+        socket.on("game_ends", onOnlineGameEnds);
         socket.on("make_move_success", onMakeMoveSuccess);
         socket.on("make_move_fail", onMakeMoveFail)
 
@@ -412,6 +413,13 @@ export default function App() {
     }
 
 
+    function onOnlineGameEnds(data) {
+        console.log(data)
+        window.removeEventListener("mousedown", handleMouseDownOnlineGameScreen);
+        setScreen("main-menu");
+    }
+
+
     // function onJoinGameFail(data) {
     //     const errorCode = data["error_code"];
     //     const errorMessage = data["error_message"];
@@ -453,6 +461,17 @@ export default function App() {
     // }
 
 
+    function onMakeMoveFail(data) {
+        const errorCode = data["error_code"];
+        const errorMessage = data["error_message"];
+        if (errorCode === 401) {
+            setScreen("log-in");
+        } else {
+            alert(errorMessage);
+        }
+    }
+
+
     function onMakeMoveSuccess(data) {
         console.log(userId)
         // Store response data (p.s. using snake case
@@ -471,16 +490,6 @@ export default function App() {
         console.log("NEXT MOVE SHOUL DBE BY", next_move_player_id)
     }
 
-
-    function onMakeMoveFail(data) {
-        const errorCode = data["error_code"];
-        const errorMessage = data["error_message"];
-        if (errorCode === 401) {
-            setScreen("log-in");
-        } else {
-            alert(errorMessage);
-        }
-    }
 
     function initScene() {
         // Initialize scene

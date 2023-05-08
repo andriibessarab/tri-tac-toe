@@ -9,6 +9,15 @@ def check_win(board):
     return ""
 
 
+# Check for tie
+def check_tie(board):
+    for row in board:
+        if '' in row:
+            # If there's an empty space on the board, the game is not tied
+            return False
+    return True
+
+
 # Check for win in horizontal line
 def check_horizontal_win(board, p, i):
     return all(mark == p for mark in board[i])

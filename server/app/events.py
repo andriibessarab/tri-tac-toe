@@ -4,9 +4,10 @@ import re
 import sqlite3
 
 from flask import request, session
-from flask_socketio import Namespace, emit, join_room, rooms
+from flask_socketio import Namespace, emit, join_room, rooms, leave_room
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from .app_utils.check_win import check_win, check_tie
 from .app_utils.decorators import login_required
 from .app_utils.session_keys import SessionKeys as s, SessionKeys
 from .app_utils.validation_patterns import ValidationPatterns as vp
@@ -334,62 +335,6 @@ class SockerEvents(Namespace):
             },
         }, room=game_room)
 
-        # # Check if user is part of this game
-        # if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
-        #     emit("join_game_fail", {
-        #         "success": False,
-        #         "error_code": 400,
-        #         "error_message": "You are not part of this game.",
-        #         "data": {},
-        #     }, room=request.sid)
-        #     return
-        #
-        # # Player & opponent data
-        # room_id = 'game-' + str(game_id)
-        # player_number = 1 if game_data["player_1"] == user_id else 2
-        # player_turn = user_id == game_data["next_move_by"]
-        # player_marker = game_data[f"player_{player_number}_marker"]
-        # opponent_player_number = 2 if player_number == 1 else 1
-        # opponent_id = game_data["player_2"] if player_number == 1 else game_data["player_1"]
-        #
-        # # Retrieve opponent data
-        # cursor.execute("SELECT * FROM user WHERE id = ?", (opponent_id,))
-        # opponent_data = cursor.fetchone()
-        # opponent_username = opponent_data["username"]
-        #
-        # # Update session info w/ game data
-        # session[SessionKeys.HAS_ONGOING_GAME] = True
-        # session[SessionKeys.ONGOING_GAME_ID] = game_id
-        # session[SessionKeys.ONGOING_GAME_ROOM_ID] = room_id
-        #
-        # # I don't think I ever use or update these
-        # # session["ongoing_game_player_number"] = player_number
-        # # session["ongoing_game_player_turn"] = player_turn
-        # # session["ongoing_game_opponent_id"] = opponent_id
-        # # session["ongoing_game_opponent_username"] = opponent_username
-        #
-        # # Send event with game, player, and opponent data
-        # emit("join_game_success", {
-        #     "success": True,
-        #     "error_code": 200,
-        #     "error_message": "",
-        #     "data": {
-        #         "game": {
-        #             "game_id": game_id,
-        #             "game_room_id": room_id,
-        #         },
-        #         "player": {
-        #             "player_number": player_number,
-        #             "player_turn": player_turn,
-        #             "player_marker": player_marker,
-        #         },
-        #         "opponent": {
-        #             "opponent_id": opponent_id,
-        #             "opponent_username": opponent_username,
-        #             "opponent_player_number": opponent_player_number
-        #         },
-        #     }}, room=request.sid)
-
     @login_required(event_name="make_move_fail")
     def on_make_move(self, response_data):
         # Check if user has an ongoing game
@@ -414,7 +359,7 @@ class SockerEvents(Namespace):
         # Validate that provided data contains proper coordinate
         if move_coordinate is None or not isinstance(move_coordinate, list) or not len(
                 move_coordinate) == 2 or not isinstance(move_coordinate[0], int) or not isinstance(
-                move_coordinate[1], int):
+            move_coordinate[1], int):
             emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
@@ -501,6 +446,43 @@ class SockerEvents(Namespace):
         update_player_move_query = f"UPDATE game_board SET board_state = ?, next_move_by = ? WHERE game_id = ?"
         cursor.execute(update_player_move_query, (json.dumps(game_board), opponent_id, game_id,))
         db.commit()
+
+        # Check for winner
+        winner = check_win(game_board)
+        if winner != "":
+            set_winner_query = f"UPDATE game SET winner = ? WHERE id = ?"
+            cursor.execute(set_winner_query, (user_id, game_id,))
+            emit("game_ends", {
+                "success": True,
+                "error_code": 200,
+                "error_message": "",
+                "data": {
+                    "previous_move": {
+                        "player_id": user_id,
+                        "player_marker": player_marker,
+                        "move_coordinate": move_coordinate,
+                    },
+                },
+            }, room=room_id)
+            db.commit()
+            return
+
+        # Check for tie
+        if check_tie(game_board):
+            emit("game_ends", {
+                "success": True,
+                "error_code": 200,
+                "error_message": "",
+                "data": {
+                    "previous_move": {
+                        "player_id": user_id,
+                        "player_marker": player_marker,
+                        "move_coordinate": move_coordinate,
+                    },
+                },
+            }, room=room_id)
+            db.commit()
+            return
 
         # Emit event to the room with the move data
         emit("make_move_success", {
