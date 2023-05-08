@@ -325,7 +325,8 @@ class SockerEvents(Namespace):
                 "player_2": {
                     "user_id": user_id,
                     "marker": game_data["player_2_marker"],
-                }
+                },
+                "next_turn_by": game_data["player_1"],  # TODO should instead retrieve from game_board table
             },
         }, room=game_room)
 

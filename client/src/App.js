@@ -55,13 +55,19 @@ export default function App() {
     const [formJoinCode, setFormJoinCode] = useState("");
 
     // Game state variables
-    const [currentGameId, setCurrentGameID] = useState(null); // String to hold the current game's ID
-    const [currentGameRoomId, setCurrentGameRoomID] = useState(null); // String to hold the current game's room ID
-    const [currentGamePlayerNumber, setCurrentGamePlayerNumber] = useState(null); // Number to indicate the current player number (1 or 2)
-    const [currentGamePlayerMarker, setCurrentGamePlayerMarker] = useState(null); // String to hold the current player's marker (x or o)
-    const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null); // Number to indicate whether the current player's turn (true or false)
-    const [currentGameOpponentId, setCurrentGameOpponentId] = useState(null); // String to hold the current game's opponent ID
-    const [currentGameOpponentUsername, setCurrentGameOpponentUsername] = useState(null); // String to hold the current game's opponent username
+    const [currentGamePlayerTurn, setCurrentGamePlayerTurn] = useState(null);
+    const [currentGamePlayerMarker, setCurrentGamePlayerMarker] = useState(null);
+    const [currentGameOpponentMarker, setCurrentGameOpponentMarker] = useState(null);
+    // let currentGamePlayerTurn = null;
+    // let currentGamePlayerMarker = null;
+    // let currentGameOpponentMarker = null;
+
+    const [player1Id, setPlayer1Id] = useState(null);
+    const [player1Marker, setPlayer1Marker] = useState(null);
+    const [player2Id, setPlayer2Id] = useState(null);
+    const [player2Marker, setPlayer2Marker] = useState(null);
+    const [nextTurnBy, setNextTurnBy] = useState(null);
+
     const [joinCode, setJoinCode] = useState("000000"); // String to hold the current game's opponent username
 
 
@@ -115,7 +121,6 @@ export default function App() {
 
     // Update scene screen based on state change
     useEffect(() => {
-
         if (!isSceneDefined || scene === undefined) {
             console.log("no scene")
             return;
@@ -194,7 +199,9 @@ export default function App() {
                 <h2>Join Game</h2>
                 <input type="text" placeholder="Join Code(6 digit)x" value={formJoinCode}
                        onChange={(e) => setFormJoinCode(e.target.value)}/>
-                <button onClick={handleJoinGame} disabled={userId === null || hasGameOngoing || formJoinCode.length !== 6}>Join Game</button>
+                <button onClick={handleJoinGame}
+                        disabled={userId === null || hasGameOngoing || formJoinCode.length !== 6}>Join Game
+                </button>
 
                 <button onClick={() => {
                     socket.emit("test")
@@ -262,12 +269,14 @@ export default function App() {
         const _userId = data["data"]["user_id"];
         const _userName = data["data"]["username"];
         const _userEmail = data["data"]["email"];
-
+        window.removeEventListener("mousedown", handleMouseDownMenuScreen);
         // Set state variable
+        setIsSceneDefined(false);
         setUserId(_userId);
         setUserName(_userName);
         setUserEmail(_userEmail);
-
+        setScreen("main-menu");
+        setIsSceneDefined(true);
         console.log("login success");
     }
 
@@ -318,7 +327,28 @@ export default function App() {
 
 
     function onOnlineGameStarts(data) {
-        console.log(data)
+        // TODO - handle if any of the values are null or undefined
+        const _player1Id = data["data"]["player_1"]["user_id"];
+        const _player1Marker = data["data"]["player_1"]["marker"];
+        const _player2Id = data["data"]["player_2"]["user_id"];
+        const _player2Marker = data["data"]["player_2"]["marker"];
+        const _nextTurnBy = data["data"]["next_turn_by"];
+        // if(_player1Id === userId) {
+        //     setCurrentGamePlayerMarker(_player1Marker);
+        //     setCurrentGameOpponentMarker(_player2Marker);
+        //     setCurrentGamePlayerTurn(true);  // TODO don't hardcode based on player's number
+        // } else {
+        //     setCurrentGamePlayerMarker (_player2Marker);
+        //     setCurrentGameOpponentMarker(_player1Marker);
+        //     setCurrentGamePlayerTurn(false);  // TODO don't hardcode based on player's number
+        // }
+
+        setPlayer1Id(_player1Id);
+        setPlayer1Marker(_player1Marker);
+        setPlayer2Id(_player2Id);
+        setPlayer2Marker(_player2Marker);
+        setNextTurnBy(_nextTurnBy);
+
         setScreen("online-game");
     }
 
@@ -402,7 +432,7 @@ export default function App() {
             }
 
             // Change state variables
-            setCurrentGamePlayerTurn(true);
+            currentGamePlayerTurn = true;
         }
     }
 
@@ -535,7 +565,7 @@ export default function App() {
                 socket.emit("create_game", {});
                 break;
             case "join-online-game":
-                window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
                 setScreen("join-online-game")
                 break;
         }
@@ -765,7 +795,13 @@ export default function App() {
     }
 
 
-    function handleMouseDownOnlineGameScreen(event, marker) {
+    function handleMouseDownOnlineGameScreen(event) {
+        console.log(userId, player1Id, player1Marker, player2Id, player2Marker, nextTurnBy)
+
+        if (userId !== nextTurnBy) {
+            return;
+        }
+
         setMousePosition(event, mouse);
 
         const intersectsTiles = getRaycasterIntersects(event, scene, mouse, raycaster, "hiddenTilesGroup");
@@ -776,10 +812,20 @@ export default function App() {
             const yOffset = intersectsTiles[0].object.position.y;
 
             // Draw marker
-            if (marker === "X") {
-                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
-            } else {
-                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+            if (userId === player1Id) {
+                if (player1Marker === "x") {
+
+                    scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+                } else if (player1Marker === "o") {
+                    scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+                }
+            } else if (userId === player2Id) {
+                if (player2Marker === "x") {
+
+                    scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(xOffset, yOffset));
+                } else if (player2Marker === "o") {
+                    scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(xOffset, yOffset));
+                }
             }
 
             let row, col;
@@ -811,7 +857,6 @@ export default function App() {
     function updateGameBoardCopy(i, j, marker) {
         localGameBoardCopy[i][j] = marker;
         singlePlayerGameBoard[i * 3 + j] = "X" ? "X" : "O";
-        console.table(localGameBoardCopy);
     }
 
 
