@@ -19,8 +19,6 @@ function screen_InviteCode(joinCode) {
     buttonTiles.name = "buttonTiles";
     waitRoomElement.name = "waitRoom";
 
-    const blah = 7;
-
 
     mesh_Text("Invite Code", 10, 2, 2, -35, 39, -2, true)
         .then((textMesh) => {

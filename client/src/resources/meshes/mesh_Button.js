@@ -2,7 +2,10 @@ import * as THREE from "three";
 
 function mesh_Button(buttonID, width, height, depth, xOffset, yOffset, setScaleToZeros = false) {
     const buttonGeometry = new THREE.BoxGeometry(width, height, depth);
-    const buttonMaterial = new THREE.MeshNormalMaterial();
+    const buttonMaterial = new THREE.MeshNormalMaterial({
+        transparent: true,
+        opacity: 0.0
+    });
     const buttonMesh = new THREE.Mesh(buttonGeometry, buttonMaterial);
 
     buttonMesh.userData.id = buttonID;

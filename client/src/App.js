@@ -16,6 +16,7 @@ import screen_InviteCode from "./resources/screens/screen_InviteCode";
 import screen_PostGameScreen from "./resources/screens/screen_PostGameScreen";
 import screen_MainMenu from "./resources/screens/screen_LogInScreen";
 import screen_Menu from "./resources/screens/screen_Menu";
+import screen_JoinOnlineGame from "./resources/screens/screen_JoinOnlineGame";
 
 export default function App() {
     // Constants
@@ -168,6 +169,9 @@ export default function App() {
             case "invite-code":
                 scene.scene.add(screen_InviteCode(joinCode));
                 //window.addEventListener("mousedown", handleMouseDownSinglePlayerScreen, false);
+                break;
+            case "join-game":
+                scene.scene.add(screen_JoinOnlineGame());
                 break;
             case "log-in":
                 scene.scene.add(screen_LogIn());
@@ -954,9 +958,9 @@ export default function App() {
                 window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
                 socket.emit("create_game", {});
                 break;
-            case "join-online-game":
+            case "join-game":
                 window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
-                setScreen("join-online-game")
+                setScreen("join-game")
                 break;
         }
     }

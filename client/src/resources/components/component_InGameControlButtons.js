@@ -23,7 +23,7 @@ function component_InGameControlButtons(gamemode, xOffset, yOffset) {
             controlButtonsButtons.add(mesh_Button("mainMenuButton", 20, 6, 1, -15 + xOffset, -43 + yOffset, true));
             controlButtonsButtons.add(mesh_Button("restartGameButton", 20, 6, 1, 15 + xOffset, -43 + yOffset, true));
 
-            mesh_Text("Main Menu", 2.5, 2, 2, -23.75 + xOffset, -44 + yOffset, 0, true)
+            mesh_Text("Main Menu", 2.5, 0.5, 2, -23.75 + xOffset, -44 + yOffset, 0, true)
                 .then((textMesh) => {
                     controlButtonsText.add(textMesh);
                 })
@@ -31,7 +31,7 @@ function component_InGameControlButtons(gamemode, xOffset, yOffset) {
                     console.error(error);
                 });
 
-            mesh_Text("Restart", 2.5, 2, 2, 9 + xOffset, -44 + yOffset, 0, true)
+            mesh_Text("Restart", 2.5, 0.5, 2, 9 + xOffset, -44 + yOffset, 0, true)
                 .then((textMesh) => {
                     controlButtonsText.add(textMesh);
                 })

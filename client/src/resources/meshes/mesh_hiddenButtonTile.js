@@ -15,7 +15,7 @@ function mesh_HiddenButtonTile(x, y, z, xOffset, yOffset, buttonName) {
     const hiddenTileGeometry = new THREE.BoxGeometry(x, y, z);
     const hiddenTileMaterial = new THREE.MeshNormalMaterial({
         transparent: true,
-        opacity: 0.0,
+        opacity: 0.5,
     });
     const hiddenTile = new THREE.Mesh(hiddenTileGeometry, hiddenTileMaterial);
     hiddenTile.position.x = xOffset;
