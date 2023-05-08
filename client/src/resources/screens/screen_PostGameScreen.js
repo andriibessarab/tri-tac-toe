@@ -6,7 +6,7 @@ import mesh_DecorCross from "../meshes/mesh_DecorCross";
 import mesh_DecorCircle from "../meshes/mesh_DecorCircle";
 import mesh_hiddenButtonTile from "../meshes/mesh_hiddenButtonTile";
 
-function screen_WonOnlineGame(userMarker="x") {
+function screen_PostGameScreen(gameStatus = "win", userMarker = "x") {
     const screenComponents = new THREE.Group();
 
     const buttonTiles = new THREE.Group();
@@ -16,7 +16,35 @@ function screen_WonOnlineGame(userMarker="x") {
     screenComponents.name = "screenComponents";
     buttonTiles.name = "buttonTiles";
 
-    mesh_Text("You Won!", 10, 2, 2, -54, 39, -2, true)
+    if (gameStatus === "win") {
+        mesh_Text("Victory is yours!", 10, 2, 2, -50, 39, -2, true)
+            .then((textMesh) => {
+                screenComponents.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    } else if (gameStatus === "lose") {
+        mesh_Text("Maybe next time :(", 10, 2, 2, -57, 39, -2, true)
+            .then((textMesh) => {
+                screenComponents.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    } else {
+        mesh_Text("Looks like it's a tie :0", 10, 2, 2, -65, 39, -2, true)
+            .then((textMesh) => {
+                screenComponents.add(textMesh);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
+    buttonTiles.add(mesh_hiddenButtonTile(37, 8, 1, 0, 2, "play-again"));
+
+    mesh_Text("Play Again", 5.5, 1, 2, -18, 0, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -24,29 +52,9 @@ function screen_WonOnlineGame(userMarker="x") {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(20, 8, 1, 0, 11.5, "easy-mode"));
+    buttonTiles.add(mesh_hiddenButtonTile(28, 8, 1, 0, -48.7, "main-menu"));
 
-    mesh_Text("Easy", 4, 1, 2, -6.5, 10, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-
-    buttonTiles.add(mesh_hiddenButtonTile(27, 8, 1, 0, -5.5, "normal-mode"));
-
-    mesh_Text("Normal", 4, 1, 2, -10.6, -7, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-
-    buttonTiles.add(mesh_hiddenButtonTile(20, 8, 1, 0, -22.5, "hard-mode"));
-
-    mesh_Text("Hard", 4, 1, 2, -6.5, -24, -1, true)
+    mesh_Text("Main Menu", 4, 1, 2, -13.5, -50, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -55,9 +63,9 @@ function screen_WonOnlineGame(userMarker="x") {
         });
 
     if (userMarker === "x") {
-            generateRandomCrosses(70);
+        generateRandomCrosses(70);
     } else {
-            generateRandomCircles(70);
+        generateRandomCircles(70);
     }
 
     return screenComponents;
@@ -117,7 +125,7 @@ function screen_WonOnlineGame(userMarker="x") {
 
 }
 
-export default screen_WonOnlineGame;
+export default screen_PostGameScreen;
 
 
 

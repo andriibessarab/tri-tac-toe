@@ -2,7 +2,6 @@ import React, {useEffect, useState} from "react";
 import socket from "./socket";
 import Scene from "./game_scenes/Scene";
 import {Raycaster, Vector2} from "three";
-import screen_Menu from "./resources/screens/screen_Menu";
 import screen_inGame from "./resources/screens/screen_InGameScreen";
 import screen_LogIn from "./resources/screens/screen_LogIn";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
@@ -14,9 +13,9 @@ import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
 import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./interactionUtils";
 import screen_InviteCode from "./resources/screens/screen_InviteCode";
-import screen_WonOnlineGame from "./resources/screens/screen_WonOnlineGame";
-import screen_LostOnlineGame from "./resources/screens/screen_LostOnlineGame";
-import screen_TieOnlineGame from "./resources/screens/screen_TieOnlineGame";
+import screen_PostGameScreen from "./resources/screens/screen_PostGameScreen";
+import screen_MainMenu from "./resources/screens/screen_LogInScreen";
+import screen_Menu from "./resources/screens/screen_Menu";
 
 export default function App() {
     // Constants
@@ -182,13 +181,16 @@ export default function App() {
                 window.addEventListener("mousedown", handleMouseDownChooseDifficultyScreen, false);
                 break;
             case "won-online-game":
-                scene.scene.add(screen_WonOnlineGame());
+                scene.scene.add(screen_PostGameScreen("win"));
+                window.addEventListener("mousedown", handleMouseDownPostGameScreen, false);
                 break;
             case "lost-online-game":
-                scene.scene.add(screen_LostOnlineGame());
+                scene.scene.add(screen_PostGameScreen("lose"));
+                window.addEventListener("mousedown", handleMouseDownPostGameScreen, false);
                 break;
             case "tie-online-game":
-                scene.scene.add(screen_TieOnlineGame());
+                scene.scene.add(screen_PostGameScreen("tie"));
+                window.addEventListener("mousedown", handleMouseDownPostGameScreen, false);
                 break;
             default:
                 break;
@@ -634,7 +636,46 @@ export default function App() {
     }
 
 
-    function handleMouseDownOnlineGameSettingsScreen(event) {
+    function handleMouseDownMenuScreen(event) {
+        if (isWaitingToJoinGame) {
+            return;
+        }
+
+        setMousePosition(event, mouse);
+
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
+
+        if (intersectsLength === 0) {
+            return;
+        }
+
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
+
+        window.removeEventListener("mousedown", handleMouseDownMenuScreen);
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "log-out":
+                socket.emit("logout");
+                break;
+            case "single-player":
+                setScreen("choose-difficulty");
+                break;
+            case "online-game":
+                setScreen("join-online-game")
+                break;
+            case "local-game":
+                setScreen("local-game")
+                break;
+        }
+    }
+
+
+    function handleMouseDownPostGameScreen(event) {
         setMousePosition(event, mouse);
 
         const targetGroupName = "buttonTiles";
@@ -652,16 +693,12 @@ export default function App() {
 
         // eslint-disable-next-line default-case
         switch (buttonName) {
-            case "back":
-                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+            case "main-menu":
+                window.removeEventListener("mousedown", handleMouseDownPostGameScreen);
                 setScreen("main-menu");
                 break;
-            case "create-game":
-                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
-                socket.emit("create_game", {});
-                break;
-            case "join-online-game":
-                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+            case "play-again":
+                window.removeEventListener("mousedown", handleMouseDownPostGameScreen);
                 setScreen("join-online-game")
                 break;
         }
@@ -886,6 +923,40 @@ export default function App() {
                 break;
             case "restartGameButton":
                 restartLocalGame();
+                break;
+        }
+    }
+
+
+    function handleMouseDownOnlineGameSettingsScreen(event) {
+        setMousePosition(event, mouse);
+
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
+
+        if (intersectsLength === 0) {
+            return;
+        }
+
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
+
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "back":
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+                setScreen("main-menu");
+                break;
+            case "create-game":
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+                socket.emit("create_game", {});
+                break;
+            case "join-online-game":
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+                setScreen("join-online-game")
                 break;
         }
     }
