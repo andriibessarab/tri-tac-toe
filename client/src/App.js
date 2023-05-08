@@ -83,6 +83,12 @@ export default function App() {
     const [isWaitingToJoinGame, setIsWaitingToJoinGame] = useState(false); // Boolean to indicate whether the user is waiting to join a game or not
     const [hasGameOngoing, setHasGameOngoing] = useState(false); // Boolean to indicate whether there is an ongoing game or not
 
+    const [newMoveMade, setNewMoveMade] = useState(null);
+    const [newMoveMadeBy, setNewMoveMadeBy] = useState(null);
+    const [newMoveMadeMarker, setNewMoveMadeMarker] = useState(null);
+
+
+
     // Init effect
     useEffect(() => {
         // Init scene
@@ -100,7 +106,8 @@ export default function App() {
         socket.on("create_game_success", onCreateGameSuccess);
         socket.on("join_game_fail", onJoinGameFail);
         socket.on("game_starts", onOnlineGameStarts);
-        // socket.on("make_move_success", onMakeMoveSuccess);
+        socket.on("make_move_success", d => onMakeMoveSuccess(d, userId, scene));
+        socket.on("make_move_fail", onMakeMoveFail)
 
         return () => {
             // Disconnect socket events
@@ -174,6 +181,59 @@ export default function App() {
         console.log(screen);
         animate();
     }, [isSceneDefined, scene, screen, userId]);
+
+    useEffect(() => {
+        if (newMoveMade === null) {
+            return;
+
+        }
+
+        const prev_move_row = newMoveMade[0];
+        const prev_move_col = newMoveMade[1];
+
+        const notThisPlayerPrevMove = newMoveMadeBy !== userId;
+
+        if (notThisPlayerPrevMove) {
+            // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
+
+            const hiddenTilesGroup = scene.scene.getObjectByName("hiddenTilesGroup");
+
+            let targetTile;
+
+            hiddenTilesGroup.children.forEach(tile => {
+                if (tile.userData.row === prev_move_row && tile.userData.col === prev_move_col) {
+                    targetTile = tile;
+                }
+            });
+
+            console.log("TARGET TILE :::", targetTile);
+
+            if (!targetTile) {
+                // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
+                return
+            }
+
+            const tile_x = targetTile.position.x;
+            const tile_y = targetTile.position.y;
+
+            // Draw other player's turn
+            if (newMoveMadeMarker === "x") {
+                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
+            } else if (newMoveMadeMarker === "o") {
+                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
+            } else {
+                // TODO - handle if invalid mve(in case something wrong was returned from db)
+                return
+            }
+
+            // Change state variables
+            // currentGamePlayerTurn = true;            // currentGamePlayerTurn = true;
+        }
+
+        setNewMoveMade(null);
+        setNewMoveMadeBy(null);
+        setNewMoveMadeMarker(null);
+    }, [newMoveMade]);
 
 
     return (
@@ -386,56 +446,78 @@ export default function App() {
     // }
 
 
+    // function onMakeMoveSuccess(data, _userId, _scene) {
+    //     useEffect(()=>{
+    //
+    //     })
+    //
+    // }
+
+
     function onMakeMoveSuccess(data) {
-        //     // Store response data (p.s. using snake case
-        //     // to not interfere with globals)
+        console.log(userId)
+        // Store response data (p.s. using snake case
+        // to not interfere with globals)
         const prev_move_player_id = data["data"]["previous_move"]["player_id"]
         const prev_move_player_marker = data["data"]["previous_move"]["player_marker"]
         const prev_move_coord = data["data"]["previous_move"]["move_coordinate"];
         const prev_move_row = prev_move_coord[0];
         const prev_move_col = prev_move_coord[1];
-        const next_move_player_id = data["data"]["next_move"]["player_id"];
-        const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
+        setNewMoveMade(prev_move_coord);
+        setNewMoveMadeBy(prev_move_player_id);
+        setNewMoveMadeMarker(prev_move_player_marker);
+        // const next_move_player_id = data["data"]["next_move"]["player_id"];
+        // const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
 
-        if (notThisPlayerPrevMove) {
-            console.log("were inlining")
-            // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
-
-            const hiddenTilesGroup = scene.scene.getObjectByName("hiddenTilesGroup");
-
-            let targetTile;
-
-            hiddenTilesGroup.children.forEach(tile => {
-                if (tile.row === prev_move_row && tile.column === prev_move_col) {
-                    targetTile = tile;
-                }
-            });
-
-            if (!targetTile) {
-                // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
-                return
-            }
-
-            const tile_x = targetTile.position.x;
-            const tile_y = targetTile.position.y;
-
-            console.log(prev_move_player_marker);
-
-            // Draw other player's turn
-            if (prev_move_player_marker === "x") {
-                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
-            } else if (prev_move_player_marker === "o") {
-                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
-            } else {
-                // TODO - handle if invalid mve(in case something wrong was returned from db)
-                return
-            }
-
-            // Change state variables
-            currentGamePlayerTurn = true;
-        }
+        // if (notThisPlayerPrevMove) {
+        //     console.log("were inlining")
+        //     // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
+        //
+        //     const hiddenTilesGroup = scene.scene.getObjectByName("hiddenTilesGroup");
+        //
+        //     let targetTile;
+        //
+        //     hiddenTilesGroup.children.forEach(tile => {
+        //         if (tile.row === prev_move_row && tile.column === prev_move_col) {
+        //             targetTile = tile;
+        //         }
+        //     });
+        //
+        //     if (!targetTile) {
+        //         // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
+        //         return
+        //     }
+        //
+        //     const tile_x = targetTile.position.x;
+        //     const tile_y = targetTile.position.y;
+        //
+        //     console.log(prev_move_player_marker);
+        //
+        //     // Draw other player's turn
+        //     if (prev_move_player_marker === "x") {
+        //         scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
+        //     } else if (prev_move_player_marker === "o") {
+        //         scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
+        //     } else {
+        //         // TODO - handle if invalid mve(in case something wrong was returned from db)
+        //         return
+        //     }
+        //
+        //     // Change state variables
+        //     currentGamePlayerTurn = true;
+        // }
     }
 
+
+    function onMakeMoveFail(data) {
+        const errorCode = data["error_code"];
+        const errorMessage = data["error_message"];
+        if (errorCode === 401) {
+            setScreen("log-in");
+        } else {
+            alert(errorMessage);
+        }
+    }
 
     function initScene() {
         // Initialize scene
@@ -848,7 +930,7 @@ export default function App() {
 
             // Emit socket for make move
             socket.emit("make_move", {
-                move_coordinate: tileCoord,
+                move_coordinate: [0, 0],
             });
         }
     }

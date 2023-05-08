@@ -309,7 +309,11 @@ class SockerEvents(Namespace):
         )
         db.commit()
 
+        game_id = game_data["id"]
         game_room = game_data["game_room"]
+
+        session[SessionKeys.ONGOING_GAME_ID] = game_id
+        session[SessionKeys.ONGOING_GAME_ROOM_ID] = game_room
 
         join_room(game_room, sid=request.sid, namespace="/")
 
@@ -386,237 +390,11 @@ class SockerEvents(Namespace):
         #         },
         #     }}, room=request.sid)
 
-    # @login_required(event_name="join_wait_fail")
-    # def on_join_wait(self, data=None):
-    #     """
-    #     Pair 2 players for game and send out generic game data
-    #     :return: nothing
-    #     """
-    #
-    #     # Check if the user is already in Redis
-    #     wait_list = self._redis.lrange("wait-list", 0, -1)
-    #     for user in wait_list:
-    #         if json.loads(user)["user_id"] == session.get(SessionKeys.USER_ID):
-    #             return
-    #
-    #     # Add user data to redis db
-    #     self._redis.rpush("wait-list", json.dumps({
-    #         "user_id": session.get(SessionKeys.USER_ID),
-    #         "username": session.get(SessionKeys.USER_NAME),
-    #         "request_id": request.sid
-    #     }))
-    #
-    #     # Check if wait list has less than two users
-    #     if self._redis.llen("wait-list") < 2:
-    #         return
-    #
-    #     # Pick two players for game
-    #     player1 = json.loads(self._redis.lpop("wait-list"))
-    #     player1_user_id = player1["user_id"]
-    #     player1_request_id = player1["request_id"]
-    #     player2 = json.loads(self._redis.lpop("wait-list"))
-    #     player2_user_id = player2["user_id"]
-    #     player2_request_id = player2["request_id"]
-    #
-    #     # Randomly choose which player goes first
-    #     first_move_player_number = random.randint(1, 2)
-    #     first_move_player_id = player1_user_id if first_move_player_number == 1 else player2_user_id
-    #
-    #     # Randomly assign marker to both players
-    #     player1_marker, player2_marker = random.sample(["x", "o"], k=2)
-    #
-    #     # Create game and game board
-    #     db = get_db()
-    #     cursor = db.cursor()
-    #     try:
-    #         cursor.execute(
-    #             "INSERT INTO game (game_mode, player_1, player_2, player_1_marker, player_2_marker) VALUES (?, ?, ?, "
-    #             "?, ?)",
-    #             ('online', player1_user_id, player2_user_id, player1_marker, player2_marker),
-    #         )
-    #     except sqlite3.IntegrityError as e:
-    #         print("HHEHEHEHEHEHEHEHHEHE", e)
-    #         if "CHECK constraint failed" in str(e):
-    #             emit("join-wait", {
-    #                 "success": True,
-    #                 "error_code": 520,
-    #                 "error_message": "Unknown server error occurred. Try to refresh the page!",
-    #                 "data": {},
-    #             }, room=player1_request_id)
-    #
-    #             # Response for player 2
-    #             emit("join-wait", {
-    #                 "success": True,
-    #                 "error_code": 520,
-    #                 "error_message": "Unknown server error occurred. Try to refresh the page!",
-    #                 "data": {},
-    #             }, room=player2_request_id)
-    #
-    #     # handle other IntegrityError cases here
-    #     game_id = cursor.lastrowid
-    #     cursor.execute(
-    #         "INSERT INTO game_board (game_id, next_move_by) VALUES (?, ?)",
-    #         (game_id, first_move_player_id),
-    #     )
-    #     db.commit()
-    #
-    #     # Add both users to socket room
-    #     room_id = 'game-' + str(game_id)
-    #
-    #     try:
-    #         join_room(room_id, sid=player1_request_id)
-    #         join_room(room_id, sid=player2_request_id)
-    #     except KeyError:  # If KeyError occurs return a 520 response
-    #         emit("join_wait_fail", {
-    #             "success": True,
-    #             "error_code": 520,
-    #             "error_message": "Unknown server error occurred. Try to refresh the page!",
-    #             "data": {},
-    #         }, room=player1_request_id)
-    #
-    #         # Response for player 2
-    #         emit("join_wait_fail", {
-    #             "success": True,
-    #             "error_code": 520,
-    #             "error_message": "Unknown server error occurred. Try to refresh the page!",
-    #             "data": {},
-    #         }, room=player2_request_id)
-    #         return
-    #
-    #     # Response for player 1
-    #     emit("join_wait_success", {
-    #         "success": True,
-    #         "error_code": 200,
-    #         "error_message": "",
-    #         "data": {
-    #             "game": {
-    #                 "game_id": game_id,
-    #                 "game_room_id": room_id,
-    #             },
-    #         }}, room=player1_request_id)
-    #
-    #     # Response for player 2
-    #     emit("join_wait_success", {
-    #         "success": True,
-    #         "error_code": 200,
-    #         "error_message": "",
-    #         "data": {
-    #             "game": {
-    #                 "game_id": game_id,
-    #                 "game_room_id": room_id,
-    #             },
-    #         }}, room=player2_request_id)
-    #
-    #     # Check if the user is already in Redis, and remove the old request
-    #     wait_list = self._redis.lrange("wait-list", 0, -1)
-    #     for user in wait_list:
-    #         print(f"----------{json.loads(user)['user_id']} {session.get(SessionKeys.USER_ID)}")
-    #
-    #         if json.loads(user)["user_id"] == session.get(SessionKeys.USER_ID):
-    #             self._redis.lrem("wait-list", 0, json.dumps({"user_id": session.get(SessionKeys.USER_ID)}))
-    #             print("""
-    #
-    #             DUMBED
-    #
-    #
-    #             """)
-
-    # @login_required(event_name="join_wait_fail")
-    # def on_join_game(self, data):
-    #     """
-    #     Init game and send response with game, player, and opponent specific data.
-    #     :return: nothing
-    #     """
-    #     # Store response data
-    #     game_id = data["game_id"]
-    #
-    #     # Retrieve needed session data
-    #     user_id = session.get(SessionKeys.USER_ID)
-    #
-    #     # Retrieve game data from db
-    #     db = get_db()
-    #     cursor = db.cursor()
-    #     cursor.execute(
-    #         "SELECT game.*, game_board.next_move_by FROM game JOIN game_board ON game.id = game_board.game_id "
-    #         "WHERE game.id = ?", (game_id,))
-    #     game_data = cursor.fetchone()
-    #
-    #     # Check if user is part of this game
-    #     if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
-    #         emit("join_game_fail", {
-    #             "success": False,
-    #             "error_code": 400,
-    #             "error_message": "You are not part of this game.",
-    #             "data": {},
-    #         }, room=request.sid)
-    #         return
-    #
-    #     # Player & opponent data
-    #     room_id = 'game-' + str(game_id)
-    #     player_number = 1 if game_data["player_1"] == user_id else 2
-    #     player_turn = user_id == game_data["next_move_by"]
-    #     player_marker = game_data[f"player_{player_number}_marker"]
-    #     opponent_player_number = 2 if player_number == 1 else 1
-    #     opponent_id = game_data["player_2"] if player_number == 1 else game_data["player_1"]
-    #
-    #     # Retrieve opponent data
-    #     cursor.execute("SELECT * FROM user WHERE id = ?", (opponent_id,))
-    #     opponent_data = cursor.fetchone()
-    #     opponent_username = opponent_data["username"]
-    #
-    #     # Update session info w/ game data
-    #     session[SessionKeys.HAS_ONGOING_GAME] = True
-    #     session[SessionKeys.ONGOING_GAME_ID] = game_id
-    #     session[SessionKeys.ONGOING_GAME_ROOM_ID] = room_id
-    #
-    #     # I don't think I ever use or update these
-    #     # session["ongoing_game_player_number"] = player_number
-    #     # session["ongoing_game_player_turn"] = player_turn
-    #     # session["ongoing_game_opponent_id"] = opponent_id
-    #     # session["ongoing_game_opponent_username"] = opponent_username
-    #
-    #     # Send event with game, player, and opponent data
-    #     emit("join_game_success", {
-    #         "success": True,
-    #         "error_code": 200,
-    #         "error_message": "",
-    #         "data": {
-    #             "game": {
-    #                 "game_id": game_id,
-    #                 "game_room_id": room_id,
-    #             },
-    #             "player": {
-    #                 "player_number": player_number,
-    #                 "player_turn": player_turn,
-    #                 "player_marker": player_marker,
-    #             },
-    #             "opponent": {
-    #                 "opponent_id": opponent_id,
-    #                 "opponent_username": opponent_username,
-    #                 "opponent_player_number": opponent_player_number
-    #             },
-    #         }}, room=request.sid)
-
-    def on_test(self):
-        print(f"""
-
-            SESSION: {session.items()}
-
-
-            REDIS: {self._redis.lrange("wait-list", 0, -1)}
-            
-            
-            ROOMS: {rooms()}
-
-        """)
-
-    @login_required(event_name="join_wait_fail")
+    @login_required(event_name="make_move_fail")
     def on_make_move(self, response_data):
         # Check if user has an ongoing game
         # if not session.get(SessionKeys.HAS_ONGOING_GAME):
         #     return
-
-        print("WRE ARE MAKING MOVE RNxs")
 
         # Check if response data was provided
         if response_data is None:
@@ -635,14 +413,15 @@ class SockerEvents(Namespace):
 
         # Validate that provided data contains proper coordinate
         if move_coordinate is None or not isinstance(move_coordinate, list) or not len(
-                move_coordinate) == 2 or not isinstance(move_coordinate[0], int) or not isinstance(move_coordinate[1],
-                                                                                                   int):
+                move_coordinate) == 2 or not isinstance(move_coordinate[0], int) or not isinstance(
+                move_coordinate[1], int):
             emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
-                "error_message": "Provided data does not contain proper coordinate",
+                "error_message": "Provided data does not contain proper coordinate.",
                 "data": {},
             }, room=request.sid)
+            return
 
         # Retrieve session data
         user_id = session.get(SessionKeys.USER_ID)
@@ -671,7 +450,7 @@ class SockerEvents(Namespace):
 
         # Store game data
         next_move_by = game_data["next_move_by"]
-        last_move_by = game_data["last_move_by"]
+        game_board = json.loads(game_data["board_state"])
         player_number = 1 if game_data["player_1"] == user_id else 2
         player_marker = game_data[f"player_{player_number}_marker"]
         opponent_number = 2 if player_number == 1 else 1
@@ -683,16 +462,6 @@ class SockerEvents(Namespace):
                 "success": False,
                 "error_code": 400,
                 "error_message": "Not user's turn to make a move.",
-                "data": {},
-            }, room=request.sid)
-            return
-
-        # Check if the player has already made a move
-        if last_move_by == user_id:
-            emit("make_move_fail", {
-                "success": False,
-                "error_code": 400,
-                "error_message": "You already made a move.",
                 "data": {},
             }, room=request.sid)
             return
@@ -717,15 +486,8 @@ class SockerEvents(Namespace):
             }, room=request.sid)
             return
 
-        # Compose cell name
-        cell_name = f"cell_{move_row}_{move_col}"
-
-        # TODO - handle if cell is not in game data
-        # if cell_name not in game_data:
-        #     return
-
         # Check if the cell is already taken by another player
-        if game_data[cell_name] != "":
+        if game_board[move_row][move_col] != "":
             emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
@@ -734,17 +496,11 @@ class SockerEvents(Namespace):
             }, room=request.sid)
             return
 
-        update_player_move_query = f"UPDATE game_board SET {cell_name} = ?, next_move_by = ?, last_move_by = ? " \
-                                   f"WHERE game_id = ?"
-        cursor.execute(update_player_move_query, (player_marker, opponent_id, user_id, game_id,))
-        db.commit()
+        game_board[move_row][move_col] = player_marker
 
-        emit("make_move_success", {
-            "success": True,
-            "error_code": 200,
-            "message": "Your move was made successfully.",
-            "data": {}
-        }, room=request.sid)
+        update_player_move_query = f"UPDATE game_board SET board_state = ?, next_move_by = ? WHERE game_id = ?"
+        cursor.execute(update_player_move_query, (json.dumps(game_board), opponent_id, game_id,))
+        db.commit()
 
         # Emit event to the room with the move data
         emit("make_move_success", {
@@ -763,3 +519,16 @@ class SockerEvents(Namespace):
 
             },
         }, room=room_id)
+
+    def on_test(self):
+        print(f"""
+
+            SESSION: {session.items()}
+
+
+            REDIS: {self._redis.lrange("wait-list", 0, -1)}
+            
+            
+            ROOMS: {rooms()}
+
+        """)

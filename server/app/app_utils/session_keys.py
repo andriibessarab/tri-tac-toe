@@ -8,4 +8,4 @@ class SessionKeys:
     # Game data
     HAS_ONGOING_GAME = "has-ongoing-game"
     ONGOING_GAME_ID = "ongoing-game-id"
-    ONGOING_GAME_ROOM_ID = "ongoing-game-id"
+    ONGOING_GAME_ROOM_ID = "ongoing-game-room-id"
