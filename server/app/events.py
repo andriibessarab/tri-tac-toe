@@ -462,6 +462,10 @@ class SockerEvents(Namespace):
                         "player_marker": player_marker,
                         "move_coordinate": move_coordinate,
                     },
+                    "winner": {
+                        "id": user_id,
+                        "marker": winner
+                    },
                 },
             }, room=room_id)
             db.commit()
@@ -478,6 +482,10 @@ class SockerEvents(Namespace):
                         "player_id": user_id,
                         "player_marker": player_marker,
                         "move_coordinate": move_coordinate,
+                    },
+                    "winner": {
+                        "id": "tie",
+                        "marker": None
                     },
                 },
             }, room=room_id)

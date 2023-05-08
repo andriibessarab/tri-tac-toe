@@ -14,6 +14,9 @@ import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
 import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./interactionUtils";
 import screen_InviteCode from "./resources/screens/screen_InviteCode";
+import screen_WonOnlineGame from "./resources/screens/screen_WonOnlineGame";
+import screen_LostOnlineGame from "./resources/screens/screen_LostOnlineGame";
+import screen_TieOnlineGame from "./resources/screens/screen_TieOnlineGame";
 
 export default function App() {
     // Constants
@@ -87,6 +90,8 @@ export default function App() {
     const [newMoveMadeBy, setNewMoveMadeBy] = useState(null);
     const [newMoveMadeMarker, setNewMoveMadeMarker] = useState(null);
 
+    const [gameWinnerId, setGameWinnerId] = useState(null);
+    const [gameWinnerMarker, setGameWinnerMarker] = useState(null);
 
 
     // Init effect
@@ -176,6 +181,15 @@ export default function App() {
                 scene.scene.add(screen_ChooseDifficulty());
                 window.addEventListener("mousedown", handleMouseDownChooseDifficultyScreen, false);
                 break;
+            case "won-online-game":
+                scene.scene.add(screen_WonOnlineGame());
+                break;
+            case "lost-online-game":
+                scene.scene.add(screen_LostOnlineGame());
+                break;
+            case "tie-online-game":
+                scene.scene.add(screen_TieOnlineGame());
+                break;
             default:
                 break;
         }
@@ -236,6 +250,33 @@ export default function App() {
         setNewMoveMadeMarker(null);
     }, [newMoveMade]);
 
+
+    useEffect(() => {
+        if (gameWinnerId === null) {
+            return;
+        }
+
+        if (gameWinnerId === "tie") {
+            setScreen("tie-online-game");
+            setGameWinnerId(null);
+            setGameWinnerMarker(null);
+            return;
+        }
+
+
+        const thisPlayerWon = gameWinnerId === userId;
+
+        if (thisPlayerWon) {
+            setScreen("won-online-game");
+        } else {
+            setScreen("lost-online-game");
+        }
+
+        setGameWinnerId(null);
+        setGameWinnerMarker(null);
+
+        // todo might not need to set marker to null because i want to show wallpaper with the winner's marker
+    }, [gameWinnerId]);
 
     return (
         <div className="App">
@@ -416,7 +457,8 @@ export default function App() {
     function onOnlineGameEnds(data) {
         console.log(data)
         window.removeEventListener("mousedown", handleMouseDownOnlineGameScreen);
-        setScreen("main-menu");
+        setGameWinnerId(data["data"]["winner"]["id"]);
+        setGameWinnerMarker(data["data"]["winner"]["marker"]);
     }
 
 
