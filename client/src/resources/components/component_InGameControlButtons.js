@@ -17,15 +17,6 @@ function component_InGameControlButtons(gamemode, xOffset, yOffset) {
     // Construct the title
     switch(gamemode) {
         case 0:
-            controlButtonsButtons.add(mesh_Button("restartGameButton", 20, 6, 1, -1 + xOffset, -43 + yOffset, true));
-
-            mesh_Text("Leave Game", 2.5, 2, 2, -10.4 + xOffset, -44 + yOffset, 0, true)
-                .then((textMesh) => {
-                    controlButtonsText.add(textMesh);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
             break;
         case 1:
         case 2:

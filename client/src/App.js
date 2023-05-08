@@ -106,7 +106,7 @@ export default function App() {
         socket.on("create_game_success", onCreateGameSuccess);
         socket.on("join_game_fail", onJoinGameFail);
         socket.on("game_starts", onOnlineGameStarts);
-        socket.on("make_move_success", d => onMakeMoveSuccess(d, userId, scene));
+        socket.on("make_move_success", onMakeMoveSuccess);
         socket.on("make_move_fail", onMakeMoveFail)
 
         return () => {
@@ -226,9 +226,9 @@ export default function App() {
                 return
             }
 
-            // Change state variables
-            // currentGamePlayerTurn = true;            // currentGamePlayerTurn = true;
+            window.addEventListener("mousedown", handleMouseDownOnlineGameScreen);
         }
+
 
         setNewMoveMade(null);
         setNewMoveMadeBy(null);
@@ -408,7 +408,6 @@ export default function App() {
         setPlayer2Id(_player2Id);
         setPlayer2Marker(_player2Marker);
         setNextTurnBy(_nextTurnBy);
-
         setScreen("online-game");
     }
 
@@ -463,49 +462,13 @@ export default function App() {
         const prev_move_coord = data["data"]["previous_move"]["move_coordinate"];
         const prev_move_row = prev_move_coord[0];
         const prev_move_col = prev_move_coord[1];
+        const next_move_player_id = data["data"]["next_move"]["player_id"];
         setNewMoveMade(prev_move_coord);
         setNewMoveMadeBy(prev_move_player_id);
         setNewMoveMadeMarker(prev_move_player_marker);
-        // const next_move_player_id = data["data"]["next_move"]["player_id"];
-        // const notThisPlayerPrevMove = parseInt(prev_move_player_id) !== parseInt(userId);
+        setNextTurnBy(next_move_player_id);
 
-        // if (notThisPlayerPrevMove) {
-        //     console.log("were inlining")
-        //     // NEXT STEPS ::: FIND TILE WITH THIS ROW AND COLUMN, REMOVE IT, TAKE ITS OFFSET, DRAW IT ON BOARD, FIND WAY TO OBTAIN USER ID
-        //
-        //     const hiddenTilesGroup = scene.scene.getObjectByName("hiddenTilesGroup");
-        //
-        //     let targetTile;
-        //
-        //     hiddenTilesGroup.children.forEach(tile => {
-        //         if (tile.row === prev_move_row && tile.column === prev_move_col) {
-        //             targetTile = tile;
-        //         }
-        //     });
-        //
-        //     if (!targetTile) {
-        //         // TODO - handle if there is not tile(could occur if other user made illegal move on cell where move has already be done)
-        //         return
-        //     }
-        //
-        //     const tile_x = targetTile.position.x;
-        //     const tile_y = targetTile.position.y;
-        //
-        //     console.log(prev_move_player_marker);
-        //
-        //     // Draw other player's turn
-        //     if (prev_move_player_marker === "x") {
-        //         scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tile_x, tile_y));
-        //     } else if (prev_move_player_marker === "o") {
-        //         scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tile_x, tile_y));
-        //     } else {
-        //         // TODO - handle if invalid mve(in case something wrong was returned from db)
-        //         return
-        //     }
-        //
-        //     // Change state variables
-        //     currentGamePlayerTurn = true;
-        // }
+        console.log("NEXT MOVE SHOUL DBE BY", next_move_player_id)
     }
 
 
@@ -919,8 +882,8 @@ export default function App() {
 
             // Store tile coordinate
             const tile = scene.scene.getObjectByName("hiddenTilesGroup").children[tileIndex];
-            const tileRow = tile.row;
-            const tileCol = tile.column;
+            const tileRow = tile.userData.row;
+            const tileCol = tile.userData.col;
             const tileCoord = [tileRow, tileCol];
 
             // Remove tile from scene
@@ -930,8 +893,10 @@ export default function App() {
 
             // Emit socket for make move
             socket.emit("make_move", {
-                move_coordinate: [0, 0],
+                move_coordinate: tileCoord,
             });
+
+            window.removeEventListener("mousedown", handleMouseDownOnlineGameScreen);
         }
     }
 
