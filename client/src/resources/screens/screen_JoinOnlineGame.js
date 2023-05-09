@@ -192,6 +192,16 @@ function screen_JoinOnlineGame() {
             buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 49, 15, "d5-plus"));
             buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 49, -14, "d5-minus"));
 
+                buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -50, "back"));
+
+    mesh_Text("Back", 3, 1, 1.5, -4.4, -51, -1, true)
+        .then((textMesh) => {
+            screenComponents.add(textMesh);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+
     const descText = `Ask the person who invited you to play for an invide\n code. It's a six character code containing digits only.(i.o. XXX)`
 
     mesh_Text(descText, 2, 1, 0.5, -33, -42, -1, true)

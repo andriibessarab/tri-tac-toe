@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import Scene from "./game_scenes/Scene";
+import Scene from "./Scene";
 import screen_MainMenu from "./resources/screens/screen_LogIn";
 import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
 import mesh_Cross from "./resources/meshes/mesh_Cross";

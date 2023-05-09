@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import socket from "./socket";
-import Scene from "./game_scenes/Scene";
+import Scene from "./Scene";
 import {Raycaster, Vector2} from "three";
 import screen_inGame from "./resources/screens/screen_InGameScreen";
 import screen_LogIn from "./resources/screens/screen_LogIn";
@@ -147,10 +147,14 @@ export default function App() {
 
         switch (screen) {
             case "main-menu":
+                scene.controls.enabled = true;
                 scene.scene.add(screen_Menu(userId !== null));
                 window.addEventListener("mousedown", handleMouseDownMenuScreen, false);
                 break;
             case "local-game":
+                        scene.controls.enabled = false;
+                        scene.resetPosition();
+                        scene.resetRotation();
                 scene.scene.add(screen_inGame(1));
                 window.addEventListener("mousedown", handleMouseDownLocalGameScreen, false);
                 break;
@@ -172,7 +176,11 @@ export default function App() {
                 break;
             case "join-game":
                 scene.scene.add(screen_JoinOnlineGame());
+                window.addEventListener("mousedown", handleMouseDownJoinOnlineGame)
                 break;
+                // case "local-game":
+                // setScreen("local-game")
+                // break;
             case "log-in":
                 scene.scene.add(screen_LogIn());
                 break;
@@ -549,6 +557,21 @@ export default function App() {
         const _mouse = new Vector2();
         const _raycaster = new Raycaster();
 
+
+
+        function animateSceneCameraFadeIn() {
+            if (_scene.camera.position.z > 130) {
+                _scene.camera.position.z -= 7;
+            }
+
+            requestAnimationFrame(animateSceneCameraFadeIn);
+        }
+
+                    animateSceneCameraFadeIn();
+
+
+
+
         // Set state variables
         setScene(_scene);
         setMouse(_mouse);
@@ -590,13 +613,13 @@ export default function App() {
 
     function animateSceneElement(obj) {
         if (obj.scale.x < 1) {
-            obj.scale.x += 0.04;
+            obj.scale.x += 0.02;
         }
         if (obj.scale.y < 1) {
-            obj.scale.y += 0.04;
+            obj.scale.y += 0.02;
         }
         if (obj.scale.z < 1) {
-            obj.scale.z += 0.04;
+            obj.scale.z += 0.02;
         }
     }
 
@@ -966,6 +989,34 @@ export default function App() {
     }
 
 
+    function handleMouseDownJoinOnlineGame(event) {
+        setMousePosition(event, mouse);
+
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
+
+        if (intersectsLength === 0) {
+            return;
+        }
+
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
+
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "back":
+                window.removeEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen);
+                setScreen("join-online-game");
+                break;
+        }
+    }
+
+
+
+
     function handleMouseDownOnlineGameScreen(event) {
         console.log(userId, player1Id, player1Marker, player2Id, player2Marker, nextTurnBy)
 
@@ -1163,21 +1214,6 @@ export default function App() {
         }
     }
 
-
-    function animateOnLaunch() {
-
-
-        function animateSceneCameraFadeIn() {
-            if (scene.scene.camera.position.z > 128) {
-                scene.scene.camera.position.z -= 5;
-            }
-
-            animateSceneCameraFadeIn();
-
-
-            requestAnimationFrame(animateSceneCameraFadeIn)
-        }
-    }
 }
 
 

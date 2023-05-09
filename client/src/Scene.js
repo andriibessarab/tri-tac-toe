@@ -18,7 +18,7 @@ export default class Scene {
             1,
             1000
         );
-        this.camera.position.z = 130;
+        this.camera.position.z = 1100;
 
         this.scene = new THREE.Scene();
 
@@ -54,5 +54,20 @@ export default class Scene {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    resetPosition() {
+        this.camera.position.x = 0;
+        this.camera.position.y = 0;
+        this.camera.position.z = 130;
+        this.camera.x = 0;
+        this.camera.y = 0;
+        this.camera.z = 0;
+    }
+
+    resetRotation() {
+        this.camera.rotation.x = 0;
+        this.camera.rotation.y = 0;
+        this.camera.rotation.z = 0;
     }
 }
