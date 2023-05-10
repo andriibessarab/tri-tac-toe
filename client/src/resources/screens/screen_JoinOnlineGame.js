@@ -215,6 +215,10 @@ function screen_JoinOnlineGame() {
     generateRandomCrosses(25);
     generateRandomCircles(25);
 
+        const decorMarkers = new THREE.Group();
+    screenComponents.add(decorMarkers);
+    decorMarkers.name = "decorMarkers";
+
     return screenComponents;
 
     function generateRandomCrosses(n) {
@@ -226,7 +230,7 @@ function screen_JoinOnlineGame() {
                 z = (Math.random() - 0.5) * 300;
             } while (
                 (x > -50 && x < 50 && z > -80 && z < 80) ||
-                (x > -40 && x < 40 && z > -120 && z < 120)
+                (x > -40 && x < 40 && z > -120 && z < 150)
                 );
             const xOffset = x;
             const yOffset = y;
@@ -239,7 +243,7 @@ function screen_JoinOnlineGame() {
 
             const circle = mesh_DecorCross(xOffset, yOffset, zOffset, xRot, yRot, zRot, opacity, false);
             circle.scale.set(scale, scale, scale);
-            screenComponents.add(circle);
+            decorMarkers.add(circle);
         }
     }
 
@@ -252,7 +256,7 @@ function screen_JoinOnlineGame() {
                 z = (Math.random() - 0.5) * 300;
             } while (
                 (x > -50 && x < 50 && z > -80 && z < 80) ||
-                (x > -40 && x < 40 && z > -120 && z < 120)
+                (x > -40 && x < 40 && z > -120 && z < 150)
                 );
             const xOffset = x;
             const yOffset = y;
@@ -265,7 +269,7 @@ function screen_JoinOnlineGame() {
 
             const circle = mesh_DecorCircle(xOffset, yOffset, zOffset, xRot, yRot, zRot, opacity, false);
             circle.scale.set(scale, scale, scale);
-            screenComponents.add(circle);
+            decorMarkers.add(circle);
         }
     }
 }

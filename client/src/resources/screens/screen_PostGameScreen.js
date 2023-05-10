@@ -62,11 +62,19 @@ function screen_PostGameScreen(gameStatus = "win", userMarker = "x") {
             console.error(error);
         });
 
+
+        const decorMarkers = new THREE.Group();
+    screenComponents.add(decorMarkers);
+    decorMarkers.name = "decorMarkers";
+
     if (userMarker === "x") {
         generateRandomCrosses(70);
     } else {
         generateRandomCircles(70);
     }
+
+    generateRandomCrosses(25);
+    generateRandomCircles(25);
 
     return screenComponents;
 
@@ -79,7 +87,7 @@ function screen_PostGameScreen(gameStatus = "win", userMarker = "x") {
                 z = (Math.random() - 0.5) * 300;
             } while (
                 (x > -50 && x < 50 && z > -80 && z < 80) ||
-                (x > -40 && x < 40 && z > -120 && z < 120)
+                (x > -40 && x < 40 && z > -120 && z < 150)
                 );
             const xOffset = x;
             const yOffset = y;
@@ -92,7 +100,7 @@ function screen_PostGameScreen(gameStatus = "win", userMarker = "x") {
 
             const circle = mesh_DecorCross(xOffset, yOffset, zOffset, xRot, yRot, zRot, opacity, false);
             circle.scale.set(scale, scale, scale);
-            screenComponents.add(circle);
+            decorMarkers.add(circle);
         }
     }
 
@@ -105,7 +113,7 @@ function screen_PostGameScreen(gameStatus = "win", userMarker = "x") {
                 z = (Math.random() - 0.5) * 300;
             } while (
                 (x > -50 && x < 50 && z > -80 && z < 80) ||
-                (x > -40 && x < 40 && z > -120 && z < 120)
+                (x > -40 && x < 40 && z > -120 && z < 150)
                 );
             const xOffset = x;
             const yOffset = y;
@@ -118,7 +126,7 @@ function screen_PostGameScreen(gameStatus = "win", userMarker = "x") {
 
             const circle = mesh_DecorCircle(xOffset, yOffset, zOffset, xRot, yRot, zRot, opacity, false);
             circle.scale.set(scale, scale, scale);
-            screenComponents.add(circle);
+            decorMarkers.add(circle);
         }
     }
 

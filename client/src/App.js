@@ -14,7 +14,6 @@ import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSett
 import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./interactionUtils";
 import screen_InviteCode from "./resources/screens/screen_InviteCode";
 import screen_PostGameScreen from "./resources/screens/screen_PostGameScreen";
-import screen_MainMenu from "./resources/screens/screen_LogInScreen";
 import screen_Menu from "./resources/screens/screen_Menu";
 import screen_JoinOnlineGame from "./resources/screens/screen_JoinOnlineGame";
 
@@ -152,9 +151,9 @@ export default function App() {
                 window.addEventListener("mousedown", handleMouseDownMenuScreen, false);
                 break;
             case "local-game":
-                        scene.controls.enabled = false;
-                        scene.resetPosition();
-                        scene.resetRotation();
+                scene.controls.enabled = false;
+                scene.resetPosition();
+                scene.resetRotation();
                 scene.scene.add(screen_inGame(1));
                 window.addEventListener("mousedown", handleMouseDownLocalGameScreen, false);
                 break;
@@ -178,9 +177,9 @@ export default function App() {
                 scene.scene.add(screen_JoinOnlineGame());
                 window.addEventListener("mousedown", handleMouseDownJoinOnlineGame)
                 break;
-                // case "local-game":
-                // setScreen("local-game")
-                // break;
+            // case "local-game":
+            // setScreen("local-game")
+            // break;
             case "log-in":
                 scene.scene.add(screen_LogIn());
                 break;
@@ -207,8 +206,56 @@ export default function App() {
             default:
                 break;
         }
-        console.log(screen);
+        function animateDecorMarkers() {
+    function animateDecorMarker(m) {
+    // Initialize marker rotation data if necessary
+    if (!m.userData.rotationData) {
+      m.userData.rotationData = {
+        rotationSpeed: 0.000,
+        acceleration: 0.0000,
+        maxSpeed: 0.2,
+        direction: Math.random() < 0.5 ? -1 : 1,
+      };
+    }
+
+    // Update marker rotation
+    const { rotationSpeed, acceleration, maxSpeed, direction } = m.userData.rotationData;
+    const newSpeed = rotationSpeed + acceleration * direction;
+    m.userData.rotationData.rotationSpeed = Math.max(-maxSpeed, Math.min(maxSpeed, newSpeed));
+    m.rotation.x += m.userData.rotationData.rotationSpeed * Math.PI / 180;
+    m.rotation.y += m.userData.rotationData.rotationSpeed * Math.PI / 180;
+    m.rotation.z += m.userData.rotationData.rotationSpeed * Math.PI / 180;
+
+    // Reverse direction if necessary
+    if (Math.abs(m.userData.rotationData.rotationSpeed) >= m.userData.rotationData.maxSpeed) {
+      m.userData.rotationData.direction = -m.userData.rotationData.direction;
+    }
+
+    // Update marker position
+    if (!m.userData.positionData) {
+      m.userData.positionData = {
+        positionSpeed: 0.1,
+        direction: Math.random() < 0.5 ? -1 : 1,
+      };
+    }
+
+    if (m.position.y >= 120) {
+      m.userData.positionData.direction = -1;
+    } else if (m.position.y <= -120) {
+      m.userData.positionData.direction = 1;
+    }
+
+    const { positionSpeed, direction: posYDirection } = m.userData.positionData;
+    m.position.y += positionSpeed * posYDirection;
+  }
+
+
+    scene.scene.getObjectByName("decorMarkers").children.forEach(animateDecorMarker);
+
+  requestAnimationFrame(animateDecorMarkers);
+}
         animate();
+        animateDecorMarkers();
     }, [isSceneDefined, scene, screen, userId]);
 
     useEffect(() => {
@@ -558,18 +605,18 @@ export default function App() {
         const _raycaster = new Raycaster();
 
 
-
         function animateSceneCameraFadeIn() {
-            if (_scene.camera.position.z > 130) {
-                _scene.camera.position.z -= 7;
+            if (_scene.camera.position.z > 136) {
+                _scene.controls.enabled = false;
+                _scene.camera.position.z -= 23;
+                requestAnimationFrame(animateSceneCameraFadeIn);
+            } else {
+                cancelAnimationFrame(animateSceneCameraFadeIn);
+                _scene.controls.enabled = true;
             }
-
-            requestAnimationFrame(animateSceneCameraFadeIn);
         }
 
-                    animateSceneCameraFadeIn();
-
-
+        animateSceneCameraFadeIn();
 
 
         // Set state variables
@@ -607,19 +654,18 @@ export default function App() {
 
             requestAnimationFrame(animate);
         }
-
     }
 
 
     function animateSceneElement(obj) {
         if (obj.scale.x < 1) {
-            obj.scale.x += 0.02;
+            obj.scale.x += 0.05;
         }
         if (obj.scale.y < 1) {
-            obj.scale.y += 0.02;
+            obj.scale.y += 0.05;
         }
         if (obj.scale.z < 1) {
-            obj.scale.z += 0.02;
+            obj.scale.z += 0.05;
         }
     }
 
@@ -699,6 +745,29 @@ export default function App() {
                 setScreen("local-game")
                 break;
         }
+    }
+
+
+    function animateDecorFigures() {
+        let f;
+        try {
+            f = scene.scene.getObjectByName("decorCircles").children[0];
+        } catch (err) {
+            return
+        }
+
+        if (f.position.y > -1000) {
+            f.position.y -= 0.000005;
+            requestAnimationFrame(animateDecorFigures);
+        } else {
+            cancelAnimationFrame(animateDecorFigures);
+        }
+
+
+        // function animateDecorCircle(f) {
+        //
+        //
+        // }
     }
 
 
@@ -762,7 +831,6 @@ export default function App() {
         }
         window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
         setScreen("single-player");
-        console.log("bllaaaaah single")
     }
 
 
@@ -1013,8 +1081,6 @@ export default function App() {
                 break;
         }
     }
-
-
 
 
     function handleMouseDownOnlineGameScreen(event) {

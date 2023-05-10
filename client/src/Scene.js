@@ -16,9 +16,9 @@ export default class Scene {
             this.fov + 10,
             window.innerWidth / window.innerHeight,
             1,
-            1000
+            2000
         );
-        this.camera.position.z = 1100;
+        this.camera.position.z = 2040;
 
         this.scene = new THREE.Scene();
 
@@ -59,10 +59,7 @@ export default class Scene {
     resetPosition() {
         this.camera.position.x = 0;
         this.camera.position.y = 0;
-        this.camera.position.z = 130;
-        this.camera.x = 0;
-        this.camera.y = 0;
-        this.camera.z = 0;
+        this.camera.position.z = 136;
     }
 
     resetRotation() {

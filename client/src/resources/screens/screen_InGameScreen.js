@@ -26,6 +26,10 @@ function screen_inGame(gamemode) {
     screenComponents.add(component_Board(gamemode, xOffset, yOffset));
     screenComponents.add(component_InGameControlButtons(gamemode, xOffset, yOffset));
 
+    const decorMarkers = new THREE.Group();
+    screenComponents.add(decorMarkers);
+    decorMarkers.name = "decorMarkers";
+
     generateRandomCrosses(25);
     generateRandomCircles(25);
 
@@ -40,7 +44,7 @@ function screen_inGame(gamemode) {
                 z = (Math.random() - 0.5) * 300;
             } while (
                 (x > -50 && x < 50 && z > -80 && z < 80) ||
-                (x > -40 && x < 40 && z > -120 && z < 120)
+                (x > -40 && x < 40 && z > -120 && z < 150)
                 );
             const xOffset = x;
             const yOffset = y;
@@ -53,7 +57,7 @@ function screen_inGame(gamemode) {
 
             const circle = mesh_DecorCross(xOffset, yOffset, zOffset, xRot, yRot, zRot, opacity, false);
             circle.scale.set(scale, scale, scale);
-            screenComponents.add(circle);
+            decorMarkers.add(circle);
         }
     }
 
@@ -66,7 +70,7 @@ function screen_inGame(gamemode) {
                 z = (Math.random() - 0.5) * 300;
             } while (
                 (x > -50 && x < 50 && z > -80 && z < 80) ||
-                (x > -40 && x < 40 && z > -120 && z < 120)
+                (x > -40 && x < 40 && z > -120 && z < 150)
                 );
             const xOffset = x;
             const yOffset = y;
@@ -79,11 +83,9 @@ function screen_inGame(gamemode) {
 
             const circle = mesh_DecorCircle(xOffset, yOffset, zOffset, xRot, yRot, zRot, opacity, false);
             circle.scale.set(scale, scale, scale);
-            screenComponents.add(circle);
+            decorMarkers.add(circle);
         }
     }
-
-    return screenComponents;
 }
 
 export default screen_inGame;
