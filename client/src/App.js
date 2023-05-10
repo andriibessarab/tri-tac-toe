@@ -3,7 +3,8 @@ import socket from "./socket";
 import Scene from "./Scene";
 import {Raycaster, Vector2} from "three";
 import screen_inGame from "./resources/screens/screen_InGameScreen";
-import screen_LogIn from "./resources/screens/screen_LogIn";
+import screen_LogIn from "./resources/screens/screen_Form";
+import screen_Form from "./resources/screens/screen_Form";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
 import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
@@ -15,7 +16,6 @@ import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./inte
 import screen_InviteCode from "./resources/screens/screen_InviteCode";
 import screen_PostGameScreen from "./resources/screens/screen_PostGameScreen";
 import screen_Menu from "./resources/screens/screen_Menu";
-import screen_JoinOnlineGame from "./resources/screens/screen_JoinOnlineGame";
 
 export default function App() {
     // Constants
@@ -151,40 +151,50 @@ export default function App() {
                 window.addEventListener("mousedown", handleMouseDownMenuScreen, false);
                 break;
             case "local-game":
-                scene.controls.enabled = false;
-                scene.resetPosition();
-                scene.resetRotation();
+                scene.controls.enabled = true;
                 scene.scene.add(screen_inGame(1));
                 window.addEventListener("mousedown", handleMouseDownLocalGameScreen, false);
                 break;
             case "join-online-game":
+                scene.controls.enabled = true;
                 scene.scene.add(screen_OnlineGameSettings());
                 window.addEventListener("mousedown", handleMouseDownOnlineGameSettingsScreen, false);
                 break;
             case "online-game":
+                scene.controls.enabled = true;
                 scene.scene.add(screen_inGame(0));
                 window.addEventListener("mousedown", handleMouseDownOnlineGameScreen, false);
                 break;
             case "single-player":
+                scene.controls.enabled = true;
                 scene.scene.add(screen_inGame(2));
                 window.addEventListener("mousedown", handleMouseDownSinglePlayerScreen, false);
                 break;
             case "invite-code":
+                scene.controls.enabled = true;
                 scene.scene.add(screen_InviteCode(joinCode));
                 //window.addEventListener("mousedown", handleMouseDownSinglePlayerScreen, false);
                 break;
             case "join-game":
-                scene.scene.add(screen_JoinOnlineGame());
-                window.addEventListener("mousedown", handleMouseDownJoinOnlineGame)
+                scene.controls.enabled = false;
+                scene.resetPosition();
+                scene.resetRotation();
+                window.addEventListener("mousedown", handleMouseDownFormScreen);
+                scene.scene.add(screen_Form("join-game"));
                 break;
-            // case "local-game":
-            // setScreen("local-game")
-            // break;
             case "log-in":
-                scene.scene.add(screen_LogIn());
+                scene.controls.enabled = false;
+                scene.resetPosition();
+                scene.resetRotation();
+                window.addEventListener("mousedown", handleMouseDownFormScreen);
+                scene.scene.add(screen_LogIn("log-in"));
                 break;
             case "register":
-                break;
+                scene.controls.enabled = false;
+                scene.resetPosition();
+                scene.resetRotation();
+                window.addEventListener("mousedown", handleMouseDownFormScreen);
+                scene.scene.add(screen_Form("register"));
             case "options":
                 break;
             case "choose-difficulty":
@@ -206,54 +216,56 @@ export default function App() {
             default:
                 break;
         }
+
         function animateDecorMarkers() {
-    function animateDecorMarker(m) {
-    // Initialize marker rotation data if necessary
-    if (!m.userData.rotationData) {
-      m.userData.rotationData = {
-        rotationSpeed: 0.000,
-        acceleration: 0.0000,
-        maxSpeed: 0.2,
-        direction: Math.random() < 0.5 ? -1 : 1,
-      };
-    }
+            function animateDecorMarker(m) {
+                // Initialize marker rotation data if necessary
+                if (!m.userData.rotationData) {
+                    m.userData.rotationData = {
+                        rotationSpeed: 0.000,
+                        acceleration: 0.0000,
+                        maxSpeed: 0.2,
+                        direction: Math.random() < 0.5 ? -1 : 1,
+                    };
+                }
 
-    // Update marker rotation
-    const { rotationSpeed, acceleration, maxSpeed, direction } = m.userData.rotationData;
-    const newSpeed = rotationSpeed + acceleration * direction;
-    m.userData.rotationData.rotationSpeed = Math.max(-maxSpeed, Math.min(maxSpeed, newSpeed));
-    m.rotation.x += m.userData.rotationData.rotationSpeed * Math.PI / 180;
-    m.rotation.y += m.userData.rotationData.rotationSpeed * Math.PI / 180;
-    m.rotation.z += m.userData.rotationData.rotationSpeed * Math.PI / 180;
+                // Update marker rotation
+                const {rotationSpeed, acceleration, maxSpeed, direction} = m.userData.rotationData;
+                const newSpeed = rotationSpeed + acceleration * direction;
+                m.userData.rotationData.rotationSpeed = Math.max(-maxSpeed, Math.min(maxSpeed, newSpeed));
+                m.rotation.x += m.userData.rotationData.rotationSpeed * Math.PI / 180;
+                m.rotation.y += m.userData.rotationData.rotationSpeed * Math.PI / 180;
+                m.rotation.z += m.userData.rotationData.rotationSpeed * Math.PI / 180;
 
-    // Reverse direction if necessary
-    if (Math.abs(m.userData.rotationData.rotationSpeed) >= m.userData.rotationData.maxSpeed) {
-      m.userData.rotationData.direction = -m.userData.rotationData.direction;
-    }
+                // Reverse direction if necessary
+                if (Math.abs(m.userData.rotationData.rotationSpeed) >= m.userData.rotationData.maxSpeed) {
+                    m.userData.rotationData.direction = -m.userData.rotationData.direction;
+                }
 
-    // Update marker position
-    if (!m.userData.positionData) {
-      m.userData.positionData = {
-        positionSpeed: 0.1,
-        direction: Math.random() < 0.5 ? -1 : 1,
-      };
-    }
+                // Update marker position
+                if (!m.userData.positionData) {
+                    m.userData.positionData = {
+                        positionSpeed: 0.1,
+                        direction: Math.random() < 0.5 ? -1 : 1,
+                    };
+                }
 
-    if (m.position.y >= 120) {
-      m.userData.positionData.direction = -1;
-    } else if (m.position.y <= -120) {
-      m.userData.positionData.direction = 1;
-    }
+                if (m.position.y >= 120) {
+                    m.userData.positionData.direction = -1;
+                } else if (m.position.y <= -120) {
+                    m.userData.positionData.direction = 1;
+                }
 
-    const { positionSpeed, direction: posYDirection } = m.userData.positionData;
-    m.position.y += positionSpeed * posYDirection;
-  }
+                const {positionSpeed, direction: posYDirection} = m.userData.positionData;
+                m.position.y += positionSpeed * posYDirection;
+            }
 
 
-    scene.scene.getObjectByName("decorMarkers").children.forEach(animateDecorMarker);
+            scene.scene.getObjectByName("decorMarkers").children.forEach(animateDecorMarker);
 
-  requestAnimationFrame(animateDecorMarkers);
-}
+            requestAnimationFrame(animateDecorMarkers);
+        }
+
         animate();
         animateDecorMarkers();
     }, [isSceneDefined, scene, screen, userId]);
@@ -342,35 +354,36 @@ export default function App() {
     return (
         <div className="App">
             <canvas id={sceneCanvasName}/>
-            <div id={"debug"}>
-                <h2>Login</h2>
-                <input type="text" placeholder="Username" value={formUserName}
-                       onChange={(e) => setFormUserName(e.target.value)}/>
-                <input type="password" placeholder="Password" value={formUserPassword}
-                       onChange={(e) => setFormUserPassword(e.target.value)}/>
-                <button onClick={handleLogIn}>Login</button>
+            {screen === "log-in" && (
+                <div id={"loginForm"}>
+                    <input type="text" placeholder="Username" value={formUserName}
+                           onChange={(e) => setFormUserName(e.target.value)}/>
+                    <input type="password" placeholder="Password" value={formUserPassword}
+                           onChange={(e) => setFormUserPassword(e.target.value)}/>
+                </div>
+            )}
 
-                <h2>Registration</h2>
-                <input type="text" placeholder="Email" value={formUserEmail}
-                       onChange={(e) => setFormUserEmail(e.target.value)}/>
-                <input type="text" placeholder="Username" value={formUserName}
-                       onChange={(e) => setFormUserName(e.target.value)}/>
-                <input type="password" placeholder="Password" value={formUserPassword}
-                       onChange={(e) => setFormUserPassword(e.target.value)}/>
-                <button onClick={handleRegister}>Register</button>
+            {screen === "register" && (
+                <div id={"registerForm"}>
+                    <input type="text" placeholder="Email" value={formUserEmail}
+                           onChange={(e) => setFormUserEmail(e.target.value)}/>
+                    <input type="text" placeholder="Username" value={formUserName}
+                           onChange={(e) => setFormUserName(e.target.value)}/>
+                    <input type="password" placeholder="Password" value={formUserPassword}
+                           onChange={(e) => setFormUserPassword(e.target.value)}/>
+                    <small>
+                        <button>Register</button>
+                    </small>
+                </div>
+            )}
 
-                <h2>Join Game</h2>
-                <input type="text" placeholder="Join Code(6 digit)x" value={formJoinCode}
-                       onChange={(e) => setFormJoinCode(e.target.value)}/>
-                <button onClick={handleJoinGame}
-                        disabled={userId === null || hasGameOngoing || formJoinCode.length !== 6}>Join Game
-                </button>
+            {screen === "join-game" && (
+                <div id={"joinGameForm"}>
+                    <input type="text" placeholder="Join Code(6 digit)" value={formJoinCode}
+                           onChange={(e) => setFormJoinCode(e.target.value)}/>
+                </div>
+            )}
 
-                <button onClick={() => {
-                    socket.emit("test")
-                }}>Test
-                </button>
-            </div>
         </div>
     );
 
@@ -644,7 +657,7 @@ export default function App() {
 
 
             requestAnimationFrame(animate);
-        } else if (screen === "choose-difficulty" || screen === "main-menu") {
+        } else if (screen === "choose-difficulty" || screen === "main-menu" || screen === "login" || screen === "register" || screen === "join-game") {
             try {
                 scene.scene.getObjectByName("screenComponents").children.forEach(animateSceneElement);
             } catch (err) {
@@ -744,6 +757,55 @@ export default function App() {
             case "local-game":
                 setScreen("local-game")
                 break;
+            case "log-in":
+                setScreen("log-in");
+                break;
+        }
+    }
+
+
+    function handleMouseDownFormScreen(event) {
+        if (isWaitingToJoinGame) {
+            return;
+        }
+
+        setMousePosition(event, mouse);
+
+        const targetGroupName = "buttonTiles";
+        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
+        const intersectsLength = intersects.length;
+
+        if (intersectsLength === 0) {
+            return;
+        }
+
+        const intersect = intersects[0];
+        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
+        const buttonObject = buttonInfo.object;
+        const buttonName = buttonObject.buttonName;
+
+        // eslint-disable-next-line default-case
+        switch (buttonName) {
+            case "register":
+                window.removeEventListener("mousedown", handleMouseDownFormScreen);
+                handleRegister();
+                break;
+            case "log-in":
+                window.removeEventListener("mousedown", handleMouseDownFormScreen);
+                handleLogIn();
+                break;
+            case "join-game":
+                window.removeEventListener("mousedown", handleMouseDownFormScreen);
+                handleJoinGame();
+                break;
+            case "back":
+                                window.removeEventListener("mousedown", handleMouseDownFormScreen);
+                if(screen === "join-game") {
+                                    setScreen("join-online-game");
+                }
+                else {
+                    setScreen("main-menu")
+                }
         }
     }
 
@@ -762,12 +824,6 @@ export default function App() {
         } else {
             cancelAnimationFrame(animateDecorFigures);
         }
-
-
-        // function animateDecorCircle(f) {
-        //
-        //
-        // }
     }
 
 

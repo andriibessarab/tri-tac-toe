@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import Scene from "./Scene";
-import screen_MainMenu from "./resources/screens/screen_LogIn";
+import screen_MainMenu from "./resources/screens/screen_Form";
 import screen_InGameScreen from "./resources/screens/screen_InGameScreen";
 import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";

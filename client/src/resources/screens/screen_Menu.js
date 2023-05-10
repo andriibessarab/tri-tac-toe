@@ -60,15 +60,15 @@ function screen_Menu(userLoggedIn) {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(22, 10, 1, 0, -27.5, "options"));
-
-    mesh_Text("Options", 4, 1, 2, -10, -29, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+    // buttonTiles.add(mesh_hiddenButtonTile(22, 10, 1, 0, -27.5, "options"));
+    //
+    // mesh_Text("Options", 4, 1, 2, -10, -29, -1, true)
+    //     .then((textMesh) => {
+    //         screenComponents.add(textMesh);
+    //     })
+    //     .catch((error) => {
+    //         console.error(error);
+    //     });
 
     if (userLoggedIn) {
         buttonTiles.add(mesh_hiddenButtonTile(20, 10, 1, 0, -40.5, "log-out"));

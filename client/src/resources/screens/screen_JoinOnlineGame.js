@@ -20,15 +20,6 @@ function screen_JoinOnlineGame() {
     buttonTiles.name = "buttonTiles";
 
 
-    mesh_Text("Join Game", 10, 2, 2, -35, 39, -2, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-
-
     mesh_Text("X", 15, 1, 5, -57, -7, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
@@ -37,7 +28,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-        mesh_Text("+", 15, 1, 5, -57, 8, -1, true)
+    mesh_Text("+", 15, 1, 5, -57, 8, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -45,7 +36,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("-", 15, 1, 5, -54.5, -20, -1, true)
+    mesh_Text("-", 15, 1, 5, -54.5, -20, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -53,8 +44,8 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, -51, 15, "d0-plus"));
-            buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, -51, -14, "d0-minus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, -51, 15, "d0-plus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, -51, -14, "d0-minus"));
 
 
     mesh_Text("X", 15, 1, 5, -37, -7, -1, true)
@@ -65,7 +56,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("+", 15, 1, 5, -37, 8, -1, true)
+    mesh_Text("+", 15, 1, 5, -37, 8, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -73,7 +64,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("-", 15, 1, 5, -34.5, -20, -1, true)
+    mesh_Text("-", 15, 1, 5, -34.5, -20, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -81,8 +72,8 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, -31, 15, "d1-plus"));
-            buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, -31, -14, "d1-minus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, -31, 15, "d1-plus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, -31, -14, "d1-minus"));
 
     mesh_Text("X", 15, 1, 5, -17, -7, -1, true)
         .then((textMesh) => {
@@ -92,7 +83,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-                mesh_Text("+", 15, 1, 5, -17, 8, -1, true)
+    mesh_Text("+", 15, 1, 5, -17, 8, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -100,7 +91,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("-", 15, 1, 5, -14.5, -20, -1, true)
+    mesh_Text("-", 15, 1, 5, -14.5, -20, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -108,8 +99,8 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, -11, 15, "d2-plus"));
-            buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, -11, -14, "d2-minus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, -11, 15, "d2-plus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, -11, -14, "d2-minus"));
 
     mesh_Text("X", 15, 1, 5, 3, -7, -1, true)
         .then((textMesh) => {
@@ -119,7 +110,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-                    mesh_Text("+", 15, 1, 5, 3, 8, -1, true)
+    mesh_Text("+", 15, 1, 5, 3, 8, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -127,7 +118,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("-", 15, 1, 5, 5.5, -20, -1, true)
+    mesh_Text("-", 15, 1, 5, 5.5, -20, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -135,8 +126,8 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 9, 15, "d3-plus"));
-            buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 9, -14, "d3-minus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 9, 15, "d3-plus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 9, -14, "d3-minus"));
 
     mesh_Text("X", 15, 1, 5, 23, -7, -1, true)
         .then((textMesh) => {
@@ -146,7 +137,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-                        mesh_Text("+", 15, 1, 5, 23, 8, -1, true)
+    mesh_Text("+", 15, 1, 5, 23, 8, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -154,7 +145,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("-", 15, 1, 5, 25.5, -20, -1, true)
+    mesh_Text("-", 15, 1, 5, 25.5, -20, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -162,8 +153,8 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 29, 15, "d4-plus"));
-            buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 29, -14, "d4-minus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 29, 15, "d4-plus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 29, -14, "d4-minus"));
 
     mesh_Text("X", 15, 1, 5, 43, -7, -1, true)
         .then((textMesh) => {
@@ -173,7 +164,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-                            mesh_Text("+", 15, 1, 5, 43, 8, -1, true)
+    mesh_Text("+", 15, 1, 5, 43, 8, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -181,7 +172,7 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            mesh_Text("-", 15, 1, 5, 45.5, -20, -1, true)
+    mesh_Text("-", 15, 1, 5, 45.5, -20, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -189,10 +180,10 @@ function screen_JoinOnlineGame() {
             console.error(error);
         });
 
-            buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 49, 15, "d5-plus"));
-            buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 49, -14, "d5-minus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 10, 1, 49, 15, "d5-plus"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 6, 1, 49, -14, "d5-minus"));
 
-                buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -50, "back"));
+    buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -50, "back"));
 
     mesh_Text("Back", 3, 1, 1.5, -4.4, -51, -1, true)
         .then((textMesh) => {
@@ -215,7 +206,7 @@ function screen_JoinOnlineGame() {
     generateRandomCrosses(25);
     generateRandomCircles(25);
 
-        const decorMarkers = new THREE.Group();
+    const decorMarkers = new THREE.Group();
     screenComponents.add(decorMarkers);
     decorMarkers.name = "decorMarkers";
 

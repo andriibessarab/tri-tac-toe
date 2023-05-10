@@ -5,6 +5,7 @@ body {
 
 div#debug {
     position: absolute;
+    display: none;
 }
 
 div#debug > h2 {
@@ -24,3 +25,53 @@ div#debug > button {
     background-color: black;
     margin: 0.5rem 0;
 }
+
+#loginForm, #registerForm, #joinGameForm {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 400px;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@media screen and (max-width: 600px) {
+  #loginForm, #registerForm, #joinGameForm {
+    max-width: 300px;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  #loginForm, #registerForm, #joinGameForm {
+    max-width: 200px;
+  }
+}
+
+input {
+  opacity: 1;
+}
+
+input:focus {
+  outline: none;
+}
+
+input[type="text"],
+input[type="password"] {
+  opacity: 1;
+  display: block;
+  background: rgba(0, 0, 0, 0);
+  color: #fff;
+  border: none;
+  border-bottom: 1px solid #fff;
+  font-size: 40px;
+  font-family: Roboto, sans-serif;
+  padding: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+
+
+

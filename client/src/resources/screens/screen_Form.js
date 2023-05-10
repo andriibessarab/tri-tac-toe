@@ -6,22 +6,82 @@ import mesh_DecorCross from "../meshes/mesh_DecorCross";
 import mesh_DecorCircle from "../meshes/mesh_DecorCircle";
 import mesh_hiddenButtonTile from "../meshes/mesh_hiddenButtonTile";
 
-function screen_Menu() {
+function screen_Form(formType) {
     const screenComponents = new THREE.Group();
 
     const buttonTiles = new THREE.Group();
 
-    const waitRoomElement = new THREE.Group();
-
     screenComponents.add(buttonTiles);
-    screenComponents.add(waitRoomElement);
 
     screenComponents.name = "screenComponents";
     buttonTiles.name = "buttonTiles";
-    waitRoomElement.name = "waitRoom";
 
 
-    mesh_Text("Play Online", 10, 2, 2, -35, 39, -2, true)
+    // eslint-disable-next-line default-case
+    switch (formType) {
+        case "log-in":
+            mesh_Text("Log In", 10, 2, 2, -18.7, 39, -2, false)
+                .then((textMesh) => {
+                    screenComponents.add(textMesh);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+
+            buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "log-in"));
+
+            mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, false)
+                .then((textMesh) => {
+                    screenComponents.add(textMesh);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+            break;
+
+        case "register":
+            mesh_Text("Register", 10, 2, 2, -18.7, 39, -2, false)
+                .then((textMesh) => {
+                    screenComponents.add(textMesh);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+
+            buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "register"));
+
+            mesh_Text("Register", 4, 1, 2, -7.5, -42, -1, false)
+                .then((textMesh) => {
+                    screenComponents.add(textMesh);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+            break;
+
+        case "join-game":
+            mesh_Text("Join Game", 10, 2, 2, -33.3, 39, -2, true)
+                .then((textMesh) => {
+                    screenComponents.add(textMesh);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+
+            buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "join-game"));
+
+            mesh_Text("Join", 4, 1, 2, -5.3, -42, -1, false)
+                .then((textMesh) => {
+                    screenComponents.add(textMesh);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+            break;
+    }
+                buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -50, "back"));
+
+        mesh_Text("Back", 3, 1, 1.5, -5, -51, -1, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })
@@ -29,35 +89,7 @@ function screen_Menu() {
             console.error(error);
         });
 
-    buttonTiles.add(mesh_hiddenButtonTile(25, 10, 1, 0, -14, "join-game"));
 
-    mesh_Text("Join Game", 4, 1, 2, -12.7, -15, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-
-    buttonTiles.add(mesh_hiddenButtonTile(31, 10, 1, 0, 11, "create-game"));
-
-    mesh_Text("Create Game", 4, 1, 2, -16, 10, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
-
-    buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -49, "back"));
-
-    mesh_Text("Back", 3, 1, 1.5, -5, -50, -1, true)
-        .then((textMesh) => {
-            screenComponents.add(textMesh);
-        })
-        .catch((error) => {
-            console.error(error);
-        });
 
     const decorMarkers = new THREE.Group();
     screenComponents.add(decorMarkers);
@@ -123,7 +155,7 @@ function screen_Menu() {
 
 }
 
-export default screen_Menu;
+export default screen_Form;
 
 
 
