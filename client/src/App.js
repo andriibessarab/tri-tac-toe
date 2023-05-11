@@ -9,7 +9,6 @@ import mesh_Cross from "./resources/meshes/mesh_Cross";
 import mesh_Circle from "./resources/meshes/mesh_Circle";
 import mesh_HiddenBoardTile from "./resources/meshes/mesh_HiddenBoardTile";
 import mesh_WinLine from "./resources/meshes/mesh_WinLine";
-import Minimax from 'tic-tac-toe-minimax'
 import screen_ChooseDifficulty from "./resources/screens/screen_ChooseDifficulty";
 import screen_OnlineGameSettings from "./resources/screens/screen_OnlineGameSettings";
 import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./interactionUtils";
@@ -32,7 +31,6 @@ export default function App() {
     ];
 
     let singlePlayerGameCurrentTurn = "X";
-    const {ComputerMove} = Minimax;
     let singlePlayerGameHuPlayer = "X";
     let singlePlayerGameAiPlayer = "O";
     let singlePlayerGameSymbols = {
@@ -40,7 +38,7 @@ export default function App() {
         aiPlayer: singlePlayerGameAiPlayer
     }
     let singlePlayerGameDifficulty = "Hard";
-    let singlePlayerGameBoard = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    let singlePlayerGameBoard = ["", "", "", "", "", "", "", "", ""];
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -63,6 +61,11 @@ export default function App() {
     // let currentGamePlayerTurn = null;
     // let currentGamePlayerMarker = null;
     // let currentGameOpponentMarker = null;
+    // const minimax = new Minimax("O", "X");
+    // const minimaxBoard = new Board(singlePlayerGameBoard);
+    // const bestMove = require("qm-tictactoe-minimax").bestMove
+    // Create a new game where player 1 starts first
+    // const game = new TicTacToeEngine(Player.PLAYER_ONE);
 
     const [player1Id, setPlayer1Id] = useState(null);
     const [player1Marker, setPlayer1Marker] = useState(null);
@@ -91,6 +94,8 @@ export default function App() {
 
     const [gameWinnerId, setGameWinnerId] = useState(null);
     const [gameWinnerMarker, setGameWinnerMarker] = useState(null);
+
+    const tttai = require('tttai');
 
 
     // Init effect
@@ -360,6 +365,8 @@ export default function App() {
                            onChange={(e) => setFormUserName(e.target.value)}/>
                     <input type="password" placeholder="Password" value={formUserPassword}
                            onChange={(e) => setFormUserPassword(e.target.value)}/>
+                    <button onClick={handleLogIn}>Log In
+                    </button>
                 </div>
             )}
 
@@ -371,9 +378,8 @@ export default function App() {
                            onChange={(e) => setFormUserName(e.target.value)}/>
                     <input type="password" placeholder="Password" value={formUserPassword}
                            onChange={(e) => setFormUserPassword(e.target.value)}/>
-                    <small>
-                        <button>Register</button>
-                    </small>
+                    <button onClick={handleRegister}>Register
+                    </button>
                 </div>
             )}
 
@@ -381,6 +387,8 @@ export default function App() {
                 <div id={"joinGameForm"}>
                     <input type="text" placeholder="Join Code(6 digit)" value={formJoinCode}
                            onChange={(e) => setFormJoinCode(e.target.value)}/>
+                    <button onClick={handleJoinGame}>Join Game
+                    </button>
                 </div>
             )}
 
@@ -419,7 +427,7 @@ export default function App() {
 
 
     function onRegisterSuccess(data) {
-        console.log("register success")
+        setScreen("log-in");
     }
 
 
@@ -427,7 +435,6 @@ export default function App() {
         const errorCode = data["error_code"];
         const errorMessage = data["error_message"];
         alert(errorMessage);
-        console.error(`Error ${errorCode} while joining the game: ${errorMessage}`);
     }
 
 
@@ -445,15 +452,14 @@ export default function App() {
         const _userId = data["data"]["user_id"];
         const _userName = data["data"]["username"];
         const _userEmail = data["data"]["email"];
-        window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-        // Set state variable
         setIsSceneDefined(false);
         setUserId(_userId);
         setUserName(_userName);
         setUserEmail(_userEmail);
+        window.removeEventListener("mousedown", handleMouseDownFormScreen);
         setScreen("main-menu");
         setIsSceneDefined(true);
-        console.log("login success");
+
     }
 
 
@@ -713,62 +719,27 @@ export default function App() {
                 setScreen("choose-difficulty");
                 break;
             case "online-game":
-                setScreen("join-online-game")
+                if (userId === null || userId === undefined) {
+                    setScreen("log-in");
+                    console.log("L")
+                } else {
+                    setScreen("join-online-game");
+                }
                 break;
             case "local-game":
-                setScreen("local-game")
-                break;
-        }
-    }
-
-
-    function handleMouseDownMenuScreen(event) {
-        if (isWaitingToJoinGame) {
-            return;
-        }
-
-        setMousePosition(event, mouse);
-
-        const targetGroupName = "buttonTiles";
-        const intersects = getRaycasterIntersects(event, scene, mouse, raycaster, targetGroupName);
-        const intersectsLength = intersects.length;
-
-        if (intersectsLength === 0) {
-            return;
-        }
-
-        const intersect = intersects[0];
-        const buttonInfo = getIntersectInfo(scene, intersect, targetGroupName);
-        const buttonObject = buttonInfo.object;
-        const buttonName = buttonObject.buttonName;
-
-        window.removeEventListener("mousedown", handleMouseDownMenuScreen);
-        // eslint-disable-next-line default-case
-        switch (buttonName) {
-            case "log-out":
-                socket.emit("logout");
-                break;
-            case "single-player":
-                setScreen("choose-difficulty");
-                break;
-            case "online-game":
-                setScreen("join-online-game")
-                break;
-            case "local-game":
-                setScreen("local-game")
+                setScreen("local-game");
                 break;
             case "log-in":
                 setScreen("log-in");
+                break;
+            case "register":
+                setScreen("register");
                 break;
         }
     }
 
 
     function handleMouseDownFormScreen(event) {
-        if (isWaitingToJoinGame) {
-            return;
-        }
-
         setMousePosition(event, mouse);
 
         const targetGroupName = "buttonTiles";
@@ -786,24 +757,10 @@ export default function App() {
 
         // eslint-disable-next-line default-case
         switch (buttonName) {
-            case "register":
-                window.removeEventListener("mousedown", handleMouseDownFormScreen);
-                handleRegister();
-                break;
-            case "log-in":
-                window.removeEventListener("mousedown", handleMouseDownFormScreen);
-                handleLogIn();
-                break;
-            case "join-game":
-                window.removeEventListener("mousedown", handleMouseDownFormScreen);
-                handleJoinGame();
-                break;
             case "back":
-                                window.removeEventListener("mousedown", handleMouseDownFormScreen);
-                if(screen === "join-game") {
-                                    setScreen("join-online-game");
-                }
-                else {
+                if (screen === "join-game") {
+                    setScreen("join-online-game");
+                } else {
                     setScreen("main-menu")
                 }
         }
@@ -1005,16 +962,26 @@ export default function App() {
             }
 
             singlePlayerGameCurrentTurn = singlePlayerGameCurrentTurn === "X" ? "O" : "X";
+            const copyOfBoardBeforeMove = singlePlayerGameBoard;
 
-            // Perform computer move
-            const computerMove = ComputerMove(singlePlayerGameBoard, singlePlayerGameSymbols, singlePlayerGameDifficulty)
+            const afterCompMoveBoard = tttai.getNextState('o', singlePlayerGameBoard);
 
-            const compMoveRow = Math.floor(computerMove / 3);
-            const compMoveCol = computerMove % 3;
+            let bestComputerMove;
 
-            updateGameBoardCopy(compMoveRow, compMoveCol, singlePlayerGameCurrentTurn);
+            for (let i = 0; i < 9; i++) {
+                console.log("--------" + " " + i + "'" + copyOfBoardBeforeMove[i] + "'-'" + afterCompMoveBoard[i] + "'");
+                if (copyOfBoardBeforeMove[i] === "" && afterCompMoveBoard[i] !== "") {
+                    bestComputerMove = i;
+
+                }
+            }
+
+            let compMoveRow, compMoveCol;
+            compMoveRow = Math.floor(bestComputerMove / 3);
+            compMoveCol = bestComputerMove % 3;
+
+            // updateGameBoardCopy(compMoveRow, compMoveCol, singlePlayerGameCurrentTurn);
             localGameTurnsGone++;
-            console.log(localGameTurnsGone)
 
             // Find the index of the tile with the given row and col
             const movePerformedOnTileWithIndex = scene.scene.getObjectByName(tilesTargetGroupName).children.findIndex(
@@ -1202,7 +1169,7 @@ export default function App() {
 
     function updateGameBoardCopy(i, j, marker) {
         localGameBoardCopy[i][j] = marker;
-        singlePlayerGameBoard[i * 3 + j] = "X" ? "X" : "O";
+        singlePlayerGameBoard[i * 3 + j] = marker === "X" ? "x" : "o";
     }
 
 
@@ -1224,7 +1191,7 @@ export default function App() {
             aiPlayer: singlePlayerGameAiPlayer
         }
         singlePlayerGameDifficulty = "Hard";
-        singlePlayerGameBoard = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        singlePlayerGameBoard = ["", "", "", "", "", "", "", "", ""];
 
         // Remove all old elements
         scene.scene.getObjectByName("hiddenTilesGroup").children.splice(0, scene.scene.getObjectByName("hiddenTilesGroup").children.length);
@@ -1291,25 +1258,25 @@ export default function App() {
 
 // Check for win in horizontal line
     function _checkHorizontalWin(i, board) {
-        return (board[i][0] === board[i][1] && board[i][0] === board[i][2]);
+        return (board[i][0] !== "" && board[i][0] === board[i][1] && board[i][0] === board[i][2]);
     }
 
 
 // Check for win in vertical line
     function _checkVerticalWin(i, board) {
-        return (board[0][i] === board[1][i] && board[0][i] === board[2][i]);
+        return (board[0][i] !== "" && board[0][i] === board[1][i] && board[0][i] === board[2][i]);
     }
 
 
 // Check for win in right leaning diagonal line
     function _checkRightLeaningDiagonalWin(board) {
-        return (board[0][0] === board[1][1] && board[0][0] === board[2][2]);
+        return (board[0][0] !== "" && board[0][0] === board[1][1] && board[0][0] === board[2][2]);
     }
 
 
 // Check for win in left leaning diagonal line
     function _checkLeftLeaningDiagonalWin(board) {
-        return (board[0][2] === board[1][1] && board[0][2] === board[2][0]);
+        return board[0][2] !== "" && (board[0][2] === board[1][1] && board[0][2] === board[2][0]);
     }
 
 

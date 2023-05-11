@@ -3,29 +3,6 @@ body {
     overflow: hidden;
 }
 
-div#debug {
-    position: absolute;
-    display: none;
-}
-
-div#debug > h2 {
-    color: white;
-}
-
-div#debug > input {
-    display: block;
-    color: white;
-    background-color: black;
-    margin: 0.5rem 0;
-}
-
-div#debug > button {
-    display: block;
-    color: white;
-    background-color: black;
-    margin: 0.5rem 0;
-}
-
 #loginForm, #registerForm, #joinGameForm {
   position: absolute;
   top: 50%;
@@ -37,19 +14,20 @@ div#debug > button {
   box-sizing: border-box;
 }
 
-@media screen and (max-width: 600px) {
-  #loginForm, #registerForm, #joinGameForm {
-    max-width: 300px;
-  }
-}
+/*@media screen and (max-width: 600px) {*/
+/*  #loginForm, #registerForm, #joinGameForm {*/
+/*    max-width: 300px;*/
+/*  }*/
+/*}*/
 
-@media screen and (max-width: 400px) {
-  #loginForm, #registerForm, #joinGameForm {
-    max-width: 200px;
-  }
-}
+/*@media screen and (max-width: 400px) {*/
+/*  #loginForm, #registerForm, #joinGameForm {*/
+/*    max-width: 200px;*/
+/*  }*/
+/*}*/
 
-input {
+input,
+button{
   opacity: 1;
 }
 
@@ -58,11 +36,12 @@ input:focus {
 }
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+button {
   opacity: 1;
   display: block;
   background: rgba(0, 0, 0, 0);
-  color: #fff;
+  color: #f4f2f9;
   border: none;
   border-bottom: 1px solid #fff;
   font-size: 40px;
@@ -70,6 +49,17 @@ input[type="password"] {
   padding: 20px;
   margin-bottom: 20px;
   width: 100%;
+}
+
+input[type="text"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill,
+button:-webkit-autofill {
+  background-color: rgba(0, 0, 0, 0) !important;
+}
+
+
+button {
+      border-bottom: none;
 }
 
 

@@ -28,19 +28,19 @@ function screen_Form(formType) {
                     console.error(error);
                 });
 
-            buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "log-in"));
-
-            mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, false)
-                .then((textMesh) => {
-                    screenComponents.add(textMesh);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
+            // buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "log-in"));
+            //
+            // mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, false)
+            //     .then((textMesh) => {
+            //         screenComponents.add(textMesh);
+            //     })
+            //     .catch((error) => {
+            //         console.error(error);
+            //     });
             break;
 
         case "register":
-            mesh_Text("Register", 10, 2, 2, -18.7, 39, -2, false)
+            mesh_Text("Register", 10, 2, 2, -26.5, 39, -2, false)
                 .then((textMesh) => {
                     screenComponents.add(textMesh);
                 })
@@ -48,15 +48,15 @@ function screen_Form(formType) {
                     console.error(error);
                 });
 
-            buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "register"));
-
-            mesh_Text("Register", 4, 1, 2, -7.5, -42, -1, false)
-                .then((textMesh) => {
-                    screenComponents.add(textMesh);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
+            // buttonTiles.add(mesh_hiddenButtonTile(15, 15, 1, 0, -40.5, "register"));
+            //
+            // mesh_Text("Register", 4, 1, 2, -10.9, -42, -1, false)
+            //     .then((textMesh) => {
+            //         screenComponents.add(textMesh);
+            //     })
+            //     .catch((error) => {
+            //         console.error(error);
+            //     });
             break;
 
         case "join-game":
@@ -68,15 +68,15 @@ function screen_Form(formType) {
                     console.error(error);
                 });
 
-            buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "join-game"));
-
-            mesh_Text("Join", 4, 1, 2, -5.3, -42, -1, false)
-                .then((textMesh) => {
-                    screenComponents.add(textMesh);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
+            // buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "join-game"));
+            //
+            // mesh_Text("Join", 4, 1, 2, -5.3, -42, -1, false)
+            //     .then((textMesh) => {
+            //         screenComponents.add(textMesh);
+            //     })
+            //     .catch((error) => {
+            //         console.error(error);
+            //     });
             break;
     }
                 buttonTiles.add(mesh_hiddenButtonTile(10, 4, 1, 0, -50, "back"));

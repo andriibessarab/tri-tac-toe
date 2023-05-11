@@ -70,6 +70,9 @@ function screen_Menu(userLoggedIn) {
     //         console.error(error);
     //     });
 
+
+
+
     if (userLoggedIn) {
         buttonTiles.add(mesh_hiddenButtonTile(20, 10, 1, 0, -40.5, "log-out"));
 
@@ -81,6 +84,15 @@ function screen_Menu(userLoggedIn) {
                 console.error(error);
             });
     } else {
+                buttonTiles.add(mesh_hiddenButtonTile(22, 10, 1, 0, -27.5, "register"));
+
+    mesh_Text("Register", 4, 1, 2, -11, -29, -1, true)
+        .then((textMesh) => {
+            screenComponents.add(textMesh);
+        })
+        .catch((error) => {
+            console.error(error);
+        });
         buttonTiles.add(mesh_hiddenButtonTile(15, 10, 1, 0, -40.5, "log-in"));
 
         mesh_Text("Log In", 4, 1, 2, -7.5, -42, -1, true)
