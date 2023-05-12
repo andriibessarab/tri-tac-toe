@@ -43,14 +43,11 @@ def create_app():
         db.init_app(app)
         db.init_db()
 
-        # Initialize Redis extension for Flask application.
-        redis = Redis(app)
-        redis.flushdb()
 
         # Create a Flask-SocketIO server
         socket = SocketIO(app, cors_allowed_origins="*")
 
         # Register the namespaces with the socketio object
-        socket.on_namespace(SockerEvents("/", redis=redis))
+        socket.on_namespace(SockerEvents("/"))
 
         return app, socket

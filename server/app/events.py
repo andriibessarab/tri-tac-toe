@@ -15,14 +15,6 @@ from .db import get_db
 
 
 class SockerEvents(Namespace):
-
-    def __init__(self, namespace=None, redis=None):
-        super().__init__(namespace)
-        if redis is None:
-            raise TypeError("Redis DB must not be None.")
-
-        self._redis = redis
-
     def on_connect(self, data=None):
         print("WERE IN BABY")
         """
