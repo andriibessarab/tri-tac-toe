@@ -22,7 +22,7 @@ function screen_Menu(userLoggedIn) {
     waitRoomElement.name = "waitRoom";
 
 
-    mesh_Text("Tic-Tac-Toe", 10, 2, 2, -35.8, 39, -2, true)
+    mesh_Text("Multi-Tac", 10, 2, 2, -29.5, 39, -2, true)
         .then((textMesh) => {
             screenComponents.add(textMesh);
         })

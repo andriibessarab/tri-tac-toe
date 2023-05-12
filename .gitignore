@@ -15,8 +15,8 @@ client/build/
 .idea/
 
 # Ignore distribution files
-/dist/
-/build/
+dist/
+# build/ Neccessary for Heroku deployment
 
 
 # Flask
@@ -32,8 +32,4 @@ instance/
 htmlcov/
 
 dist/
-build/
 *.egg-info/
-
-# Redis
-dump.rdb
