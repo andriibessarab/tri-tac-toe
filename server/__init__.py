@@ -18,7 +18,7 @@ def create_app():
     """
 
     # Create a Flask-SocketIO server
-    app = Flask(__name__, instance_relative_config=True, static_folder='../client/build', static_url_path='')
+    app = Flask(__name__, static_folder='../client/build', static_url_path='')
 
     # Configure server
     app.config.from_mapping(
