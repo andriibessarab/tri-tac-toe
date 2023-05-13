@@ -3,41 +3,24 @@ import os
 from flask import Flask
 from flask.helpers import send_from_directory
 from flask_cors import CORS, cross_origin
-from flask_socketio import SocketIO
-from flask_sqlalchemy import SQLAlchemy
 
-from .events import SockerEvents
+from server.events import SockerEvents
 
 
-def create_app():
+def create_app(config_file="config.py"):
     # Create a Flask-SocketIO server
     app = Flask(__name__, static_folder='../client/build', static_url_path='')
-
-    # Ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass  # TODO handle case where os folder is not defined
-
-    # Configure server
-    app.config.from_mapping(
-        SECRET_KEY="dev",  # TODO should be overridden with a random value when deploying
-        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL"),
-    )
-    # app.config.from_pyfile("config.py", silent=True)
+    app.config.from_pyfile(config_file, silent=True)
 
     # Enable CORS for all domains on all routes
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    from .extensions import db
-    db.init_app(app)  # initialize a Flask application for use with this extension instance
-
-
-    # Create a Flask-SocketIO server
-    socket = SocketIO(app, cors_allowed_origins="*")
+    from .extensions import db, socket
+    db.init_app(app)  # init Flask app for use w/ this extension instance
+    socket.init_app(app)  # init Flask app for use w/ socket
 
     # Register the namespaces with the socketio object
-    socket.on_namespace(SockerEvents("/"))
+    socket.on_namespace(SocketEvents("/"))
 
     @app.route('/')
     @cross_origin()

@@ -1,4 +1,4 @@
-from extensions import db
+from server.extensions import db
 
 
 class User(db.Model):
@@ -43,6 +43,11 @@ class Game(db.Model):
     winner = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, unique=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False, default=db.func.now())
 
+    # Define relationships
+    player1 = db.relationship(User, foreign_keys=[player_1])
+    player2 = db.relationship(User, foreign_keys=[player_2])
+    game_winner = db.relationship(User, foreign_keys=[winner])
+
     def to_json(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
@@ -84,8 +89,8 @@ class GameBoard(db.Model):
     created_at = db.Column(db.TIMESTAMP, nullable=False, default=db.func.now())
 
     # Define relationships
-    game = db.relationship("game", backref="game_boards")
-    user = db.relationship("user", backref="game_boards")
+    game = db.relationship(Game, backref="game_boards")
+    user = db.relationship(User, backref="game_boards")
 
     def to_json(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}

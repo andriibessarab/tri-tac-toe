@@ -7,10 +7,10 @@ from flask import request, session
 from flask_socketio import Namespace, emit, join_room, rooms, leave_room
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .app_utils.check_win import check_win, check_tie
-from .app_utils.decorators import login_required
-from .app_utils.session_keys import SessionKeys as s, SessionKeys
-from .app_utils.validation_patterns import ValidationPatterns as vp
+from .utils.check_win import check_win, check_tie
+from .utils.decorators import login_required
+from .utils.session_keys import SessionKeys as s, SessionKeys
+from .utils.validation_patterns import ValidationPatterns as vp
 from .db import get_db
 
 
