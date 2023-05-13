@@ -3,18 +3,21 @@ import random
 import re
 import sqlite3
 
+import bcrypt
+import sqlalchemy
 from flask import request, session
 from flask_socketio import Namespace, emit, join_room, rooms, leave_room
+from sqlalchemy import exc
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from .models import User
 from .utils.check_win import check_win, check_tie
 from .utils.decorators import login_required
 from .utils.session_keys import SessionKeys as s, SessionKeys
 from .utils.validation_patterns import ValidationPatterns as vp
-from .db import get_db
+from server.extensions import db
 
-
-class SockerEvents(Namespace):
+class SocketEvents(Namespace):
     def on_connect(self, data=None):
         """
         A SocketIO event handler for when a client connects to the server.
@@ -42,7 +45,6 @@ class SockerEvents(Namespace):
         username = data["username"]
         email = data["email"]
         password = data["password"]
-        db = get_db()
 
         # Validate username
         if not re.match(vp.USERNAME_PATTERN, username):
@@ -75,20 +77,23 @@ class SockerEvents(Namespace):
             }, room=request.sid)
             return
 
+        password_bytes = password.encode('utf-8')
+        hashpw = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+
         try:
-            db.execute(
-                "INSERT INTO user (username, email, password) VALUES (?, ?, ?)",
-                (username, email, generate_password_hash(password)),
-            )
-            db.commit()
-        except db.IntegrityError:
+            # Create a new user instance
+            new_user = User(username=username, email=email, password=hashpw)
+
+            # Add the user to the session and commit the changes
+            db.session.add(new_user)
+            db.session.commit()
+        except exc.IntegrityError as e:
             emit("register-fail", {
                 "success": False,
                 "error_code": 409,
                 "error_message": "Username or email is/are already in-use.",
                 "data": {},
             }, room=request.sid)
-            return
         else:
             emit("register-success", {
                 "success": True,
@@ -97,7 +102,6 @@ class SockerEvents(Namespace):
                 "data": {},
             }, room=request.sid)
             print(f"Client registered: {username}")
-        return
 
     def on_login(self, data=None):
         """
@@ -117,14 +121,11 @@ class SockerEvents(Namespace):
         username = data["username"]
         password = data["password"]
 
-        # Retrieve user from database
-        db = get_db()
-        user = db.execute(
-            "SELECT * FROM user WHERE username = ?", (username,)
-        ).fetchone()
+        # Select a user by their username
+        user = User.query.filter_by(username=username).first()
 
         # Check if user doesn't exist
-        if user is None or not check_password_hash(user["password"], password):
+        if user is None or not user.verify_password(password):
             emit("login-fail", {
                 "success": False,
                 "error_code": 401,
@@ -133,10 +134,10 @@ class SockerEvents(Namespace):
             }, room=request.sid)
             return
 
-        user_id = user["id"]
-        username = user["username"]
-        user_email = user["email"]
-        user_role = user["user_role"]
+        user_id = user.id
+        username = user.username
+        user_email = user.email
+        user_role = user.user_role
 
         # Clear session and add user
         session.clear()
@@ -157,7 +158,6 @@ class SockerEvents(Namespace):
             },
         }, room=request.sid)
         print(f"Client logged in: {username}")
-        print(session.items())
         return
 
     def on_logout(self, data=None):
@@ -169,9 +169,9 @@ class SockerEvents(Namespace):
 
         Returns:
             None.
-            :param data:
-            :param self:
         """
+
+        username = session.get(SessionKeys.USER_NAME)
 
         # Clear session
         session.clear()
@@ -184,7 +184,6 @@ class SockerEvents(Namespace):
             "data": {},
         }, room=request.sid)
         print(f"Client logged out: successfully")
-        print(session.items())
         return
 
     # DON'T TOUCH ONES ABOVE

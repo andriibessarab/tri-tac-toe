@@ -1,3 +1,5 @@
+import bcrypt
+
 from server.extensions import db
 
 
@@ -14,17 +16,9 @@ class User(db.Model):
     def to_json(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return str(self.id)
+    def verify_password(self, password):
+        password_bytes = password.encode('utf-8')
+        return bcrypt.checkpw(password_bytes, self.password)
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
@@ -102,3 +96,6 @@ class GameBoard(db.Model):
     def get_user(self):
         user = User.query.get(self.next_move_by)
         return user.to_json() if user else None
+
+    def __repr__(self):
+        return f"<GameBoard(id={self.id}, game_id='{self.game}', next_move_by='{self.next_move_by}')>"

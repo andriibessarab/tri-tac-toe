@@ -4,7 +4,7 @@ from flask import Flask
 from flask.helpers import send_from_directory
 from flask_cors import CORS, cross_origin
 
-from server.events import SockerEvents
+from server.events import SocketEvents
 
 
 def create_app(config_file="config.py"):
