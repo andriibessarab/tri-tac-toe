@@ -4,12 +4,12 @@ from extensions import db
 class User(db.Model):
     __tablename__ = "user"
 
-    id = db.Column("id", db.Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
-    username = db.Column("username", db.String, nullable=False, unique=True)
-    email = db.Column("email", db.String, nullable=False, unique=True)
-    password = db.Column("password", db.String, nullable=False)
-    user_role = db.Column("user_role", db.Enum('adm', 'usr', 'ban'), nullable=False, default="usr")
-    created_at = db.Column("created_at", db.DateTime, nullable=False, default=db.func.now())
+    id = db.Column(db.Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
+    username = db.Column(db.String, nullable=False, unique=True)
+    email = db.Column(db.String, nullable=False, unique=True)
+    password = db.Column(db.String, nullable=False)
+    user_role = db.Column(db.Enum('adm', 'usr', 'ban'), nullable=False, default="usr")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
 
     def to_json(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
@@ -36,12 +36,12 @@ class Game(db.Model):
     id = db.Column("id", db.Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     game_mode = db.Column(db.String, nullable=False, unique=False)
     join_code = db.Column(db.String, nullable=True, unique=True)
-    player_1 = db.Column(db.Integer, nullable=False, unique=False, db.ForeignKey("user.id"))
-    player_2 = db.Column(db.Integer, nullable=True, unique=False, db.ForeignKey("user.id"))
+    player_1 = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, unique=False)
+    player_2 = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, unique=False)
     player_1_marker = db.Column(db.Enum('x', 'o'), nullable=False, unique=False)
     player_2_marker = db.Column(db.Enum('x', 'o'), nullable=False, unique=False)
-    winner = db.Column(db.Integer, nullable=True, unique=False, db.ForeignKey("user.id"))
-    created_at = db.Column(db.TIMESTAMP, nullable=False, server_default=db.func.now())
+    winner = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, unique=False)
+    created_at = db.Column(db.TIMESTAMP, nullable=False, default=db.func.now())
 
     def to_json(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
@@ -72,3 +72,28 @@ class Game(db.Model):
 
     def __repr__(self):
         return f"<Game(id={self.id}, join_code='{self.join_code}')>"
+
+
+class GameBoard(db.Model):
+    __tablename__ = "game_board"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_id = db.Column(db.Integer, db.ForeignKey("game.id"), nullable=False, unique=True)
+    board_state = db.Column(db.String, nullable=False, unique=False)
+    next_move_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, unique=False)
+    created_at = db.Column(db.TIMESTAMP, nullable=False, default=db.func.now())
+
+    # Define relationships
+    game = db.relationship("game", backref="game_boards")
+    user = db.relationship("user", backref="game_boards")
+
+    def to_json(self):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
+
+    def get_game(self):
+        game = Game.query.get(self.game_id)
+        return game.to_json() if game else None
+
+    def get_user(self):
+        user = User.query.get(self.next_move_by)
+        return user.to_json() if user else None
