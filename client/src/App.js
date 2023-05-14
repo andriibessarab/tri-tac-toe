@@ -15,6 +15,7 @@ import {getIntersectInfo, getRaycasterIntersects, setMousePosition} from "./inte
 import screen_InviteCode from "./resources/screens/screen_InviteCode";
 import screen_PostGameScreen from "./resources/screens/screen_PostGameScreen";
 import screen_Menu from "./resources/screens/screen_Menu";
+import Minimax from "./minimax";
 
 export default function App() {
     // Constants
@@ -38,7 +39,6 @@ export default function App() {
         aiPlayer: singlePlayerGameAiPlayer
     }
     let singlePlayerGameDifficulty = "Hard";
-    let singlePlayerGameBoard = ["", "", "", "", "", "", "", "", ""];
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -66,6 +66,7 @@ export default function App() {
     // const bestMove = require("qm-tictactoe-minimax").bestMove
     // Create a new game where player 1 starts first
     // const game = new TicTacToeEngine(Player.PLAYER_ONE);
+    let singlePlayerGame = new Minimax();
 
     const [player1Id, setPlayer1Id] = useState(null);
     const [player1Marker, setPlayer1Marker] = useState(null);
@@ -94,8 +95,6 @@ export default function App() {
 
     const [gameWinnerId, setGameWinnerId] = useState(null);
     const [gameWinnerMarker, setGameWinnerMarker] = useState(null);
-
-    const tttai = require('tttai');
 
 
     // Init effect
@@ -946,16 +945,16 @@ export default function App() {
             // Remove tile from scene
             scene.scene.getObjectByName(tilesTargetGroupName).children.splice(tileIndex, 1);
 
-            updateGameBoardCopy(tileRow, tileCol, singlePlayerGameCurrentTurn);
+            updateGameBoardCopy(tileRow, tileCol, singlePlayerGameHuPlayer);
+            singlePlayerGame.setMove(tileRow, tileCol, singlePlayerGame.HUMAN);
 
             // Draw marker
-            if (localGameMarker === "X") {
-                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tilePositionX, tilePositionY));
-                localGameMarker = "O";
+            if (singlePlayerGameHuPlayer === "X") {
+                            scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tilePositionX, tilePositionY));
             } else {
-                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tilePositionX, tilePositionY));
-                localGameMarker = "X";
+                 scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tilePositionX, tilePositionY));
             }
+
 
             localGameTurnsGone++;
             if (checkWin() || localGameTurnsGone === 9) {
@@ -963,26 +962,9 @@ export default function App() {
                 return;
             }
 
-            singlePlayerGameCurrentTurn = singlePlayerGameCurrentTurn === "X" ? "O" : "X";
-            const copyOfBoardBeforeMove = singlePlayerGameBoard;
-
-            const afterCompMoveBoard = tttai.getNextState('o', singlePlayerGameBoard);
-
-            let bestComputerMove;
-
-            for (let i = 0; i < 9; i++) {
-                console.log("--------" + " " + i + "'" + copyOfBoardBeforeMove[i] + "'-'" + afterCompMoveBoard[i] + "'");
-                if (copyOfBoardBeforeMove[i] === "" && afterCompMoveBoard[i] !== "") {
-                    bestComputerMove = i;
-
-                }
-            }
-
-            let compMoveRow, compMoveCol;
-            compMoveRow = Math.floor(bestComputerMove / 3);
-            compMoveCol = bestComputerMove % 3;
-
-            // updateGameBoardCopy(compMoveRow, compMoveCol, singlePlayerGameCurrentTurn);
+            const [compMoveRow, compMoveCol] = singlePlayerGame.aiTurn();
+            updateGameBoardCopy(compMoveRow, compMoveCol, singlePlayerGameAiPlayer);
+            singlePlayerGame.setMove(compMoveRow, compMoveCol, singlePlayerGame.COMP);
             localGameTurnsGone++;
 
             // Find the index of the tile with the given row and col
@@ -998,20 +980,16 @@ export default function App() {
 
 
             //Draw marker
-            if (singlePlayerGameCurrentTurn === "X") {
+            if (singlePlayerGameAiPlayer === "X") {
                 scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(compMoveX, compMoveY));
-                localGameMarker = "O";
             } else {
                 scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(compMoveX, compMoveY));
-                localGameMarker = "X";
             }
 
             if (checkWin() || localGameTurnsGone === 9) {
                 localGameOngoing = false;
                 return;
             }
-
-            singlePlayerGameCurrentTurn = singlePlayerGameCurrentTurn === "X" ? "O" : "X";
 
             // Remove tile from scene
             scene.scene.getObjectByName("hiddenTilesGroup").children.splice(movePerformedOnTileWithIndex, 1);
@@ -1171,7 +1149,6 @@ export default function App() {
 
     function updateGameBoardCopy(i, j, marker) {
         localGameBoardCopy[i][j] = marker;
-        singlePlayerGameBoard[i * 3 + j] = marker === "X" ? "x" : "o";
     }
 
 
@@ -1187,13 +1164,8 @@ export default function App() {
 
         singlePlayerGameCurrentTurn = "X";
         singlePlayerGameHuPlayer = "X";
-        singlePlayerGameAiPlayer = "O";
-        singlePlayerGameSymbols = {
-            huPlayer: singlePlayerGameHuPlayer,
-            aiPlayer: singlePlayerGameAiPlayer
-        }
         singlePlayerGameDifficulty = "Hard";
-        singlePlayerGameBoard = ["", "", "", "", "", "", "", "", ""];
+        singlePlayerGame = new Minimax();
 
         // Remove all old elements
         scene.scene.getObjectByName("hiddenTilesGroup").children.splice(0, scene.scene.getObjectByName("hiddenTilesGroup").children.length);
