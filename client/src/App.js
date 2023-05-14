@@ -121,17 +121,20 @@ export default function App() {
 
         return () => {
             // Disconnect socket events
-            socket.off("connect", onConnect);
-            socket.off("disconnect", onDisconnect);
-            socket.off("register-success", onRegisterSuccess);
-            socket.off("register-fail", onRegisterFailed);
-            socket.off("login-success", onLogInSuccess);
-            socket.off("login-fail", onLogInFailed);
-            socket.off("logout", onLogOut);
-            socket.off("create_game_fail", onCreateGameFail);
-            socket.off("create_game_success", onCreateGameSuccess);
-            socket.off("join_game_fail", onJoinGameFail);
-            socket.off("game_starts", onOnlineGameStarts);
+        socket.off("connect", onConnect);
+        socket.off("disconnect", onDisconnect);
+        socket.off("register-success", onRegisterSuccess);
+        socket.off("register-fail", onRegisterFailed);
+        socket.off("login-success", onLogInSuccess);
+        socket.off("login-fail", onLogInFailed);
+        socket.off("logout", onLogOut);
+        socket.off("create_game_fail", onCreateGameFail);
+        socket.off("create_game_success", onCreateGameSuccess);
+        socket.off("join_game_fail", onJoinGameFail);
+        socket.off("game_starts", onOnlineGameStarts);
+        socket.off("game_ends", onOnlineGameEnds);
+        socket.off("make_move_success", onMakeMoveSuccess);
+        socket.off("make_move_fail", onMakeMoveFail)
         };
     }, []);
 
@@ -492,7 +495,6 @@ export default function App() {
         // Store response
         const _joinCode = data["data"]["game"]["join_code"]
         setJoinCode(_joinCode);
-        console.log(_joinCode, joinCode)
         setScreen("invite-code");
     }
 

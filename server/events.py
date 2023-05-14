@@ -1,46 +1,27 @@
 import json
 import random
 import re
-import sqlite3
 
 import bcrypt
-import sqlalchemy
 from flask import request, session
-from flask_socketio import Namespace, emit, join_room, rooms, leave_room
+from flask_socketio import Namespace, emit, join_room, rooms
 from sqlalchemy import exc
-from werkzeug.security import generate_password_hash, check_password_hash
 
-from .models import User
-from .utils.check_win import check_win, check_tie
+from server.extensions import db
+from .models import User, Game, GameBoard
 from .utils.decorators import login_required
 from .utils.session_keys import SessionKeys as s, SessionKeys
 from .utils.validation_patterns import ValidationPatterns as vp
-from server.extensions import db
+
 
 class SocketEvents(Namespace):
     def on_connect(self, data=None):
-        """
-        A SocketIO event handler for when a client connects to the server.
-        """
         pass
 
     def on_disconnect(self, data=None):
-        """
-        A SocketIO event handler for when a client connects to the server.
-        """
         pass
 
     def on_register(self, data=None):
-        """
-        A SocketIO event handler for when a client registers for an account.
-
-        Args:
-            data (dict): A dictionary containing the event data, including the username, email, and password.
-
-        Returns:
-            None
-        """
-
         # Fetch event data
         username = data["username"]
         email = data["email"]
@@ -104,19 +85,6 @@ class SocketEvents(Namespace):
             print(f"Client registered: {username}")
 
     def on_login(self, data=None):
-        """
-        Event handler for 'login' event. Authenticates the user by checking if the username and password match an entry
-        in the database. If authentication succeeds, sets the session data and sends a success message to the client.
-
-        Args:
-            data (dict): The data sent with the event. Should contain keys 'username' and 'password' with string values.
-
-        Returns:
-            None.
-            :param data:
-            :param self:
-        """
-
         # Fetch event data
         username = data["username"]
         password = data["password"]
@@ -134,17 +102,9 @@ class SocketEvents(Namespace):
             }, room=request.sid)
             return
 
-        user_id = user.id
-        username = user.username
-        user_email = user.email
-        user_role = user.user_role
-
         # Clear session and add user
         session.clear()
-        session[s.USER_ID] = user_id
-        session[s.USER_NAME] = username
-        session[s.USER_EMAIL] = user_email
-        session[s.USER_ROLE] = user_role
+        session[s.USER] = user
 
         # Return 200 & user data
         emit("login-success", {
@@ -152,26 +112,14 @@ class SocketEvents(Namespace):
             "error_code": 200,
             "error_message": "",
             "data": {
-                "user_id": user_id,
-                "username": username,
-                "email": user_email,
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email,
             },
         }, room=request.sid)
-        print(f"Client logged in: {username}")
-        return
 
     def on_logout(self, data=None):
-        """
-        Event handler for 'logout' event. Clears the session and sends a success message to the client.
-
-        Args:
-            data (dict): The data sent with the event. Should be an empty dictionary.
-
-        Returns:
-            None.
-        """
-
-        username = session.get(SessionKeys.USER_NAME)
+        user = session.get(s.USER)
 
         # Clear session
         session.clear()
@@ -183,13 +131,10 @@ class SocketEvents(Namespace):
             "error_message": "",
             "data": {},
         }, room=request.sid)
-        print(f"Client logged out: successfully")
-        return
 
-    # DON'T TOUCH ONES ABOVE
     @login_required(event_name="create_game_fail")
     def on_create_game(self, data=None):
-        user_id = session.get(SessionKeys.USER_ID)
+        user = session.get(s.USER)
 
         # Randomly choose which player goes first
         first_move_player_number = random.randint(1, 2)
@@ -203,52 +148,53 @@ class SocketEvents(Namespace):
         # Generate empty board
         board = json.dumps([["", "", ""], ["", "", ""], ["", "", ""]])
 
-        # Create game and game board
-        db = get_db()
-        cursor = db.cursor()
+        # Create new game and game board
         try:
-            cursor.execute(
-                "INSERT INTO game (game_mode, join_code, player_1, player_2, player_1_marker, player_2_marker) VALUES "
-                "(?, ?, ?, ?, ?, ?)",
-                ('online', join_code, user_id, None, player1_marker, player2_marker),
-            )
-            game_id = cursor.lastrowid
-            cursor.execute(
-                "INSERT INTO game_board (game_id, board_state, next_move_by) VALUES (?, ?, ?)",
-                (game_id, board, user_id),
-            )
-            db.commit()
-        except sqlite3.IntegrityError as e:
+            new_game = Game(game_mode="online", join_code=join_code, player_1=user.id, player_1_marker=player1_marker,
+                            player_2_marker=player2_marker)
+
+            # Add new game to the session
+            db.session.add(new_game)
+
+            # Commit game to the database
+            db.session.commit()
+
+            new_game_board = GameBoard(game_id=new_game.id, board_state=board, next_move_by=user.id)
+
+            # Add new game board to the session
+            db.session.add(new_game_board)
+
+            # Commit game board to the database
+            db.session.commit()
+        except exc.IntegrityError as e:
             emit("create_game_fail", {
-                "success": True,
-                "error_code": 520,
-                "error_message": "Unknown server error occurred while creating a game. Try to refresh the page!",
+                "success": False,
+                "error_code": 409,
+                "error_message": "Something went wrong when creating the game, please try again.",
                 "data": {},
             }, room=request.sid)
-            return
+        else:
+            session[s.GAME] = new_game
 
-        cursor.execute("SELECT game_room FROM game WHERE id=?", (game_id,))
-        game_room = cursor.fetchone()[0]
+            print(new_game, new_game_board)
 
-        session[SessionKeys.ONGOING_GAME_ID] = game_id
-        session[SessionKeys.ONGOING_GAME_ROOM_ID] = game_room
-        join_room(game_room, sid=request.sid, namespace="/")
+            join_room(new_game.get_room_id(), sid=request.sid, namespace="/")
 
-        # Response
-        emit("create_game_success", {
-            "success": True,
-            "error_code": 200,
-            "error_message": "",
-            "data": {
-                "game": {
-                    "join_code": join_code
-                },
-            }}, room=request.sid)
+                # Response
+            emit("create_game_success", {
+                    "success": True,
+                    "error_code": 200,
+                    "error_message": "",
+                    "data": {
+                        "game": {
+                            "join_code": new_game.join_code
+                        },
+             }}, room=request.sid)
 
     @login_required(event_name="join_game_fail")
     def on_join_game(self, data):
         # Retrieve session data
-        user_id = session.get(SessionKeys.USER_ID)
+        user = session.get(s.USER)
 
         # Store response data
         join_code = data["join_code"]
@@ -258,23 +204,15 @@ class SocketEvents(Namespace):
             emit("join_game_fail", {
                 "success": False,
                 "error_code": 400,
-                "error_message": f"Invalid join code.",
+                "error_message": "Invalid join code.",
                 "data": {},
             }, room=request.sid)
             return
 
-        # Retrieve needed session data
-        user_id = session.get(SessionKeys.USER_ID)
-        user_name = session.get(SessionKeys.USER_NAME)
+        # Select a user by their username
+        game = Game.query.filter_by(join_code=join_code).first()
 
-        # Retrieve game data from db
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT * FROM game WHERE join_code = ?", (join_code,))
-        game_data = cursor.fetchone()
-
-        if game_data is None:
+        if game is None:
             emit("join_game_fail", {
                 "success": False,
                 "error_code": 400,
@@ -283,7 +221,25 @@ class SocketEvents(Namespace):
             }, room=request.sid)
             return
 
-        if game_data["player_1"] == user_id:
+        if game.is_game_completed():
+            emit("join_game_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": f"This game is finished.",
+                "data": {},
+            }, room=request.sid)
+            return
+
+        if game.is_game_full():
+            emit("join_game_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": f"This game is full.",
+                "data": {},
+            }, room=request.sid)
+            return
+
+        if game.player_1 == user.id or game.player_2 == user.id:
             emit("join_game_fail", {
                 "success": False,
                 "error_code": 400,
@@ -292,19 +248,13 @@ class SocketEvents(Namespace):
             }, room=request.sid)
             return
 
-        cursor.execute(
-            "UPDATE game SET player_2 = ? WHERE join_code = ?",
-            (user_id, join_code)
-        )
-        db.commit()
+        # Update player_2 of game
+        game.player_2 = user.id
+        db.session.commit()
 
-        game_id = game_data["id"]
-        game_room = game_data["game_room"]
+        session[s.GAME] = game
 
-        session[SessionKeys.ONGOING_GAME_ID] = game_id
-        session[SessionKeys.ONGOING_GAME_ROOM_ID] = game_room
-
-        join_room(game_room, sid=request.sid, namespace="/")
+        join_room(game.get_room_id(), sid=request.sid, namespace="/")
 
         emit("game_starts", {
             "success": True,
@@ -312,16 +262,16 @@ class SocketEvents(Namespace):
             "error_message": "",
             "data": {
                 "player_1": {
-                    "user_id": game_data["player_1"],
-                    "marker": game_data["player_1_marker"],
+                    "user_id": game.player_1,
+                    "marker": game.player_1_marker,
                 },
                 "player_2": {
-                    "user_id": user_id,
-                    "marker": game_data["player_2_marker"],
+                    "user_id": game.player_2,
+                    "marker": game.player_2_marker,
                 },
-                "next_turn_by": game_data["player_1"],  # TODO should instead retrieve from game_board table
+                "next_turn_by": game.player_1,  # TODO should instead retrieve from game_board table
             },
-        }, room=game_room)
+        }, room=game.get_room_id())
 
     @login_required(event_name="make_move_fail")
     def on_make_move(self, response_data):
@@ -347,64 +297,11 @@ class SocketEvents(Namespace):
         # Validate that provided data contains proper coordinate
         if move_coordinate is None or not isinstance(move_coordinate, list) or not len(
                 move_coordinate) == 2 or not isinstance(move_coordinate[0], int) or not isinstance(
-            move_coordinate[1], int):
+                move_coordinate[1], int):
             emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
                 "error_message": "Provided data does not contain proper coordinate.",
-                "data": {},
-            }, room=request.sid)
-            return
-
-        # Retrieve session data
-        user_id = session.get(SessionKeys.USER_ID)
-        game_id = session.get(SessionKeys.ONGOING_GAME_ID)
-        room_id = session.get(SessionKeys.ONGOING_GAME_ROOM_ID)
-
-        # TODO - what to do if either is null?
-
-        # Retrieve game data from db
-        db = get_db()
-        cursor = db.cursor()
-        select_game_data_query = "SELECT game.*, game_board.* FROM game JOIN game_board " \
-                                 "ON game.id = game_board.game_id WHERE game.id = ? "
-        cursor.execute(select_game_data_query, (game_id,))
-        game_data = cursor.fetchone()
-
-        # Check if the player is part of this game
-        if game_data is None or (game_data["player_1"] != user_id and game_data["player_2"] != user_id):
-            emit("make_move_fail", {
-                "success": False,
-                "error_code": 400,
-                "error_message": "User is not part of this game.",
-                "data": {},
-            }, room=request.sid)
-            return
-
-        # Store game data
-        next_move_by = game_data["next_move_by"]
-        game_board = json.loads(game_data["board_state"])
-        player_number = 1 if game_data["player_1"] == user_id else 2
-        player_marker = game_data[f"player_{player_number}_marker"]
-        opponent_number = 2 if player_number == 1 else 1
-        opponent_id = game_data[f"player_{opponent_number}"]
-
-        # Check if it's the player's turn to make a move
-        if next_move_by != user_id:
-            emit("make_move_fail", {
-                "success": False,
-                "error_code": 400,
-                "error_message": "Not user's turn to make a move.",
-                "data": {},
-            }, room=request.sid)
-            return
-
-        # Check if the game is still ongoing
-        if game_data["winner"] is not None:
-            emit("make_move_fail", {
-                "success": False,
-                "error_code": 400,
-                "error_message": "The game has ended.",
                 "data": {},
             }, room=request.sid)
             return
@@ -419,56 +316,98 @@ class SocketEvents(Namespace):
             }, room=request.sid)
             return
 
-        # Check if the cell is already taken by another player
-        if game_board[move_row][move_col] != "":
+        # Retrieve session data
+        user = session.get(s.USER)
+        game = session.get(s.GAME)
+
+        # TODO - what to do if either is null?
+
+        # Make sure game and game board are up-to-date
+        game = Game.query.get(game.id)
+        game_board = game.get_game_board()
+        board_state = game_board.get_board_state()
+
+        # TODO - what if game board is null
+
+        # Check if player is not part of this game
+        if game is None or (game.player_1 != user.id and game.player_2 != user.id):
             emit("make_move_fail", {
                 "success": False,
                 "error_code": 400,
-                "error_message": "Cell is already taken.",
+                "error_message": "User is not part of this game.",
                 "data": {},
             }, room=request.sid)
             return
 
-        game_board[move_row][move_col] = player_marker
+        # Check if it's not player's turn to make a move
+        if game_board.next_move_by != user.id:
+            emit("make_move_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": "Not user's turn to make a move.",
+                "data": {},
+            }, room=request.sid)
+            return
 
-        update_player_move_query = f"UPDATE game_board SET board_state = ?, next_move_by = ? WHERE game_id = ?"
-        cursor.execute(update_player_move_query, (json.dumps(game_board), opponent_id, game_id,))
-        db.commit()
+        # Check if the game is over
+        if game.winner is not None:
+            emit("make_move_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": "The game has ended.",
+                "data": {},
+            }, room=request.sid)
+            return
+
+        # Check if cell is taken
+        if not game_board.is_cell_free(move_row, move_col):
+            emit("make_move_fail", {
+                "success": False,
+                "error_code": 400,
+                "error_message": "Cell is taken.",
+                "data": {},
+            }, room=request.sid)
+            return
+
+        board_state[move_row][move_col] = game.get_player_marker(user.id)
+        game_board.board_state = json.dumps(board_state)
+        game_board.next_move_by = game.get_opponent_id(user.id)
+        db.session.commit()
 
         # Check for winner
-        winner = check_win(game_board)
-        if winner != "":
-            set_winner_query = f"UPDATE game SET winner = ? WHERE id = ?"
-            cursor.execute(set_winner_query, (user_id, game_id,))
+        winner = game.check_win()
+        if winner is not None:
+            game.winner = winner
+            db.session.commit()
             emit("game_ends", {
                 "success": True,
                 "error_code": 200,
                 "error_message": "",
                 "data": {
                     "previous_move": {
-                        "player_id": user_id,
-                        "player_marker": player_marker,
+                        "player_id": user.id,
+                        "player_marker": game.get_player_marker(user.id),
                         "move_coordinate": move_coordinate,
                     },
                     "winner": {
-                        "id": user_id,
-                        "marker": winner
+                        "id": game.winner,
+                        "marker": game.get_player_marker(winner)
                     },
                 },
-            }, room=room_id)
+            }, room=game.get_room_id())
             db.commit()
             return
 
         # Check for tie
-        if check_tie(game_board):
+        if game.check_tie():
             emit("game_ends", {
                 "success": True,
                 "error_code": 200,
                 "error_message": "",
                 "data": {
                     "previous_move": {
-                        "player_id": user_id,
-                        "player_marker": player_marker,
+                        "player_id": user.id,
+                        "player_marker": game.get_player_marker(user.id),
                         "move_coordinate": move_coordinate,
                     },
                     "winner": {
@@ -476,8 +415,7 @@ class SocketEvents(Namespace):
                         "marker": None
                     },
                 },
-            }, room=room_id)
-            db.commit()
+            }, room=game.get_room_id())
             return
 
         # Emit event to the room with the move data
@@ -487,26 +425,13 @@ class SocketEvents(Namespace):
             "error_message": "",
             "data": {
                 "previous_move": {
-                    "player_id": user_id,
-                    "player_marker": player_marker,
+                    "player_id": user.id,
+                    "player_marker": game.get_player_marker(user.id),
                     "move_coordinate": move_coordinate,
                 },
                 "next_move": {
-                    "player_id": opponent_id,
+                    "player_id": game.get_opponent_id(user.id),
                 },
 
             },
-        }, room=room_id)
-
-    def on_test(self):
-        print(f"""
-
-            SESSION: {session.items()}
-
-
-            REDIS: {self._redis.lrange("wait-list", 0, -1)}
-            
-            
-            ROOMS: {rooms()}
-
-        """)
+        }, room=game.get_room_id())

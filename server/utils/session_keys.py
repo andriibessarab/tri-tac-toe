@@ -1,4 +1,9 @@
 class SessionKeys:
+    # DB Objects
+    USER = "user"
+    GAME = "game"
+    GAME_BOARD = "game_board"
+
     # Authenticated user
     USER_ID = "user-id"
     USER_NAME = "user-name"
