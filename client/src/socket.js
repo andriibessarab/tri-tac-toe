@@ -1,5 +1,12 @@
 import {io} from 'socket.io-client';
 
-const socket = io("https://multi-tac.herokuapp.com:" + location.port, {autoConnect: true,});
+// "undefined" means the URL will be computed from the `window.location` object
+const URL = undefined;
+
+const socket = io(URL, {
+    autoConnect: true,
+    cors: {
+        origin: '*'
+    }});
 
 export default socket;
