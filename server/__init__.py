@@ -31,4 +31,4 @@ def create_app(config_file="config.py"):
     with app.app_context():
         db.create_all()
 
-    return app, socket
+    return app
