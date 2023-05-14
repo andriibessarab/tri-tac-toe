@@ -1,6 +1,7 @@
 import json
 
 import bcrypt
+from werkzeug.security import generate_password_hash
 
 from server.extensions import db
 
@@ -19,8 +20,7 @@ class User(db.Model):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
     def verify_password(self, password):
-        password_bytes = password.encode('utf-8')
-        return bcrypt.checkpw(password_bytes, self.password)
+        return generate_password_hash(password) == self.password
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"

@@ -6,6 +6,7 @@ import bcrypt
 from flask import request, session
 from flask_socketio import Namespace, emit, join_room, rooms
 from sqlalchemy import exc
+from werkzeug.security import generate_password_hash
 
 from server.extensions import db
 from .models import User, Game, GameBoard
@@ -58,8 +59,7 @@ class SocketEvents(Namespace):
             }, room=request.sid)
             return
 
-        password_bytes = password.encode('utf-8')
-        hashpw = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+        hashpw = generate_password_hash(password)
 
         try:
             # Create a new user instance
