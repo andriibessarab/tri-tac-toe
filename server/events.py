@@ -58,8 +58,8 @@ class SocketEvents(Namespace):
             }, room=request.sid)
             return
 
-        password_bytes = password.encode('utf-8')
-        hashpw = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+        password_bytes = bytes(password, 'UTF-8')
+        hashpw = bcrypt.hashpw(password_bytes, bcrypt.gensalt(rounds=12))
 
         try:
             # Create a new user instance

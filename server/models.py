@@ -19,7 +19,7 @@ class User(db.Model):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
     def verify_password(self, password):
-        password_bytes = password.encode('utf-8')
+        password_bytes = bytes(password, 'UTF-8')
         return bcrypt.checkpw(password_bytes, self.password)
 
     def __repr__(self):
