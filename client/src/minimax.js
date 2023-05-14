@@ -1,3 +1,7 @@
+// This code is based on the minimax algorithm implementation by Cledersonbc
+// Original repository: https://github.com/Cledersonbc/tic-tac-toe-minimax
+
+
 export default class Minimax {
     /*Code of Minmax here*/
 
@@ -9,6 +13,16 @@ export default class Minimax {
 
     HUMAN = -1;
     COMP = +1;
+
+    constructor(difficulty) {
+        if (difficulty === 'easy' || difficulty === 'normal' || difficulty === 'hard') {
+            this.difficulty = difficulty;
+        } else {
+            // Default to 'easy' if an invalid difficulty is provided
+            this.difficulty = 'easy';
+            console.warn('Invalid difficulty provided. Defaulting to "easy".');
+        }
+    }
 
     /* Function to heuristic evaluation of state. */
     evalute(state) {
@@ -126,12 +140,36 @@ export default class Minimax {
         return best;
     }
 
+    // Make random move
+    randomMove(board) {
+        const emptyCells = this.emptyCells(board);
+        const randomIndex = Math.floor(Math.random() * emptyCells.length);
+        const [row, col] = emptyCells[randomIndex];
+        return [row, col];
+    }
+
+
     /* It calls the minimax function */
     aiTurn() {
         let move;
 
-        move = this.minimax(this.minimaxBoard, this.emptyCells(this.minimaxBoard).length, this.COMP);
+        switch (this.difficulty) {
+            case "hard":
+                move = this.minimax(this.minimaxBoard, this.emptyCells(this.minimaxBoard).length, this.COMP);
+                break;
+            case "easy":
+                move = this.randomMove(this.minimaxBoard);
+                break;
+            case "normal":
+                if (Math.random() < 0.5) {
+                    move = this.minimax(this.minimaxBoard, this.emptyCells(this.minimaxBoard).length, this.COMP);
+                } else {
+                    move = this.randomMove(this.minimaxBoard);
+                }
+                break;
+        }
 
-        return [move[0], move[1]]
+        return [move[0], move[1]];
     }
+
 }

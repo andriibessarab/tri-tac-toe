@@ -1,3 +1,8 @@
+// This game is based on the three.js tutorial by SuboptimalEng
+// Original repository: [https://github.com/SuboptimalEng/three-js-tutorials](https://github.com/SuboptimalEng/three-js-tutorials)
+// The tutorial inspired and guided the development of this game.
+
+
 import React, {useEffect, useState} from "react";
 import socket from "./socket";
 import Scene from "./Scene";
@@ -38,7 +43,6 @@ export default function App() {
         huPlayer: singlePlayerGameHuPlayer,
         aiPlayer: singlePlayerGameAiPlayer
     }
-    let singlePlayerGameDifficulty = "Hard";
 
     // Socket states
     const [isConnected, setIsConnected] = useState(socket.connected);
@@ -66,7 +70,8 @@ export default function App() {
     // const bestMove = require("qm-tictactoe-minimax").bestMove
     // Create a new game where player 1 starts first
     // const game = new TicTacToeEngine(Player.PLAYER_ONE);
-    let singlePlayerGame = new Minimax();
+    let singlePlayerGame;
+    const [singlePlayerGameDifficulty, setSinglePlayerGameDifficulty] = useState(null);
 
     const [player1Id, setPlayer1Id] = useState(null);
     const [player1Marker, setPlayer1Marker] = useState(null);
@@ -120,20 +125,20 @@ export default function App() {
 
         return () => {
             // Disconnect socket events
-        socket.off("connect", onConnect);
-        socket.off("disconnect", onDisconnect);
-        socket.off("register-success", onRegisterSuccess);
-        socket.off("register-fail", onRegisterFailed);
-        socket.off("login-success", onLogInSuccess);
-        socket.off("login-fail", onLogInFailed);
-        socket.off("logout", onLogOut);
-        socket.off("create_game_fail", onCreateGameFail);
-        socket.off("create_game_success", onCreateGameSuccess);
-        socket.off("join_game_fail", onJoinGameFail);
-        socket.off("game_starts", onOnlineGameStarts);
-        socket.off("game_ends", onOnlineGameEnds);
-        socket.off("make_move_success", onMakeMoveSuccess);
-        socket.off("make_move_fail", onMakeMoveFail)
+            socket.off("connect", onConnect);
+            socket.off("disconnect", onDisconnect);
+            socket.off("register-success", onRegisterSuccess);
+            socket.off("register-fail", onRegisterFailed);
+            socket.off("login-success", onLogInSuccess);
+            socket.off("login-fail", onLogInFailed);
+            socket.off("logout", onLogOut);
+            socket.off("create_game_fail", onCreateGameFail);
+            socket.off("create_game_success", onCreateGameSuccess);
+            socket.off("join_game_fail", onJoinGameFail);
+            socket.off("game_starts", onOnlineGameStarts);
+            socket.off("game_ends", onOnlineGameEnds);
+            socket.off("make_move_success", onMakeMoveSuccess);
+            socket.off("make_move_fail", onMakeMoveFail)
         };
     }, []);
 
@@ -536,7 +541,6 @@ export default function App() {
 
 
     function onOnlineGameEnds(data) {
-        console.log(data)
         window.removeEventListener("mousedown", handleMouseDownOnlineGameScreen);
         setGameWinnerId(data["data"]["winner"]["id"]);
         setGameWinnerMarker(data["data"]["winner"]["marker"]);
@@ -834,13 +838,13 @@ export default function App() {
         // eslint-disable-next-line default-case
         switch (buttonName) {
             case "easy-mode":
-                singlePlayerGameDifficulty = "Easy";
+                setSinglePlayerGameDifficulty("easy");
                 break;
             case "normal-mode":
-                singlePlayerGameDifficulty = "Normal";
+                setSinglePlayerGameDifficulty("normal");
                 break;
             case "hard-mode":
-                singlePlayerGameDifficulty = "Hard";
+                setSinglePlayerGameDifficulty("hard");
                 break;
         }
         window.removeEventListener("mousedown", handleMouseDownChooseDifficultyScreen);
@@ -925,6 +929,10 @@ export default function App() {
             localGameOngoing = true;
         }
 
+        if (localGameTurnsGone === 0) {
+            singlePlayerGame = new Minimax(singlePlayerGameDifficulty)
+        }
+
         setMousePosition(event, mouse);
 
         const tilesTargetGroupName = "hiddenTilesGroup";
@@ -950,9 +958,9 @@ export default function App() {
 
             // Draw marker
             if (singlePlayerGameHuPlayer === "X") {
-                            scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tilePositionX, tilePositionY));
+                scene.scene.getObjectByName("crossMarkerGroup").add(mesh_Cross(tilePositionX, tilePositionY));
             } else {
-                 scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tilePositionX, tilePositionY));
+                scene.scene.getObjectByName("circleMarkerGroup").add(mesh_Circle(tilePositionX, tilePositionY));
             }
 
 
@@ -1007,8 +1015,6 @@ export default function App() {
         const buttonInfo = getIntersectInfo(scene, buttonIntersect, buttonsTargetGroupName);
         const buttonObject = buttonInfo.object;
         const buttonName = buttonObject.userData.id;
-
-        console.log(buttonName)
 
         // eslint-disable-next-line default-case
         switch (buttonName) {
@@ -1164,8 +1170,7 @@ export default function App() {
 
         singlePlayerGameCurrentTurn = "X";
         singlePlayerGameHuPlayer = "X";
-        singlePlayerGameDifficulty = "Hard";
-        singlePlayerGame = new Minimax();
+        singlePlayerGame = new Minimax(singlePlayerGameDifficulty);
 
         // Remove all old elements
         scene.scene.getObjectByName("hiddenTilesGroup").children.splice(0, scene.scene.getObjectByName("hiddenTilesGroup").children.length);
@@ -1278,6 +1283,3 @@ export default function App() {
     }
 
 }
-
-
-
