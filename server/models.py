@@ -87,7 +87,7 @@ class Game(db.Model):
     def get_user_id_from_marker(self, marker):
         if self.player_1_marker == marker:
             return self.player_1
-        elif self.player_w_marker == marker:
+        elif self.player_2_marker == marker:
             return self.player_2
         else:
             return None
