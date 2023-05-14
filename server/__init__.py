@@ -3,11 +3,13 @@ import os
 from flask import Flask
 from flask.helpers import send_from_directory
 from flask_cors import CORS, cross_origin
+from gevent import monkey
 
 from server.events import SocketEvents
 
 
 def create_app(config_file="config.py"):
+    monkey.patch_all()
     # Create a Flask-SocketIO server
     app = Flask(__name__, static_folder='../client/build', static_url_path='')
     app.config.from_pyfile(config_file, silent=True)
