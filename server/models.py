@@ -12,7 +12,7 @@ class User(db.Model):
     username = db.Column(db.String, nullable=False, unique=True)
     email = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
-    user_role = db.Column(db.Enum('adm', 'usr', 'ban'), nullable=False, default="usr")
+    user_role = db.Column(db.Enum('adm', 'usr', 'ban', name='user_role'), nullable=False, default='usr')
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
 
     def to_json(self):
@@ -34,8 +34,8 @@ class Game(db.Model):
     join_code = db.Column(db.String, nullable=False, unique=True)
     player_1 = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, unique=False)
     player_2 = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, unique=False)
-    player_1_marker = db.Column(db.Enum('x', 'o'), nullable=False, unique=False)
-    player_2_marker = db.Column(db.Enum('x', 'o'), nullable=False, unique=False)
+    player_1_marker = db.Column(db.Enum('x', 'o', name="player_1_marker"), nullable=False, unique=False)
+    player_2_marker = db.Column(db.Enum('x', 'o', name="player_2_marker"), nullable=False, unique=False)
     winner = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, unique=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False, default=db.func.now())
 
