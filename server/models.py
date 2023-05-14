@@ -20,7 +20,14 @@ class User(db.Model):
 
     def verify_password(self, password):
         password_bytes = bytes(password, 'UTF-8')
-        return bcrypt.checkpw(password_bytes, self.password)
+
+        # Remove the leading '\x' from the string
+        hex_string = self.password.replace("\\x", "")
+
+        # Convert the hex string to bytes
+        hashed_password = bytes.fromhex(hex_string)
+
+        return bcrypt.checkpw(password_bytes, hashed_password)
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
