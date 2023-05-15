@@ -856,6 +856,7 @@ export default function App() {
         if (!localGameOngoing) {
             restartLocalGame();
             localGameOngoing = true;
+            return;
         }
 
         setMousePosition(event, mouse);
@@ -864,7 +865,7 @@ export default function App() {
         const tilesIntersects = getRaycasterIntersects(event, scene, mouse, raycaster, tilesTargetGroupName);
         const tilesIntersectsLength = tilesIntersects.length;
 
-        if (tilesIntersectsLength > 0) {
+        if (tilesIntersectsLength > 0 && localGameOngoing) {
             const tileIntersect = tilesIntersects[0];
             const tileInfo = getIntersectInfo(scene, tileIntersect, tilesTargetGroupName);
             const tileIndex = tileInfo.index;
@@ -874,6 +875,8 @@ export default function App() {
             const tilePositionY = tilePosition.y;
             const tileRow = tileObject.userData.row;
             const tileCol = tileObject.userData.col;
+
+            console.log(tileInfo)
 
             // Remove tile from scene
             scene.scene.getObjectByName(tilesTargetGroupName).children.splice(tileIndex, 1);
