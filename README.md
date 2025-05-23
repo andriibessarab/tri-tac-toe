@@ -1,7 +1,7 @@
-# ❌⭕ Tri Tac Toe
+# ❌⭕ Tri-Tac-Toe
 ![](./client/public/assets/gifs/single=player-preview.gif)
 
-Tri Tac Toe is an online Tic Tac Toe game I built as a final project for my ICS3U course. I developed it using React, Three.js, SQL, Flask, SQLAlchemy, and Socket.io. It supports multiplayer, single-player, and local game modes.  
+Tri-Tac-Toe is an online Tic-Tac-Toe game I built as a final project for my ICS3U course. I developed it using React, Three.js, SQL, Flask, SQLAlchemy, and Socket.io. It supports multiplayer, single-player, and local game modes.  
 
 The application was originally deployed on Heroku, but it has since been taken down.  
 
